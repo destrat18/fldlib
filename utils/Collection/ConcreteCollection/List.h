@@ -118,7 +118,9 @@ class GenericList : public VirtualCollection, private ImplList {
    void _remove(const ExtendedSuppressParameters& parameters, GenericListCursor* cursor=nullptr);
    virtual void _removeAll(const ExtendedSuppressParameters& parameters,
          const VirtualCollectionCursor* start, const VirtualCollectionCursor* end=nullptr) override
-      {  _removeAll(parameters, (GenericListCursor*) start, (GenericListCursor*) end); }
+      {  _removeAll(parameters, const_cast<GenericListCursor*>((const GenericListCursor*) start),
+               const_cast<GenericListCursor*>((const GenericListCursor*) end));
+      }
    void _removeAll(const ExtendedSuppressParameters& parameters)
       {  _removeAll(parameters, (const GenericListCursor*) nullptr); }
    void _removeAll(const ExtendedSuppressParameters& parameters,
@@ -210,12 +212,13 @@ class GenericListCursor : public VirtualCollectionCursor {
       {  AssumeCondition(pileElement) return pileElement; }
    virtual bool _isEqual(const AbstractCursor& cursor) const override;
    virtual void _gotoReference(const EnhancedObject& element) override
-      {  setElement((ImplListElement*) &element); }
+      {  setElement(const_cast<ImplListElement*>((const ImplListElement*) &element)); }
 
   public:
    GenericListCursor(const GenericList& support)
       :  VirtualCollectionCursor(support), pileElement(nullptr) {}
    GenericListCursor(const GenericListCursor& source) = default;
+   GenericListCursor& operator=(const GenericListCursor& source) = default;
    DefineCopy(GenericListCursor)
    DDefineAssign(GenericListCursor)
    DefineCursorForAbstractCollect(GenericList, GenericListCursor)
@@ -316,9 +319,11 @@ class List : public GenericList {
    List(const List& source, AddMode dupMode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       : GenericList(source, dupMode, retrieveRegistrationFromCopy) {}
+   List(List&& source) { swap(source); }
    DefineCopy(List)
    DDefineAssign(List)
    DefineCollectionForAbstractCollect(List, ListCursor)
+   List& operator=(List&& source) { swap(source); return *this; }
    List& operator=(const List& source)
       {  VirtualCollection::operator=(source);
          if (this != &source)
@@ -351,6 +356,7 @@ class ListCursor : public GenericListCursor {
   public:
    ListCursor(const List& support) : GenericListCursor(support) {}
    ListCursor(const ListCursor& source) : GenericListCursor(source) {}
+   ListCursor& operator=(const ListCursor& source) = default;
    DefineCopy(ListCursor)
    DefineCursorForAbstractCollect(List, ListCursor)
 
@@ -450,6 +456,8 @@ class TList : public List {
    TList(const TList<ListElement, ListCast>& source, AddMode dupMode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       : List(source, dupMode, retrieveRegistrationFromCopy) {}
+   TList(TList<ListElement, ListCast>&& source)
+      : List(std::move(source)) {}
    Template2DefineCopy(TList, ListElement, ListCast)
 
 #define DefTypeElement ListElement
@@ -504,6 +512,7 @@ class TListCursor : public ListCursor {
   public:
    TListCursor(const TList<TypeElement, Cast>& support) : ListCursor(support) {}
    TListCursor(const TListCursor<TypeElement, Cast>& source) : ListCursor(source) {}
+   TListCursor& operator=(const TListCursor<TypeElement, Cast>& source) = default;
    Template2DefineCopy(TListCursor, TypeElement, Cast)
    Template2DefineCursorForAbstractCollect(TList, TListCursor, TypeElement, Cast)
 

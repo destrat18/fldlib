@@ -33,7 +33,7 @@
 #ifndef StandardClassesHPP
 #define StandardClassesHPP
 
-#include <iostream>
+#include <iosfwd>
 #include <typeinfo>
 #include <functional>
 
@@ -153,12 +153,7 @@ class EnhancedObject {
    virtual ~EnhancedObject() { uCountInstances--; }
 
    static int queryDebugCount() { return uCountInstances; }
-   static void writeMessages(std::ostream& out)
-      {  if (uCountInstances > 0)
-            out << uCountInstances << " memory leaks" << std::endl;
-         else if (uCountInstances < 0)
-            out << -uCountInstances << " objects multiply destroyed" << std::endl;
-      }
+   static void writeMessages(std::ostream& out);
    virtual int queryDebugSize() const { return sizeof(EnhancedObject); }
    virtual const char* queryDebugClassName() const { return "EnhancedObject" ; }
 
@@ -292,7 +287,7 @@ class HandlerMultiCast {
    static const Element& castFrom(const Base& source)
       { return (const Element&) (const Intermediate&) IntermediateCast::castFrom(source); }
    static const Element* castFrom(const Base* source)
-      { return (Element*) (const Intermediate*) IntermediateCast::castFrom(source); }
+      { return (const Element*) (const Intermediate*) IntermediateCast::castFrom(source); }
 };
 
 template <class Element, class IntermediateCast, class BaseCast>
@@ -330,7 +325,7 @@ class HandlerIntermediateCast {
    static Element& castFrom(Base& source) { return (Element&) (Intermediate&) source; }
    static Element* castFrom(Base* source) { return (Element*) (Intermediate*) source; }
    static const Element& castFrom(const Base& source) { return (const Element&) (const Intermediate&) source; }
-   static const Element* castFrom(const Base* source) { return (Element*) (const Intermediate*) source; }
+   static const Element* castFrom(const Base* source) { return (const Element*) (const Intermediate*) source; }
 };
 
 template <class TypeElement, class TypeCast>
@@ -374,7 +369,8 @@ class ExtendedParameters {
 
   public:
    ExtendedParameters() : uParams(0) {}
-   ExtendedParameters(const ExtendedParameters& source) : uParams(source.uParams) {}
+   ExtendedParameters(const ExtendedParameters& source) = default;
+   ExtendedParameters& operator=(const ExtendedParameters& source) = default;
 };
 
 class EExtendedParameters {
@@ -392,7 +388,8 @@ class EExtendedParameters {
 
   public:
    EExtendedParameters() : uParams(0) {}
-   EExtendedParameters(const EExtendedParameters& source) : uParams(source.uParams) {}
+   EExtendedParameters(const EExtendedParameters& source) = default;
+   EExtendedParameters& operator=(const EExtendedParameters& source) = default;
 };
 
 /***************************************/
@@ -401,8 +398,8 @@ class EExtendedParameters {
 
 class VirtualCast : public ExtendedParameters {
   protected:
-   virtual EnhancedObject* _castFrom(EnhancedObject*) const { AssumeUncalled return nullptr; }
-   virtual EnhancedObject* _castTo(EnhancedObject*) const { AssumeUncalled return nullptr; }
+   virtual EnhancedObject* _castFrom(EnhancedObject* /* copyObject */) const { AssumeUncalled return nullptr; }
+   virtual EnhancedObject* _castTo(EnhancedObject* /* collectionObject */) const { AssumeUncalled return nullptr; }
 
   public:
    VirtualCast() : ExtendedParameters() {}

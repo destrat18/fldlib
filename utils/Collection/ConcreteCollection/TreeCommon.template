@@ -36,6 +36,7 @@
 
 namespace COL {}
 
+#include "Pointer/ImplList.template"
 #include "Collection/Implementation/ImplCommonTree.template"
 #include "Collection/VirtualCollection/VirtualTree.template"
 
@@ -223,7 +224,7 @@ TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::_moveTo(
          return;
       insertionCursor.pushSon(*this);
       if (flatInsertionCursor.isValid())
-         insertionCursor.lastCursor() = *flatInsertionCursor;
+         insertionCursor.lastCursor().assign(*flatInsertionCursor);
 
       notifyCursorUpdate(move);
       try {
@@ -241,7 +242,7 @@ TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::_moveTo(
       if (destinationCursor && !parameters.getInsertion().isRemote()) {
          if (insertionCursor.getLevel() > destinationCursor->getLevel())
             destinationCursor->pushSon(*this);
-         destinationCursor->TypeImplCursor::lastCursor() = insertionCursor.lastCursor();
+         destinationCursor->TypeImplCursor::lastCursor().assign(insertionCursor.lastCursor());
       };
       move.notifyPerformedMove(insertionCursor);
       if (cursor)
@@ -399,13 +400,13 @@ TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::_removeAll(
          ((TypeImplCursor&) *cursor) = invalidation.parent();
          cursor->pushSon(*this);
          if (invalidation.start().isValid())
-            cursor->TypeImplCursor::lastCursor() = *invalidation.start();
+            cursor->TypeImplCursor::lastCursor().assign(*invalidation.start());
          else
             cursor->TypeImplCursor::lastCursor().setToFirst();
          cursor->setToInnerFirstSon();
          if (invalidation.end().isValid()) {
             invalidation.parent().pushSon(*this);
-            invalidation.parent().lastCursor() = *invalidation.end();
+            invalidation.parent().lastCursor().assign(*invalidation.end());
             while (cursor->tsetToNext(Cursor::RBottomUp, action)
                   && !invalidation.parent().isEqual(*cursor));
             TypeImplTree::removeAtomic(invalidation.parent(), ExtendedSuppressParameters().setFree());

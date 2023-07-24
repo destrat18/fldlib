@@ -32,6 +32,10 @@
 
 #include "StandardClasses/Persistence.h"
 
+namespace {}
+
+#include <iostream>
+
 namespace STG {
 
 #if DefineDebugLevel > 1

@@ -31,6 +31,7 @@
 
 #ifndef Numerics_BaseIntegerGenericTemplate
 #define Numerics_BaseIntegerGenericTemplate
+#include <iostream>
 #include "ForwardNumerics/BaseIntegerGeneric.h"
 
 namespace Numerics {

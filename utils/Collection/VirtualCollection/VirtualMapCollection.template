@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualMapCollection.template
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualMapCollection.template
 // Description :
 //   Implementation of the template class TVirtualMapCollection.
 //

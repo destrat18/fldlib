@@ -60,6 +60,8 @@ class DefineTaylorDouble : public TypeDouble {
       EnhancedDouble() {}
       EnhancedDouble(const inherited& source) : inherited(source) {}
       EnhancedDouble(inherited&& source) : inherited(source) {}
+      EnhancedDouble(const EnhancedDouble& source) = default;
+      EnhancedDouble(EnhancedDouble&& source) = default;
       EnhancedDouble(const TypeDouble& source)
          {  for (int index = 0; index <= source.getMantissa().lastCellIndex(); ++index)
                inherited::getSMantissa()[index] = source.getMantissa()[index];
@@ -81,6 +83,7 @@ class DefineTaylorDouble : public TypeDouble {
             return *this;
          }
       EnhancedDouble& operator=(const EnhancedDouble& source) = default;
+      EnhancedDouble& operator=(EnhancedDouble&& source) = default;
 
       void adjustComputation(typename TypeDouble::ReadParameters& params, EnhancedDouble& minError, EnhancedDouble& maxError)
          {  if (params.isApproximate()) {
@@ -132,7 +135,8 @@ class DefineTaylorDouble : public TypeDouble {
       :  inherited(value, params) {}
    DefineTaylorDouble(const typename inherited::FloatConversion& value, ReadParameters& params)
       :  inherited(value, params) {}
-   DefineTaylorDouble(const typename inherited::BuiltDouble& source) : inherited(source) {}
+   DefineTaylorDouble(const TypeDouble& source) : inherited(source) {}
+   DefineTaylorDouble(const thisType& source) = default;
 
    void expAssign(TypeDouble& errorMin, TypeDouble& errorMax, ReadParameters& params);
    void logAssign(TypeDouble& errorMin, TypeDouble& errorMax, ReadParameters& params);

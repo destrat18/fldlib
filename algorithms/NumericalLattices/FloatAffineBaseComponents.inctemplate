@@ -740,7 +740,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::plusAssignBoth
       bool hasExternalCoefficient) {
    Coefficient* thisCoeff = &(Coefficient&) thisCursor.globalElementSAt();
    BuiltReal& thisCoeffValue = thisCoeff->getSValue();
-   const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+   const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
    const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
    if (thisSymbol == sourceSymbol) {
       bool isXValue = (policyCall == PCSourceXValue) && thisSymbol->isDoubleReferenced();
@@ -2306,7 +2306,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::inverseAssignC
    if (isZero(coeff, coeffValue, hasExternalCoefficient)) {
       Cursor thisRemoveCursor(thisCursor);
       HighLevelSymbol* symbolToFree = (thisSymbol->getType() == Symbol::THighLevel
-            && !thisSymbol->isReferenced()) ? (HighLevelSymbol*) thisSymbol : nullptr;
+            && !thisSymbol->isReferenced()) ? (HighLevelSymbol*) const_cast<Symbol*>(thisSymbol) : nullptr;
       thisCursor.setToPrevious();
       removeAt(thisRemoveCursor);
       if (symbolToFree)
@@ -2884,6 +2884,8 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::divAssign(
       };
    };
 
+   dCentral.setZero();
+   apcCentralAdditions.release();
    BuiltReal max;
    ++basicOperationCounter;
    Cursor cursor(*this);
@@ -3549,7 +3551,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::temporalMergeW
             if (compare == CREqual) {
                Coefficient& thisCoeff = (Coefficient&) thisCursor.globalElementSAt();
                BuiltReal& thisCoeffValue = thisCoeff.getSValue();
-               const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+               const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
                const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
                bool doesReplace = false;
                if (!hasExternalCoefficient || (!thisCoeff.isExternal() && !sourceCoeff.isExternal())) {
@@ -3661,7 +3663,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::temporalMergeW
                thisSymbol = thisCursor.setToNext() ? &thisCursor.elementSAt() : nullptr;
             }
             else if (compare == CRGreater) {
-               const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+               const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
                const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
                if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
                   auto& maxParams = TypeBaseFloatAffine::maxParams();
@@ -3681,7 +3683,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::temporalMergeW
          } while (thisSymbol && sourceSymbol);
 
          while (sourceSymbol) {
-            const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+            const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
             const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
             if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
                auto& maxParams = TypeBaseFloatAffine::maxParams();
@@ -3724,7 +3726,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::temporalMergeW
    else {
       auto& maxParams = TypeBaseFloatAffine::maxParams();
       while (sourceCursor.setToNext()) {
-         const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+         const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
          const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
          if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
             if (sourceCoeffValue.isPositive())
@@ -3836,7 +3838,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::spatialMergeWi
             if (compare == CREqual) {
                Coefficient& thisCoeff = (Coefficient&) thisCursor.globalElementSAt();
                BuiltReal& thisCoeffValue = thisCoeff.getSValue();
-               const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+               const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
                const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
                if (!hasExternalCoefficient || (!thisCoeff.isExternal() && !sourceCoeff.isExternal())) {
                   auto& nearestParams = TypeBaseFloatAffine::nearestParams();
@@ -3936,7 +3938,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::spatialMergeWi
                thisSymbol = thisCursor.setToNext() ? &thisCursor.elementSAt() : nullptr;
             }
             else if (compare == CRGreater) {
-               const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+               const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
                if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
                   AssumeCondition(!((const Coefficient&) sourceCoeff).isExternal())
                   const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
@@ -3957,7 +3959,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::spatialMergeWi
          } while (thisSymbol && sourceSymbol);
 
          while (sourceSymbol) {
-            const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+            const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
             if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
                AssumeCondition(!((const Coefficient&) sourceCoeff).isExternal())
                const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
@@ -4001,7 +4003,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::spatialMergeWi
    else {
       auto& maxParams = TypeBaseFloatAffine::maxParams();
       while (sourceCursor.setToNext()) {
-         const Coefficient& sourceCoeff = (Coefficient&) sourceCursor.globalElementAt();
+         const Coefficient& sourceCoeff = (const Coefficient&) sourceCursor.globalElementAt();
          if (!hasExternalCoefficient || !sourceCoeff.isExternal()) {
             AssumeCondition(!((const Coefficient&) sourceCoeff).isExternal())
             const BuiltReal& sourceCoeffValue = sourceCoeff.getValue();
@@ -4070,7 +4072,7 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::spatialMergeWi
 DefineEquationTemplateHeader(URealBitsNumber)
 bool
 DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::simplifyWith(
-      const thisType& constraint, Symbol& constraintSymbol,
+      const thisType& constraint, bool isNegative, Symbol& constraintSymbol,
       const BuiltReal& constraintNormalization, SymbolsManager& manager, bool hasExternalCoefficient) {
    BuiltReal constraintSymbolValue, remainder, weightPositive, weightAll, matchAll;
       /* match = weightPositive * constraintSymbolValue */
@@ -4392,10 +4394,10 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::simplifyAllEqu
    BuiltReal normalization = getNormalization(isNegative, nullptr, hasExternalCoefficient);
    bool result = true;
    notifySafeUpdate(
-         [this, &symbol, &normalization, &result, &manager, hasExternalCoefficient]
+         [this, &symbol, isNegative, &normalization, &result, &manager, hasExternalCoefficient]
          (thisType& equation)
       {  if (!equation.isDefinition())
-            result = equation.simplifyWith(*this, symbol, normalization, manager, hasExternalCoefficient)
+            result = equation.simplifyWith(*this, isNegative, symbol, normalization, manager, hasExternalCoefficient)
                && result;
       });
    return result;
@@ -4410,10 +4412,10 @@ DefineEquation DefineEquationTemplateParameters(URealBitsNumber)::simplifyAllEqu
    BuiltReal normalization = getNormalization(isNegative, nullptr, hasExternalCoefficient);
    bool result = true;
    notifySafeUpdate(
-         [this, &symbol, &normalization, &result, &manager, &condition, hasExternalCoefficient]
+         [this, &symbol, isNegative, &normalization, &result, &manager, &condition, hasExternalCoefficient]
          (thisType& equation)
       {  if (!equation.isDefinition() && condition(equation))
-            result = equation.simplifyWith(*this, symbol, normalization, manager, hasExternalCoefficient)
+            result = equation.simplifyWith(*this, isNegative, symbol, normalization, manager, hasExternalCoefficient)
                && result;
       });
    return result;
@@ -4924,8 +4926,10 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::Solver::perf
    ValueForSymbol* newValue = new ValueForSymbol(exitingSymbol);
    direction.addNew(newValue);
    newValue->symbolValue() = BuiltReal(1U); // getConstraintResult(pivot) ?
-   if (doesDecreaseEntering != newTerm->getCoefficient().isNegative() /* oldEquation->isNegative() == hasChangedSign */)
+   if (doesDecreaseEntering != newTerm->getCoefficient().isNegative() /* oldEquation->isNegative() == hasChangedSign */) {
       newValue->symbolValue().opposite();
+      newValue->changeDirection();
+   }
 
    // update constraintResult in direction
    direction.removeConstraintResult(foundPivot);
@@ -4981,24 +4985,31 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::Solver::tran
             const BaseEquation& baseEquation = locateBaseEquationCursor.elementAt();
             BuiltReal resultValue = baseEquation.getConstant();
             typename Vertex::Cursor searchOriginCursor(origin);
-            baseEquation.getLinearPart().foreachDo(
-                  [&resultValue, &searchOriginCursor, &baseEquation](const BaseTerm& term)
-               {  while (searchOriginCursor.setToNext()
+            typename ValueForSymbol::Side side = ValueForSymbol::SUndefined;
+            {  typename COL::SortedArray<BaseTerm, typename BaseTerm::Key>::Cursor cursor(
+                     baseEquation.getLinearPart());
+               while (cursor.setToNext()) {
+                  const BaseTerm& term = cursor.elementAt();
+                  while (searchOriginCursor.setToNext()
                         && &searchOriginCursor.elementAt().getSymbol() != &term.getSymbol()) {};
                   BuiltReal addResult = searchOriginCursor.elementAt().getSymbolValue();
                   typename BuiltReal::ReadParameters* minParams;
                   if (baseEquation.isNegative()) // minimize the evaluation
-                     minParams = searchOriginCursor.elementAt().isPositive() == term.getCoefficient().isPositive()
+                     minParams = term.getCoefficient().isPositive()
                         ? &TypeBaseFloatAffine::minParams() : &TypeBaseFloatAffine::maxParams();
                   else // maximize the evaluation
-                     minParams = searchOriginCursor.elementAt().isNegative() == term.getCoefficient().isPositive()
+                     minParams = !term.getCoefficient().isPositive()
                         ? &TypeBaseFloatAffine::minParams() : &TypeBaseFloatAffine::maxParams();
                   addResult.multAssign(term.getCoefficient(), *minParams);
                   minParams->clear();
+                  if (!term.getCoefficient().isNegative ())
+                     side = (typename ValueForSymbol::Side) (side | searchOriginCursor.elementAt().getSide());
+                  else 
+                     side = (typename ValueForSymbol::Side) (side | searchOriginCursor.elementAt().getOtherSide());
                   resultValue.plusAssign(addResult, *minParams);
                   minParams->clear();
-                  return true;
-               });
+               };
+            }
             if (baseEquation.isNegative()) {
                auto& minParams = TypeBaseFloatAffine::minParams();
                resultValue.plusAssign(baseEquation.getNormalization(), minParams);
@@ -5012,16 +5023,23 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::Solver::tran
                maxParams.clear();
                resultValue.divAssign(baseEquation.getNormalization(), maxParams);
                maxParams.clear();
-               resultCursor.elementSAt().changeDirection();
             }
+            if (side == ValueForSymbol::SBoth) { // should not occur
+               BuiltReal one(1U), negOne(one);
+               negOne.opposite();
+               if (resultValue == one)
+                  side = ValueForSymbol::SNegative;
+               else if (resultValue == negOne)
+                  side = ValueForSymbol::SPositive;
+            }
+            resultCursor.elementSAt().setSide(side);
             resultCursor.elementSAt().symbolValue() = resultValue;
          }
          else {
             const ValueForSymbol& originValueForSymbol = originCursor.elementSAt();
             ValueForSymbol& resultValueForSymbol = resultCursor.elementSAt();
             resultValueForSymbol.symbolValue() = originValueForSymbol.getSymbolValue();
-            if (resultValueForSymbol.isNegative() != originValueForSymbol.isNegative())
-               resultValueForSymbol.changeDirection();
+            resultValueForSymbol.setSide(originValueForSymbol.getSide());
          };
          symbol = resultCursor.setToNext() ? &resultCursor.elementAt().getSymbol() : nullptr;
       } while (symbol != nullptr);
@@ -5075,11 +5093,26 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::close(bool h
    vAdmissibleVertex.addSymbolsFrom(eEquation);
    BuiltReal equationResult;
    if (!isPositiveEquation(eEquation, vAdmissibleVertex, !fNegative, equationResult)) {
+      BuiltReal limit = 1U;
+      limit.setExponent(typename BuiltReal::Exponent(typename BuiltReal::Exponent
+            ::Basic(), 0, 64U), true /* isNegative */);
+      // limit = 5.421010862427522e-20
+      if (!fNegative)
+         limit.opposite();
+      if (!fNegative ? (equationResult >= limit) : (equationResult <= limit)) {
+         vAdmissibleVertex.setConstraintResult(BuiltReal());
+         return true;
+      }
+      if (!fNegative)
+         limit.opposite();
+
       Vertex direction(vAdmissibleVertex, typename Vertex::SolverInit());
       Solver solver(eEquation, !fNegative);
       if (mpParent.isValid()) {
          auto parent = (const PNT::TMngPointer<thisType>&) mpParent;
          do {
+            if (!parent->isSatisfiable())
+               return false;
             solver.addBase(*parent);
             direction.setConstraintResult(solver.queryVertexResult(parent->eEquation, direction, fNegative));
             parent = (const PNT::TMngPointer<thisType>&) parent->mpParent;
@@ -5101,11 +5134,12 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::close(bool h
                   break;
             };
             const BuiltReal& currentCoefficient = term.getCoefficient();
-            if (!currentCoefficient.isZero()
-                  && currentCoefficient.isNegative() == vertexCursor.elementAt().isNegative()) {
+            if (!currentCoefficient.isZero() && (currentCoefficient.isNegative()
+                     ? vertexCursor.elementAt().mayBeNegative()
+                     : vertexCursor.elementAt().mayBePositive())) {
                BuiltReal initialVertexSymbol(vertexCursor.elementAt().getSymbolValue()),
                          vertexDiffSymbol(+1U);
-               bool doesInverse = vertexCursor.elementAt().isNegative();
+               bool doesInverse = currentCoefficient.isNegative();
                if (doesInverse)
                   vertexDiffSymbol.opposite();
                vertexDiffSymbol.minusAssign(initialVertexSymbol, doesInverse ? minParams : maxParams);
@@ -5115,42 +5149,55 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::close(bool h
                      currentCoefficient.isNegative() != fNegative,
                      vertexCursor.elementAt().getSymbolValue(), direction, vertexDiffSymbol,
                      foundPivot, degeneratedIndex, false /* isInitialOut */)) { // pivot
-                  BuiltReal& symbolValue = vertexCursor.elementSAt().symbolValue();
-                  symbolValue.plusAssign(vertexDiffSymbol, minParams);
-                  bool doesDecreaseEntering = vertexDiffSymbol.isNegative();
-                  vertexCursor.elementSAt().changeDirection();
-                  minParams.clear();
-                  BuiltReal temp(1U);
-                  temp.opposite();
-                  if (symbolValue < temp) {
-                     BuiltReal newValue = temp;
-                     temp.minusAssign(symbolValue, minParams);
-                     symbolValue = newValue;
+                  bool doesDecreaseEntering = false;
+                  if (!vertexDiffSymbol.isZero()) { // non-degenerated case
+                     BuiltReal& symbolValue = vertexCursor.elementSAt().symbolValue();
+                     symbolValue.plusAssign(vertexDiffSymbol, minParams);
+                     doesDecreaseEntering = vertexDiffSymbol.isNegative();
+                     vertexCursor.elementSAt().changeDirection();
                      minParams.clear();
-                     vertexDiffSymbol.plusAssign(temp, maxParams);
-                     maxParams.clear();
-                  };
-                  solver.updateConstraintResult(direction, symbol, vertexDiffSymbol);
-                  vertexDiffSymbol.multAssign(currentCoefficient, minParams);
-                  minParams.clear();
-                  AssumeCondition(vertexDiffSymbol.isPositive() || vertexDiffSymbol.isZero())
-                  if (fNegative) { // currentCoefficient is inversed w.r.t equation coefficient
-                     equationResult.minusAssign(vertexDiffSymbol, maxParams);
-                     maxParams.clear();
+                     BuiltReal temp(1U);
+                     temp.opposite();
+                     if (symbolValue < temp) {
+                        BuiltReal newValue = temp;
+                        temp.minusAssign(symbolValue, minParams);
+                        symbolValue = newValue;
+                        minParams.clear();
+                        vertexDiffSymbol.plusAssign(temp, maxParams);
+                        maxParams.clear();
+                     };
+                     solver.updateConstraintResult(direction, symbol, vertexDiffSymbol);
+                     vertexDiffSymbol.multAssign(currentCoefficient, minParams);
+                     minParams.clear();
+                     if (vertexDiffSymbol.isNegative()) {
+                        limit.opposite();
+                        // limit = -5.421010862427522e-20
+                        if (vertexDiffSymbol >= limit)
+                           vertexDiffSymbol = BuiltReal();
+                     }
+                     AssumeCondition(vertexDiffSymbol.isPositive() || vertexDiffSymbol.isZero())
+                     if (fNegative) { // currentCoefficient is inversed w.r.t equation coefficient
+                        equationResult.minusAssign(vertexDiffSymbol, maxParams);
+                        maxParams.clear();
+                     }
+                     else {
+                        equationResult.plusAssign(vertexDiffSymbol, minParams);
+                        minParams.clear();
+                     };
+                     if (degeneratedIndex >= 0)
+                        degeneratedIndex = -1;
                   }
-                  else {
-                     equationResult.plusAssign(vertexDiffSymbol, minParams);
-                     minParams.clear();
-                  };
-                  if (degeneratedIndex >= 0 && !vertexDiffSymbol.isZero())
-                     degeneratedIndex = -1;
+                  else
+                     doesDecreaseEntering = !vertexDiffSymbol.isNegative();
                   if (foundPivot >= 0) {
                      solver.performPivot(cursor, foundPivot, direction, doesDecreaseEntering, fNegative);
                      if (degeneratedIndex >= 0)
                         degeneratedIndex = foundPivot;
                   };
-                  hasCompleteCycle = false;
-                  break;
+                  if (foundPivot >= 0 || !vertexDiffSymbol.isZero()) {
+                     hasCompleteCycle = false;
+                     break;
+                  }
                }
             };
          };
@@ -5178,8 +5225,22 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::close(bool h
                   !parent->fNegative, constraintResult);
             if (!isPositive) { // near 0, but evaluation is pessimistic
                if (!improveResult(parent->eEquation, vAdmissibleVertex,
-                     !parent->fNegative, constraintResult, (const thisType*) mpParent.key(), parent.key()))
-                  return false;
+                     !parent->fNegative, constraintResult, (const thisType*) mpParent.key(), parent.key())) {
+                  // limit = 5.421010862427522e-20
+                  if (!parent->fNegative) {
+                     limit.opposite();
+                     if (constraintResult < limit) {
+                        std::cout << "oups, internal bug in constraint solving" << std::endl;
+                        return false;
+                     }
+                  }
+                  else if (constraintResult > limit) {
+                     std::cout << "oups, internal bug in constraint solving" << std::endl;
+                     return false;
+                  }
+                  std::cout << "constraints almost solved! failure due to rounding errors" << std::endl;
+                  return true;
+               }
             };
             vAdmissibleVertex.changeConstraintResult(constraintIndex, constraintResult);
             ++constraintIndex;
@@ -5187,8 +5248,22 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::close(bool h
          } while (parent.isValid());
          if (!isPositiveEquation(eEquation, vAdmissibleVertex, !fNegative, constraintResult)) {
             if (!improveResult(eEquation, vAdmissibleVertex,
-                  !fNegative, constraintResult, (const thisType*) mpParent.key(), nullptr))
-               return false;
+                  !fNegative, constraintResult, (const thisType*) mpParent.key(), nullptr)) {
+               // limit = 5.421010862427522e-20
+               if (!parent->fNegative) {
+                  limit.opposite();
+                  if (constraintResult < limit) {
+                     std::cout << "oups, internal bug in constraint solving" << std::endl;
+                     return false;
+                  }
+               }
+               else if (constraintResult > limit) {
+                  std::cout << "oups, internal bug in constraint solving" << std::endl;
+                  return false;
+               }
+               std::cout << "constraints almost solved! failure due to rounding errors" << std::endl;
+               return true;
+            }
          };
       };
    }
@@ -5419,11 +5494,15 @@ DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)::improveResul
          vertexValue = vertexCursor.setToNext() ? &vertexCursor.elementSAt() : nullptr;
          continue;
       };
-      if ((vertexValue->isPositive() == coefficientValue.isPositive()) == isPositiveDirection) {
-         newValue.swap(coefficientValue);
+      if ((isPositiveDirection == coefficientValue.isPositive())
+            ? !vertexValue->mayBeNegative() : !vertexValue->mayBePositive()) {
+         newValue.swap(vertexValue->symbolValue());
+         BuiltReal oldEquationResult(equationResult);
          if (!isPositiveEquation(equation, vertex, isPositiveDirection, equationResult)
-               || !verifyAllPositiveEquations(vertex, rootConstraint, currentConstraint))
-            newValue.swap(coefficientValue);
+               || !verifyAllPositiveEquations(vertex, rootConstraint, currentConstraint)) {
+            newValue.swap(vertexValue->symbolValue());
+            equationResult.swap(oldEquationResult);
+         }
          else
             return true;
       }
@@ -5538,7 +5617,7 @@ DefineConstraintsSet DefineEquationTemplateParameters(URealBitsNumber)::retrieve
             };
             const BuiltReal& currentCoefficient = term.getCoefficient();
             if (!currentCoefficient.isZero()
-                  && currentCoefficient.isNegative() == vertexCursor.elementAt().isNegative()) {
+                  && currentCoefficient.isNegative() == vertexCursor.elementAt().mayBeNegative()) {
                BuiltReal initialVertexSymbol(vertexCursor.elementAt().getSymbolValue()),
                          vertexDiffSymbol(+1U);
                typename BuiltReal::ReadParameters& minParams
@@ -5624,7 +5703,7 @@ DefineConstraintsSet DefineEquationTemplateParameters(URealBitsNumber)::retrieve
             };
             const BuiltReal& currentCoefficient = term.getCoefficient();
             if (!currentCoefficient.isZero()
-                  && currentCoefficient.isPositive() == vertexCursor.elementAt().isNegative()) {
+                  && currentCoefficient.isPositive() == vertexCursor.elementAt().mayBeNegative()) {
                BuiltReal initialVertexSymbol(vertexCursor.elementAt().getSymbolValue()),
                          vertexDiffSymbol(+1U);
                typename BuiltReal::ReadParameters& minParams = currentCoefficient.isPositive()

@@ -31,6 +31,7 @@
 
 #include "Numerics/Rational.h"
 // #include "Numerics/Numerics.hpp"
+#include <cctype>
 
 namespace Numerics {
 

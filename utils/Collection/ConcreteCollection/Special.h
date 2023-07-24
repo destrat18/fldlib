@@ -116,6 +116,8 @@ class EmptyCollection : public VirtualCollection {
 
   public:
    EmptyCollection() {}
+   EmptyCollection(EmptyCollection&& source)
+      :  inherited(source) {}
    EmptyCollection(const EmptyCollection& source, AddMode mode=AMDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  inherited(source, mode) {}
@@ -283,6 +285,7 @@ class UniqueCollection : public VirtualCollection {
       {  TInsertInitialNewValue<UniqueCollection, EnhancedObject, SimpleCast> insertInitialValue(*this);
          initialValues.foreachDo(insertInitialValue);
       }
+   UniqueCollection(UniqueCollection&& source) : peoElement(nullptr) { swap(source); }
    UniqueCollection(const UniqueCollection& source, AddMode mode=AMDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  inherited(source), peoElement((source.peoElement && (mode==AMDuplicate))
@@ -290,6 +293,10 @@ class UniqueCollection : public VirtualCollection {
                ? ((const VirtualCastWithElement*) retrieveRegistrationFromCopy)
                   ->castFrom(source.peoElement->createCopy(), source.peoElement)
                : source.peoElement->createCopy()) : source.peoElement) {}
+   UniqueCollection& operator=(UniqueCollection&& source)
+      {  peoElement = source.peoElement; source.peoElement = nullptr; return *this; }
+   UniqueCollection& operator=(const UniqueCollection& source)
+      {  peoElement = source.peoElement; return *this; }
    typedef EnhancedObject Node;
    DefineCopy(UniqueCollection)
    DDefineAssign(UniqueCollection)
@@ -385,6 +392,7 @@ class UniqueCollectionCursor : public VirtualCollectionCursor {
   public:
    UniqueCollectionCursor(const UniqueCollection& support) : inherited(support), fValid(false) {}
    UniqueCollectionCursor(const thisType& source) = default;
+   UniqueCollectionCursor& operator=(const thisType& source) = default;
    DefineCopy(UniqueCollectionCursor)
    DDefineAssign(UniqueCollectionCursor)
 
@@ -479,7 +487,7 @@ UniqueCollection::_queryCount(const ExtendedLocateParameters& parameters,
       const VirtualCollectionCursor* startCursor, const VirtualCollectionCursor* endCursor) const {
    inherited::_queryCount(parameters, startCursor, endCursor);
    return (!startCursor && !endCursor) ? ((peoElement != nullptr) ? 1 : 0)
-      :  queryInternCount(parameters, (Cursor*) startCursor, (Cursor*) endCursor);
+      :  queryInternCount(parameters, const_cast<Cursor*>((const Cursor*) startCursor), const_cast<Cursor*>((const Cursor*) endCursor));
 }
 
 inline EnhancedObject*
@@ -596,6 +604,8 @@ class DoubleCollection : public VirtualCollection {
       {  TInsertInitialNewValue<DoubleCollection, EnhancedObject, SimpleCast> insertInitialValue(*this);
          initialValues.foreachDo(insertInitialValue);
       }
+   DoubleCollection(DoubleCollection&& source)
+      :  peoFirst(nullptr), peoSecond(nullptr) { swap(source); }
    DoubleCollection(const DoubleCollection& source, AddMode mode=AMDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  inherited(source),
@@ -609,6 +619,15 @@ class DoubleCollection : public VirtualCollection {
                   ->castFrom(source.peoSecond->createCopy(), source.peoSecond)
             : source.peoSecond->createCopy())
             : source.peoSecond) {}
+   DoubleCollection& operator=(DoubleCollection&& source)
+      {  peoFirst = source.peoFirst; peoSecond = source.peoSecond;
+         source.peoFirst = source.peoSecond = nullptr;
+         return *this;
+      }
+   DoubleCollection& operator=(const DoubleCollection& source)
+      {  peoFirst = source.peoFirst; peoSecond = source.peoSecond;
+         return *this;
+      }
    typedef EnhancedObject Node;
    DefineCopy(DoubleCollection)
    DDefineAssign(DoubleCollection)
@@ -716,7 +735,8 @@ class DoubleCollectionCursor : public VirtualCollectionCursor {
 
   public:
    DoubleCollectionCursor(const DoubleCollection& support) : inherited(support), mMode(MInvalid) {}
-   DoubleCollectionCursor(const thisType& source) : inherited(source), mMode(source.mMode) {}
+   DoubleCollectionCursor(const thisType& source) = default;
+   DoubleCollectionCursor& operator=(const thisType& source) = default;
    DefineCopy(DoubleCollectionCursor)
    DDefineAssign(DoubleCollectionCursor)
    DefineCursorForAbstractCollect(DoubleCollection, DoubleCollectionCursor)
@@ -778,10 +798,12 @@ DoubleCollection::_addAll(const VirtualCollection& vcSource, const ExtendedInser
       const auto& source = (const SpecialCollection&) vcSource;
       if (source.isUniqueType())
          _addAll((const UniqueCollection&) source, parameters, (Cursor*) cursor,
-               (UniqueCollectionCursor*) startSource, (UniqueCollectionCursor*) endSource);
+               const_cast<UniqueCollectionCursor*>((const UniqueCollectionCursor*) startSource),
+               const_cast<UniqueCollectionCursor*>((const UniqueCollectionCursor*) endSource));
       else if (source.isDoubleType())
          _addAll((const DoubleCollection&) source, parameters, (Cursor*) cursor,
-               (Cursor*) startSource, (Cursor*) endSource);
+               const_cast<Cursor*>((const Cursor*) startSource),
+               const_cast<Cursor*>((const Cursor*) endSource));
       else {
          AssumeCondition(source.isEmptyType())
       }
@@ -794,7 +816,7 @@ inline void
 DoubleCollection::_moveTo(VirtualCollection& vcDestination, const ExtendedReplaceParameters& parameters,
       VirtualCollectionCursor* cursor, VirtualCollectionCursor* destinationCursor) {
    if (vcDestination.isSpecial()) {
-      const auto& destination = (const SpecialCollection&) vcDestination;
+      auto& destination = (SpecialCollection&) vcDestination;
       if (destination.isDoubleType())
          _moveTo((DoubleCollection&) destination, parameters, (Cursor*) cursor,
                (Cursor*) destinationCursor);
@@ -814,13 +836,13 @@ DoubleCollection::_moveAllTo(VirtualCollection& vcDestination, const ExtendedRep
       const VirtualCollectionCursor* startCursor, const VirtualCollectionCursor* endCursor,
       VirtualCollectionCursor* destinationCursor) {
    if (vcDestination.isSpecial()) {
-      const auto& destination = (const SpecialCollection&) vcDestination;
+      auto& destination = (SpecialCollection&) vcDestination;
       if (destination.isUniqueType())
-         _moveAllTo((UniqueCollection&) destination, parameters, (Cursor*) startCursor,
-               (Cursor*) endCursor, (UniqueCollectionCursor*) destinationCursor);
+         _moveAllTo((UniqueCollection&) destination, parameters, const_cast<Cursor*>((const Cursor*) startCursor),
+               const_cast<Cursor*>((const Cursor*) endCursor), (UniqueCollectionCursor*) destinationCursor);
       else if (destination.isDoubleType())
-         _moveAllTo((DoubleCollection&) destination, parameters, (Cursor*) startCursor,
-               (Cursor*) endCursor, (Cursor*) destinationCursor);
+         _moveAllTo((DoubleCollection&) destination, parameters, const_cast<Cursor*>((const Cursor*) startCursor),
+               const_cast<Cursor*>((const Cursor*) endCursor), (Cursor*) destinationCursor);
       else {
          AssumeCondition(destination.isEmptyType())
       }
@@ -857,7 +879,8 @@ DoubleCollection::_queryCount(const ExtendedLocateParameters& parameters,
       if (peoSecond) ++result;
    }
    else
-      result = queryInternCount(parameters, (Cursor*) startCursor, (Cursor*) endCursor);
+      result = queryInternCount(parameters, const_cast<Cursor*>((const Cursor*) startCursor),
+            const_cast<Cursor*>((const Cursor*) endCursor));
    return result;
 }
 
@@ -905,6 +928,7 @@ class TUniqueCollection : public UniqueCollection {
       {  UniqueCollection::TInsertInitialNewValue<thisType, TypeElement, Cast> insertInitialValue(*this);
          initialValues.foreachDo(insertInitialValue);
       }
+   TUniqueCollection(thisType&& source) : UniqueCollection(std::move(source)) {}
    TUniqueCollection(const thisType& source, AddMode mode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  UniqueCollection(source, mode, retrieveRegistrationFromCopy) {}
@@ -995,6 +1019,7 @@ class TDoubleCollection : public DoubleCollection {
       {  DoubleCollection::TInsertInitialNewValue<thisType, TypeElement, Cast> insertInitialValue(*this);
          initialValues.foreachDo(insertInitialValue);
       }
+   TDoubleCollection(thisType&& source) : DoubleCollection(std::move(source)) {}
    TDoubleCollection(const thisType& source, AddMode mode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  DoubleCollection(source, mode, retrieveRegistrationFromCopy) {}

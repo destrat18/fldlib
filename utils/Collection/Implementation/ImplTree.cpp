@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplTree.cpp
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplTree.cpp
 // Description :
 //   Implementation of the classes GenericTreeElement, ImplTreeCursor that define
 //   the elements and the cursors for the tree based collection implementations.
@@ -195,6 +195,8 @@ GenericImplTreeCursor::CursorPath::CursorPath(const GenericImplTree& tree,
          uAscentLevel = diff;
       else
          uDescentLevel = -diff;
+      ppccscAscentCursor = fstCursor->ccsStack.newCursor();
+      ppccscDescentCursor = sndCursor->ccsStack.newCursor();
       ppccscAscentCursor->setToLast();
       ppccscDescentCursor->setToLast();
       for (; diff > 0; diff--)

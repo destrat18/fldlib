@@ -800,7 +800,7 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
          return array(0);
       }
    bool isAtomic() const { return verifyAtomicity(); }
-   const IntegerTraits& implementation() const { return (inherited&) *this; }
+   const IntegerTraits& implementation() const { return (const inherited&) *this; }
    IntegerTraits& implementation() { return (inherited&) *this; }
    void swap(thisType& source) { inherited::swap(source); }
    void clear() { inherited::clear(); }
@@ -905,6 +905,7 @@ class DefineBigCellInt : public DInteger::DefineBigCellInt DefineBigCellTemplate
    DefineBigCellInt() : inherited() {}
    DefineBigCellInt(DefineBaseTypeConstReference value) : inherited(value) {}
    DefineBigCellInt(const thisType& source) = default;
+   thisType& operator=(const thisType& source) = default;
 };
 
 #endif // DefineBigCellClass
@@ -1016,7 +1017,7 @@ class DefineBigInt
 #endif
       }
    ArrayCells& cells() { return (ArrayCells&) inherited::cellTraits(); }
-   const ArrayCells& cells() const { return (ArrayCells&) inherited::cellTraits(); }
+   const ArrayCells& cells() const { return (const ArrayCells&) inherited::cellTraits(); }
 
   public:
    typedef typename ArrayCells::MidArray MidArray;

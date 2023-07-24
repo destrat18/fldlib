@@ -132,7 +132,7 @@ class TMultiMapSortedTraits {
             typename MultipleCollection::Cursor& cursor, typename MultipleCollection::Cursor& destinationCursor)
          {  mcElements.moveTo(destination.mcElements, parameters, &cursor, &destinationCursor);
             if (&destination != this)
-               setMultipleBase((MultipleElement&) destinationCursor.elementAt(), destination);
+               setMultipleBase((MultipleElement&) destinationCursor.elementSAt(), destination);
             return ((&destination != this) && mcElements.isEmpty());
          }
       bool remove(const VirtualCollection::ExtendedSuppressParameters& parameters,
@@ -445,7 +445,7 @@ class TMultiMap : public VirtualMultiSortedCollection {
 
         public:
          FreeArray(int allocation) { inherited::bookPlace(allocation); }
-         FreeArray(const FreeArray& source) {}
+         FreeArray(const FreeArray& source) : inherited() {}
          DefineCopy(FreeArray)
 
          void add(ReceiverMultipleElement& element)
@@ -532,7 +532,7 @@ class TMultiMap : public VirtualMultiSortedCollection {
       }
    virtual EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const VirtualCollectionCursor* cursor) const override
-      {  return BaseCast::castTo(_getElement(parameters, (Cursor*) cursor)); }
+      {  return BaseCast::castTo(_getElement(parameters, const_cast<Cursor*>((const Cursor*) cursor))); }
    MultipleElement* _getElement(const ExtendedLocateParameters& parameters, const Cursor* cursor=nullptr) const;
 
    virtual LocationResult _locate(const EnhancedObject& source, const ExtendedLocateParameters& parameters,
@@ -552,7 +552,7 @@ class TMultiMap : public VirtualMultiSortedCollection {
       {  return inherited::_locateKey(source, parameters, cursor, start, end); }
 
   public:
-   virtual typename TypeTraits::KeyTraits::ControlKeyType key(const MultipleElement& element) const { AssumeUncalled }
+   virtual typename TypeTraits::KeyTraits::ControlKeyType key(const MultipleElement& element) const { AssumeUncalled return typename TypeTraits::KeyTraits::ControlKeyType(); }
 
    #define DefJustDeclare
    #define DefTypeKey typename Key::KeyType

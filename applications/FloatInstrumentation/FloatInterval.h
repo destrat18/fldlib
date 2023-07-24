@@ -33,7 +33,7 @@
 #define FloatInstrumentation_FloatIntervalH
 
 #include "NumericalAnalysis/FloatIntervalExecutionPath.h"
-
+#include <iostream>
 #include "FloatInstrumentation/FloatInterval.inch"
 
 namespace NumericalDomains { namespace DDoubleInterval {

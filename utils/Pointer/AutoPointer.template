@@ -83,7 +83,8 @@ TAutoPointer<Element>::TAutoPointer(const Element& element) : peElement(element.
 
 template <class Element>
 TAutoPointer<Element>::TAutoPointer(const TAutoPointer<Element>& source)
-   : peElement(source.peElement ? source.peElement->createSCopy() : nullptr) {}
+   :  EnhancedObject(source),
+      peElement(source.peElement ? source.peElement->createSCopy() : nullptr) {}
 
 template <class Element>
 TAutoPointer<Element>::~TAutoPointer()

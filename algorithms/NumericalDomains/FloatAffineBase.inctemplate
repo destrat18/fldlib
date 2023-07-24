@@ -3072,7 +3072,7 @@ TSimplificationRules DefineEquationTemplateParameters(URealBitsNumber)
       definitionEquation.notifyUpdate([this, &definitionEquation, &equation, &definedSymbol, &max, &manager]
             (Equation& source)
          {  if (!source.isDefinition() && equation.getConditionSameBranch()(source))
-               source.simplifyWith(definitionEquation, *definedSymbol, max, manager, false /* hasExternalCoefficient */);
+               source.simplifyWith(definitionEquation, false, *definedSymbol, max, manager, false /* hasExternalCoefficient */);
          });
       if (auto* symbolDefinitionTracker = manager.getSymbolDefinitionTracker()) {
          if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -3329,7 +3329,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    constraintMin->getSDefinition().minusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
    bool doesConstraint = false;
    BuiltReal normalization = constraintMin->getDefinition().getNormalization(true, &doesConstraint);
-   if (doesConstraint && getSRealDomain().simplifyWith(constraintMin->getDefinition(),
+   if (doesConstraint && getSRealDomain().simplifyWith(constraintMin->getDefinition(), true,
          *constraintMin, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3363,7 +3363,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    constraintMax->getSDefinition().minusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
    doesConstraint = false;
    normalization = constraintMax->getDefinition().getNormalization(false, &doesConstraint);
-   if (doesConstraint && getSRealDomain().simplifyWith(constraintMax->getDefinition(),
+   if (doesConstraint && getSRealDomain().simplifyWith(constraintMax->getDefinition(), false,
          *constraintMax, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3445,7 +3445,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    constraintMin->getSDefinition().minusAssign(getError(), Equation::PCSourceRValue, symbolsManager());
    bool doesConstraint = false;
    BuiltReal normalization = constraintMin->getDefinition().getNormalization(true, &doesConstraint);
-   if (doesConstraint && getSError().simplifyWith(constraintMin->getDefinition(),
+   if (doesConstraint && getSError().simplifyWith(constraintMin->getDefinition(), true,
          *constraintMin, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3479,7 +3479,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    constraintMax->getSDefinition().minusAssign(getError(), Equation::PCSourceRValue, symbolsManager());
    doesConstraint = false;
    normalization = constraintMax->getDefinition().getNormalization(false, &doesConstraint);
-   if (doesConstraint && getSError().simplifyWith(constraintMax->getDefinition(),
+   if (doesConstraint && getSError().simplifyWith(constraintMax->getDefinition(), false,
          *constraintMax, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3528,7 +3528,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool doesConstraint = false;
    BuiltReal normalization = constraintMin->getDefinition().getNormalization(minRelativeError.isNegative(),
          &doesConstraint);
-   if (doesConstraint && getSRealDomain().simplifyWith(constraintMin->getDefinition(),
+   if (doesConstraint && getSRealDomain().simplifyWith(constraintMin->getDefinition(), minRelativeError.isNegative(),
          *constraintMin, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3562,7 +3562,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    doesConstraint = false;
    normalization = constraintMax->getDefinition().getNormalization(!minRelativeError.isNegative(),
          &doesConstraint);
-   if (doesConstraint && getSRealDomain().simplifyWith(constraintMax->getDefinition(),
+   if (doesConstraint && getSRealDomain().simplifyWith(constraintMax->getDefinition(), !minRelativeError.isNegative(),
          *constraintMax, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3616,7 +3616,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool doesConstraint = false;
    BuiltReal normalization = constraintMin->getDefinition().getNormalization(!isNegativeDomain,
          &doesConstraint);
-   if (doesConstraint && getSError().simplifyWith(constraintMin->getDefinition(),
+   if (doesConstraint && getSError().simplifyWith(constraintMin->getDefinition(), !isNegativeDomain,
          *constraintMin, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
@@ -3650,7 +3650,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    doesConstraint = false;
    normalization = constraintMax->getDefinition().getNormalization(isNegativeDomain,
          &doesConstraint);
-   if (doesConstraint && getSError().simplifyWith(constraintMax->getDefinition(),
+   if (doesConstraint && getSError().simplifyWith(constraintMax->getDefinition(), isNegativeDomain,
          *constraintMax, normalization, symbolsManager())) {
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker

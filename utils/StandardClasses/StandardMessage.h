@@ -45,8 +45,7 @@ class EUserError {
   public:
    EUserError() {}
    virtual ~EUserError() {}
-   virtual std::ostream& print(std::ostream& out) const
-      {  return out << DefineSTD_UserError << std::endl; }
+   virtual std::ostream& print(std::ostream& out) const;
 };
 
 class ESPreconditionError : public EUserError {
@@ -69,17 +68,13 @@ class ESPreconditionError : public EUserError {
 #else
       ;
 #endif
-   virtual std::ostream& print(std::ostream& out) const
-      {  return out << DefineSTD_PreconditionError << ' ' << szText << '\n' << DefineSTD_File << ' '
-            << szFile << ", " << DefineSTD_Line << " " << uLine << std::endl;
-      }
+   virtual std::ostream& print(std::ostream& out) const;
 };
 
 class ENotImplemented : public EUserError {
   public:
    ENotImplemented() {}
-   virtual std::ostream& print(std::ostream& out) const
-      {  return out << DefineSTD_NotImplemented << ' ' << std::endl; }
+   virtual std::ostream& print(std::ostream& out) const;
 };
 
 inline std::ostream& operator<<(std::ostream& osOut, const EUserError& epeError)

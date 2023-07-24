@@ -30,17 +30,42 @@
 //   derivations are open.
 //
 
+#include <iostream>
 #include "StandardClasses/StandardClasses.hpp"
+
+namespace {}
+
+auto
+EUserError::print(std::ostream& out) const -> std::ostream&
+   {  return out << DefineSTD_UserError << std::endl; }
+
+auto
+ESPreconditionError::print(std::ostream& out) const -> std::ostream&
+   {  return out << DefineSTD_PreconditionError << ' ' << szText << '\n' << DefineSTD_File << ' '
+         << szFile << ", " << DefineSTD_Line << " " << uLine << std::endl;
+   }
 
 #if DefineDebugLevel > 1
 ESPreconditionError::ESPreconditionError(const char *textSource, int lineSource, const char* fileSource)
    :  uLine(lineSource), szFile(fileSource), szText(textSource) {}
 #endif
 
+auto
+ENotImplemented::print(std::ostream& out) const -> std::ostream&
+   {  return out << DefineSTD_NotImplemented << ' ' << std::endl; }
+
 
 #if DefineDebugLevel == 2
 
 int EnhancedObject::uCountInstances = 0;
+
+void
+EnhancedObject::writeMessages(std::ostream& out)
+{  if (uCountInstances > 0)
+      out << uCountInstances << " memory leaks" << std::endl;
+   else if (uCountInstances < 0)
+      out << -uCountInstances << " objects multiply destroyed" << std::endl;
+}
 
 #elif DefineDebugLevel > 2
 

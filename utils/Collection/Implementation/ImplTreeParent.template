@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplTreeParent.template
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplTreeParent.template
 // Description :
 //   Implementation of the classes GenericImplParentTree that define tree based
 //   collection implementations. The elements have a reference to their father

@@ -80,9 +80,12 @@ class TArray : public GenericArray {
             insertInitialValue(*this);
          initialValues.foreachDo(insertInitialValue);
       }
+   TArray(thisType&& source) { swap(source); }
    TArray(const thisType& source, AddMode dupMode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  GenericArray(source, dupMode, retrieveRegistrationFromCopy) {}
+   thisType& operator=(thisType&& source) { swap(source); return *this; }
+   thisType& operator=(const thisType& source) = default;
    Template2DefineCopy(TArray, Element, Cast)
    Template2DefineCollectionForAbstractCollect(TArray, TArrayCursor, Element, Cast)
 

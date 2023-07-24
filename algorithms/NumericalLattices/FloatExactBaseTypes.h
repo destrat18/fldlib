@@ -33,7 +33,8 @@
 #define NumericalDomains_FloatExactBaseTypesH
 
 #include "Numerics/Floating.h"
-#include <math.h>
+#include <cmath>
+#include <cfloat>
 
 namespace NumericalDomains {
 

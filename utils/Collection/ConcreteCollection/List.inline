@@ -155,6 +155,11 @@ GenericList::ElementNotification : public CursorNotification, protected ListCurs
    ElementNotification(const ImplListElement& element) : pileElement(&element) {}
    ElementNotification(const ElementNotification& source)
       :  CursorNotification(source), pileElement(source.pileElement) {}
+   ElementNotification& operator=(const ElementNotification& source)
+      {  CursorNotification::operator=(source);
+         pileElement = source.pileElement;
+         return *this;
+      }
    DefineCursorNotificationMethods(ElementNotification, GenericListCursor)
    DDefineAssign(ElementNotification)
 };
@@ -199,6 +204,13 @@ GenericList::BoundNotification : public CursorNotification, protected ListCursor
    BoundNotification(const BoundNotification& source)
       :  CursorNotification(source), pilGenericList(source.pilGenericList),
          pileStart(source.pileStart), pileEnd(source.pileEnd) {}
+   BoundNotification& operator=(const BoundNotification& source)
+      {  CursorNotification::operator=(source);
+         pilGenericList = source.pilGenericList;
+         pileStart = source.pileStart;
+         pileEnd = source.pileEnd;
+         return *this;
+      }
    DefineCursorNotificationMethods(BoundNotification, GenericListCursor)
    DDefineAssign(BoundNotification)
 };
@@ -229,6 +241,7 @@ GenericList::ChangeNotification : public ElementNotification {
    ChangeNotification(const ImplListElement& oldElement, ImplListElement& newElement)
       :  ElementNotification(oldElement), pileNewElement(&newElement) {}
    ChangeNotification(const ChangeNotification& source) = default;
+   ChangeNotification& operator=(const ChangeNotification& source) = default;
    DefineCursorNotificationMethods(ChangeNotification, GenericListCursor)
    DDefineAssign(ChangeNotification)
 };

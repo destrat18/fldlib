@@ -35,6 +35,7 @@
 #include "NumericalLattices/FloatAffineBaseCommon.h"
 #include "Numerics/Floating.h"
 #include <math.h>
+#include <float.h>
 
 namespace NumericalDomains {
 

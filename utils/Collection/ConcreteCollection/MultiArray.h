@@ -73,14 +73,14 @@ class MultiArray : public GenericMultiArray {
    typedef typename Key::TypeOfKey TypeOfKey;
 
   protected:
-   virtual bool acceptElement(const EnhancedObject& asource) const { return true; }
+   virtual bool acceptElement(const EnhancedObject& asource) const override { return true; }
    virtual EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
-         const VirtualCollectionCursor* cursor) const
-      {  return Cast::castTo(_getElement(parameters, (thisCursorType*) cursor)); }
+         const VirtualCollectionCursor* cursor) const override
+      {  return Cast::castTo(_getElement(parameters, const_cast<thisCursorType*>((const thisCursorType*) cursor))); }
 
    LocationResult _locateKey(const EnhancedObject& source, const ExtendedLocateParameters& parameters,
          VirtualMultiSortedCollectionCursor* cursor, const VirtualMultiSortedCollectionCursor* start,
-         const VirtualMultiSortedCollectionCursor* end) const
+         const VirtualMultiSortedCollectionCursor* end) const override
       {  return GenericMultiArray::_locateKey(source, parameters, cursor, start, end); }
 
    LocationResult _locateKey(typename Key::KeyType key, const ExtendedLocateParameters& parameters,
@@ -117,10 +117,12 @@ class MultiArray : public GenericMultiArray {
    MultiArray(const MultiArray<Element, Key, Cast>& source, AddMode mode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  GenericMultiArray(source, mode, retrieveRegistrationFromCopy) {}
+   MultiArray(MultiArray<Element, Key, Cast>&& source)
+      :  GenericMultiArray(std::move(source)) {}
    Template3DefineCopy(MultiArray, Element, Key, Cast)
    Template3DefineCollectionForAbstractCollect(MultiArray, MultiArrayCursor, Element, Key, Cast)
 
-   virtual const EnhancedObject& key(const EnhancedObject& element) const
+   virtual const EnhancedObject& key(const EnhancedObject& element) const override
       { return TypeOfKey::castToCopyHandler(Key::key((const Element&) Cast::castFrom(element))); }
 
 #define DefTypeElement Element
@@ -238,7 +240,7 @@ class TMultiArray : public GenericMultiArray {
    typedef GenericMultiArray inherited;
 
    virtual const EnhancedObject& key(const EnhancedObject& /* element */) const override
-      {  AssumeUncalled return *(const EnhancedObject*) nullptr; }
+      {  const EnhancedObject* result = nullptr; AssumeUncalled return *result; }
 
    LocationResult _locateKey(const EnhancedObject& /* source */, const ExtendedLocateParameters& /* parameters */,
          VirtualMultiSortedCollectionCursor* /* cursor */, const VirtualMultiSortedCollectionCursor* /* start */,
@@ -264,7 +266,7 @@ class TMultiArray : public GenericMultiArray {
          VirtualMultiSortedCollectionCursor* cursor=nullptr, const VirtualMultiSortedCollectionCursor* start=nullptr,
          const VirtualMultiSortedCollectionCursor* end=nullptr) const override
       {  return _locateKey(key((const TypeElement&) TypeCast::castFrom(source)), parameters,
-            (Cursor*) cursor, (Cursor*) start, (Cursor*) end);
+            (Cursor*) cursor, const_cast<Cursor*>((const Cursor*) start), const_cast<Cursor*>((const Cursor*) end));
       }
 
    virtual int _merge(const COL::ImplArray& source, int firstSourceIndex, int lastSourceIndex, bool doesDuplicate=false) override
@@ -275,7 +277,7 @@ class TMultiArray : public GenericMultiArray {
       { return TypeKey::key(getElement(parameters, cursor)); }
    virtual EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const VirtualCollectionCursor* cursor) const override
-      { return TypeCast::castTo(_getElement(parameters, (thisCursorType*) cursor)); }
+      { return TypeCast::castTo(_getElement(parameters, const_cast<thisCursorType*>((const thisCursorType*) cursor))); }
    TypeElement* _getElement(const ExtendedLocateParameters& parameters,
          const thisCursorType* cursor=nullptr) const
       {  return tgetElement(TemplateQueryParameters<thisType, inherited, TypeElement, KeyTraits, TypeCast>(),
@@ -299,6 +301,8 @@ class TMultiArray : public GenericMultiArray {
    TMultiArray(const TMultiArray<TypeElement, TypeKey, TypeCast>& source, AddMode mode=AMNoDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  GenericMultiArray(source, mode, retrieveRegistrationFromCopy) {}
+   TMultiArray(TMultiArray<TypeElement, TypeKey, TypeCast>&& source)
+      :  GenericMultiArray(std::move(source)) {}
    Template3DefineCopy(TMultiArray, TypeElement, TypeKey, TypeCast)
    Template3DefineCollectionForAbstractCollect(TMultiArray, TMultiArrayCursor, TypeElement, TypeKey, TypeCast)
 

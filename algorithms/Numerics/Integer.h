@@ -184,6 +184,8 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
 
      public:
       FormatParameters() : uLength(0) {}
+      FormatParameters(const STG::IOObject::FormatParameters& source) : uLength(0)
+         {  assignPart(source); }
       FormatParameters(const FormatParameters& source) = default;
       FormatParameters& operator=(const FormatParameters& source) = default;
 
@@ -215,6 +217,10 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
       FormatParameters& setIntegerCell() { setText(); setOwnField(TIntegerCell); return *this; }
       FormatParameters& setDecimal() { setText(); setOwnField(TDecimal); return *this; }
       FormatParameters& setHexaDecimal() { setText(); setOwnField(THexaDecimal); return *this; }
+      FormatParameters& setFullHexaDecimal(int length)
+         {  setText(); setOwnField(TFullHexaDecimal); uLength = length; return *this; }
+      FormatParameters& setFullBinary(int length)
+         {  setText(); setOwnField(TFullBinary); uLength = length; return *this; }
    };
 
   protected:
@@ -291,7 +297,10 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          inheritedImplementation::operator<<=(shift);
          return *this;
       }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
    thisType& operator>>=(int shift) { inheritedImplementation::operator>>=(shift); return *this; }
+#pragma GCC diagnostic pop
    void leftShiftLocal(int index, int shift)
       {  inheritedImplementation::assertSize((int) ((log_base_2()+shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
          inheritedImplementation::leftShiftLocal(shift, index);
@@ -349,6 +358,7 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
      public:
       DivisionResult() : inherited() {}
       DivisionResult(const DivisionResult& source) = default;
+      DivisionResult& operator=(const DivisionResult& source) = default;
       DivisionResult& setPartial() { mergePartialField(1); return *this; }
       DivisionResult& setTotal() { clearPartialField(); return *this; }
 
@@ -451,7 +461,11 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
 
    typedef Implementation::BitArray BitArray;
    BitArray bitArray(int index) { return inheritedImplementation::bitArray(index); }
+// diagnostic error of gcc due to inlining
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
    bool bitArray(int index) const { return inheritedImplementation::bitArray(index); }
+#pragma GCC diagnostic pop
    bool cbitArray(int index) const { return bitArray(index); }
 
    void setBitArray(int index, bool value) { inheritedImplementation::setBitArray(index, value); }

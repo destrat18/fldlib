@@ -158,7 +158,9 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
    void _remove(const ExtendedSuppressParameters& parameters, DefTypeCursor* cursor=nullptr);
    virtual void _removeAll(const ExtendedSuppressParameters& parameters,
          const VirtualCollectionCursor* start, const VirtualCollectionCursor* end=nullptr) override
-      {  _removeAll(parameters, (DefTypeCursor*) start, (DefTypeCursor*) end); }
+      {  _removeAll(parameters, const_cast<DefTypeCursor*>((const DefTypeCursor*) start),
+               const_cast<DefTypeCursor*>((const DefTypeCursor*) end));
+      }
    void _removeAll(const ExtendedSuppressParameters& parameters,
          const DefTypeCursor* start=nullptr, const DefTypeCursor* end=nullptr);
 
@@ -174,7 +176,7 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
          const VirtualCollectionCursor* start=nullptr, const VirtualCollectionCursor* end=nullptr) const override;
    virtual EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const VirtualCollectionCursor* cursor) const override
-      {  return _getElement(parameters, (DefTypeCursor*) cursor); }
+      {  return _getElement(parameters, const_cast<DefTypeCursor*>((const DefTypeCursor*) cursor)); }
    EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const DefTypeCursor* cursor=nullptr) const;
 
@@ -195,6 +197,7 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  DefTypeVirtualInheritedCollection(source, dupMode),
          ImplArray(source, dupMode==AMDuplicate, retrieveRegistrationFromCopy) {}
+   DefTypeCollection(DefTypeCollection&& source) { swap(source); }
 
    DefineCopy(DefTypeCollection)
    DDefineAssign(DefTypeCollection)
@@ -203,6 +206,8 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
    DefineCollectionForAbstractCollect(DefTypeCollection, DefTypeCursor)
    DefTypeCollection& operator=(const DefTypeCollection& source)
       {  DefTypeCollection::_fullAssign(source, ExtendedReplaceParameters()); return *this; }
+   DefTypeCollection& operator=(DefTypeCollection&& source)
+      {  swap(source); return *this; }
 
    virtual bool isValid() const override
       {  return DefTypeVirtualInheritedCollection::isValid() && ImplArray::isValid(); } 
@@ -255,8 +260,8 @@ class DefTypeCursor : public DefTypeVirtualInheritedCursor {
 
   public:
    DefTypeCursor(const DefTypeCollection& support) : DefTypeVirtualInheritedCursor(support), uIndex(-1) {}
-   DefTypeCursor(const DefTypeCursor& source)
-      : DefTypeVirtualInheritedCursor(source), uIndex(source.uIndex) {}
+   DefTypeCursor(const DefTypeCursor& source) = default;
+   DefTypeCursor& operator=(const DefTypeCursor& source) = default;
    DefineCopy(DefTypeCursor)
    DDefineAssign(DefTypeCursor)
    DefineCursorForAbstractCollect(DefTypeCollection, DefTypeCursor)

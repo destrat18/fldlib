@@ -36,6 +36,7 @@ namespace Numerics {}
 
 #include "Numerics/Integer.template"
 #include "Numerics/Floating.template"
+#include "Numerics/HostFloating.template"
 // #include "Numerics/Numerics.template"
 
 template class Numerics::TDoubleElement<Numerics::TFloatingBase<Numerics::DoubleTraits> >;

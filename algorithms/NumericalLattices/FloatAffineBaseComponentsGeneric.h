@@ -37,6 +37,7 @@
 #include "ForwardNumerics/BaseFloatingGeneric.h"
 #include "BackwardNumerics/BaseProjectionFloating.h"
 #include <math.h>
+#include <float.h>
 
 namespace NumericalDomains {
 

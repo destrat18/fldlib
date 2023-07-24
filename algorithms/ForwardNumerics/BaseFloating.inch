@@ -159,6 +159,8 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
   public:
 #ifdef DefineGeneric
    typedef TBaseStoreTraits BaseStoreTraits;
+#else
+   typedef UnsignedBaseStoreTraits BaseStoreTraits;
 #endif
    static const int BitSizeMantissa = UBitSizeMantissa;
    static const int BitSizeExponent = UBitSizeExponent;
@@ -170,7 +172,7 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
       }
    void retrieveChunk(void* destinationChunk, const CharChunk& chunk, int chunkSize) const
       {  AssumeCondition(chunkSize == (UBitSizeMantissa+UBitSizeExponent+1+7)/8)
-         memcpy(destinationChunk, (unsigned char*) chunk, chunkSize);
+         memcpy(destinationChunk, (const unsigned char*) chunk, chunkSize);
       }
    void clearChunk(CharChunk& chunk, int chunkSize) const
       {  AssumeCondition(chunkSize == (UBitSizeMantissa+UBitSizeExponent+1+7)/8)
@@ -650,6 +652,19 @@ class DefineBuiltDouble : protected DDouble::Access, protected TypeTraits {
          }
          else
             result -= biExponent;
+         return result;
+      }
+   typename TypeTraits::Exponent queryExponent(bool& isNegativeExponent) const
+      {  typename TypeTraits::Exponent result = TypeTraits::getZeroExponent(biExponent);
+         if (biExponent >= result) {
+            result = biExponent;
+            result -= TypeTraits::getZeroExponent(biExponent);
+            isNegativeExponent = false;
+         }
+         else {
+            result -= biExponent;
+            isNegativeExponent = true;
+         }
          return result;
       }
    void setBasicExponent(const typename TypeTraits::Exponent& exponent) { biExponent = exponent; }

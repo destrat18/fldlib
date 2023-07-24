@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplTree.h
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplTree.h
 // Description :
 //   Definition of the classes GenericTreeElement, ImplTreeCursor that define
 //   the elements and the cursors for the tree based collection implementations.
@@ -50,8 +50,8 @@ class GenericTreeElement : public EnhancedObject, public ImplTreeElement {
    GenericTreeElement() {}
    GenericTreeElement(VirtualCollection* sonsCollection)
       :  ImplTreeElement(sonsCollection) {}
-   GenericTreeElement(const GenericTreeElement& source)
-      :  EnhancedObject(source), ImplTreeElement(source) {}
+   GenericTreeElement(const GenericTreeElement& source) = default;
+   GenericTreeElement& operator=(const GenericTreeElement& source) = default;
    DefineCopy(GenericTreeElement)
    DDefineAssign(GenericTreeElement)
 
@@ -336,7 +336,7 @@ class GenericImplTree : public TImplTree<GenericTreeElement, GenericImplTreeCurs
 
   public:
    GenericImplTree() {}
-   GenericImplTree(const GenericImplTree& source) {}
+   GenericImplTree(const GenericImplTree& source) : inherited() {}
    GenericImplTree& operator=(const GenericImplTree& source) = default;
    void swap(GenericImplTree& source) { inherited::swap(source); }
 };

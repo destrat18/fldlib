@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplTreeParent.h
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplTreeParent.h
 // Description :
 //   Definition of the classes GenericImplParentTree that define tree based
 //   collection implementations. The elements have a reference to their father

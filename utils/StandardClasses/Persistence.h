@@ -89,7 +89,8 @@ struct TChunk {
    size_t length;
 
    TChunk() : string(nullptr), length(0) {}
-   TChunk(const TChunk<TypeChar>& source) = default;
+   TChunk(const thisType& source) = default;
+   thisType& operator=(const thisType& source) = default;
    thisType& setLocalLength(size_t localLength) { length = localLength; return *this; }
    thisType& setString(TypeChar* content) { string = content; return *this; }
 };
@@ -147,7 +148,8 @@ class IOObject : public EnhancedObject {
 
      public:
       FormatParameters() {}
-      FormatParameters(const FormatParameters& source) : ExtendedParameters(source) {}
+      FormatParameters(const FormatParameters& source) = default;
+      FormatParameters& operator=(const FormatParameters& source) = default;
 
       FormatParameters& assignPart(const FormatParameters& source)
          {  setOwnField(source.queryOwnField()); return *this; }
@@ -211,6 +213,7 @@ class IOObject : public EnhancedObject {
             assume((void*) &chunk);
             return *this;
          }
+      virtual ISBase& ignore(int n) { return *this; }
       virtual ISBase& assume(const VirtualStringProperty& /* text */) { return *this; }
       virtual ISBase& read(bool& /* b */, bool /* isRaw */) { return *this; }
       virtual ISBase& read(char& /* ch */, bool /* isRaw */) { return *this; }
@@ -326,6 +329,7 @@ class IOObject : public EnhancedObject {
      public:
       OSStream(std::ostream& source) : posOut(&source) {}
       OSStream(const OSStream& source) = default;
+      OSStream& operator=(const OSStream& source) = default;
 
       bool isValid() const { return (bool) posOut; }
       virtual bool isStreamBased() const { return true; }
@@ -340,7 +344,8 @@ class IOObject : public EnhancedObject {
 
   public:
    IOObject() {}
-   IOObject(const IOObject& source) : EnhancedObject(source) {}
+   IOObject(const IOObject& source) = default;
+   IOObject& operator=(const IOObject& source) = default;
    DefineCopy(IOObject)
 
    void read(ISBase& in, const FormatParameters& params) { _read(in, params); }

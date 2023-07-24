@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,9 +20,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : AbstractCollection.h
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : AbstractCollection.h
 // Description :
 //   Definition of the class AbstractCollection.
 //   It implements the cursor notion and it is the base class of all collections.
@@ -45,7 +43,8 @@ class PPAbstractCursor;
 class PureAbstractCollection : public EnhancedObject {
   public:
    PureAbstractCollection() {}
-   PureAbstractCollection(const PureAbstractCollection& source) : EnhancedObject(source) {}
+   PureAbstractCollection(const PureAbstractCollection& source) = default;
+   PureAbstractCollection& operator=(const PureAbstractCollection& source) = default;
    DefineCopy(PureAbstractCollection)
 };
 
@@ -57,8 +56,8 @@ class AbstractCollection : public PureAbstractCollection, private PNT::SharedEle
       {  return PureAbstractCollection::_compare(asource); }
 
    AbstractCollection() {}
-   AbstractCollection(const AbstractCollection& source)
-      :  PureAbstractCollection(source), PNT::SharedElement(source) {}
+   AbstractCollection(const AbstractCollection& source) = default;
+   AbstractCollection& operator=(const AbstractCollection& source) = default;
 
    virtual AbstractCursor* createNewCursor() const;
    virtual void assumeCompatibility(AbstractCursor& cursor) const;
@@ -125,6 +124,7 @@ class PureAbstractCursor : public EnhancedObject {
   public:
    PureAbstractCursor() {}
    PureAbstractCursor(const PureAbstractCursor& source) = default;
+   PureAbstractCursor& operator=(const PureAbstractCursor& source) = default;
    DefineCopy(PureAbstractCursor)
 };
 
@@ -179,6 +179,7 @@ class PPAbstractCursor : public PNT::PassPointer<AbstractCursor> {
    PPAbstractCursor(const PPAbstractCursor& source, Duplicate duplicate)
       :  PNT::PassPointer<AbstractCursor>(source, duplicate) {}
    DefineCopy(PPAbstractCursor)
+   PPAbstractCursor& operator=(const PPAbstractCursor& source) = default;
    void assign(AbstractCursor* cursor, Init)
       {  PNT::PassPointer<AbstractCursor>::assign(cursor, Init()); }
 };
@@ -222,7 +223,8 @@ class AbstractCollection::CursorNotification
 
   public:
    CursorNotification() {}
-   CursorNotification(const CursorNotification& source) : inherited(source) {}
+   CursorNotification(const CursorNotification& source) = default;
+   CursorNotification& operator=(const CursorNotification& source) = default;
    DefineCursorNotificationMethods(CursorNotification, AbstractCursor)
 
    void setOrigin(const AbstractCursor& originCursor)

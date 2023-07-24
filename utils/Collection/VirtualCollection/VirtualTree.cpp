@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualTree.cpp
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualTree.cpp
 // Description :
 //   Implementation of the class VirtualTree.
 //
@@ -49,6 +49,7 @@ class VirtualTree::RouteCopyAction::BasicElement : public ImplListElement {
   public:
    BasicElement(const EnhancedObject& sourceElement) : peoSourceElement(&sourceElement) {}
    BasicElement(const BasicElement& source) = default;
+   BasicElement& operator=(const BasicElement& source) = default;
    DefineCopy(BasicElement)
    DDefineAssign(BasicElement)
 
@@ -139,7 +140,7 @@ VirtualTree::pqueryCount(const ExtendedTreeLocateParameters& parameters,
             return isEmpty() ? 0 : 1;
          if ((start && !end->isValid()) || (end && !start->isValid())) {
             PPCursor cursor = newCursor();
-            *cursor = (start) ? *start : *end;
+            cursor->assign((start) ? *start : *end);
             return cursor->setToFather() ? _querySonsCount(*cursor) : (isEmpty() ? 0 : 1);
          };
       }

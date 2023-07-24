@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -50,7 +48,7 @@ TMultiMap<TypeTraits>::correctDuplicationSplitReceiver(
       VirtualCollection::RelativePosition direction, int addReceiver, bool isFirstExcluded) {
    typename SortedCollection::Cursor cursor(scSortedCollection);
    if (scursor) {
-      cursor = *scursor;
+      cursor.assign(*scursor);
       if (isFirstExcluded && cursor.isValid()) {
          if (direction == COL::VirtualCollection::RPAfter)
             cursor.setToNext();
@@ -108,17 +106,17 @@ TMultiMap<TypeTraits>::correctDuplicationCopyReceiver(const thisType& source,
    typename SortedCollection::Cursor cursor(scSortedCollection), sourceCursor(source.scSortedCollection);
    if (direction == COL::VirtualCollection::RPAfter) {
       if (sourceStart)
-         sourceCursor = *sourceStart;
+         sourceCursor.assign(*sourceStart);
       else
          sourceCursor.setToFirst();
    }
    else if (sourceEnd)
-      sourceCursor = *sourceEnd;
+      sourceCursor.assign(*sourceEnd);
    else
       sourceCursor.setToLast();
 
    if (scursor) {
-      cursor = *scursor;
+      cursor.assign(*scursor);
       if (isFirstExcluded && cursor.isValid()) {
          if (direction == COL::VirtualCollection::RPAfter)
             cursor.setToNext();
@@ -392,13 +390,13 @@ TMultiMap<TypeTraits>::paddAll(const thisType& source,
    bool isForward = !parameters.isRemote() || !parameters.isAfter();
    if (isForward) {
       if (startSource)
-         *sourceCursor = *startSource;
+         sourceCursor->assign(*startSource);
       else
          sourceCursor->setToFirst();
    }
    else {
       if (endSource)
-         *sourceCursor = *endSource;
+         sourceCursor->assign(*endSource);
       else
          sourceCursor->setToLast();
    };

@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */

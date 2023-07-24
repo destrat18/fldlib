@@ -1200,7 +1200,7 @@ class TMultipleSortedCollection : public VirtualMultiSortedCollection, public DM
       }
    virtual EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const VirtualCollectionCursor* cursor) const
-      {  return BaseCast::castTo(_getElement(parameters, (Cursor*) cursor)); }
+      {  return BaseCast::castTo(_getElement(parameters, const_cast<Cursor*>((const Cursor*) cursor))); }
    CommonElement* _getElement(const ExtendedLocateParameters& parameters, const Cursor* cursor=nullptr) const;
 
    virtual LocationResult _locate(const EnhancedObject& source, const ExtendedLocateParameters& parameters,

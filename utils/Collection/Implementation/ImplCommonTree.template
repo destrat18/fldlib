@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplCommonTree.template
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplCommonTree.template
 // Description :
 //   Implementation of a common implementation for all tree collections.
 //

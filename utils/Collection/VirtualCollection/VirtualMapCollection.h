@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualMapCollection.h
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualMapCollection.h
 // Description :
 //   Definition of the template class TVirtualMap.
 //
@@ -330,6 +330,7 @@ class TVirtualMapCollection : public VirtualCollection, protected DVirtualMapCol
    TVirtualMapCollection() {}
    TVirtualMapCollection(const TVirtualMapCollection<TypeKeyTraits>& source, AddMode dupMode=AMNoDuplicate)
       :  VirtualCollection(source, dupMode) {}
+   TVirtualMapCollection& operator=(const TVirtualMapCollection<TypeKeyTraits>& source) = default;
 
    void paddAll(const thisType& source, const ExtendedInsertionParameters& parameters,
          Cursor* cursor, const Cursor* startSource, const Cursor* endSource);
@@ -389,10 +390,10 @@ class TVirtualMapCollection : public VirtualCollection, protected DVirtualMapCol
 template <class TypeKeyTraits>
 class TVirtualMapCollectionCursor : public VirtualCollectionCursor {
   protected:
-   TVirtualMapCollectionCursor(const TVirtualMapCollectionCursor<TypeKeyTraits>& source)
-      :  VirtualCollectionCursor(source) {}
+   TVirtualMapCollectionCursor(const TVirtualMapCollectionCursor<TypeKeyTraits>& source) = default;
    TVirtualMapCollectionCursor(const TVirtualMapCollection<TypeKeyTraits>& support)
       :  VirtualCollectionCursor(support) {}
+   TVirtualMapCollectionCursor& operator=(const TVirtualMapCollectionCursor<TypeKeyTraits>& source) = default;
 
    virtual typename TypeKeyTraits::ControlKeyType _queryKey() const
       {  AssumeUncalled typename TypeKeyTraits::ControlKeyType* result = nullptr; return *result; }
@@ -782,7 +783,7 @@ class TInterfaceMapCollection : public TVirtualMap<Element, TypeKeyTraits, Cast>
       }
    virtual int _queryCount(const ExtendedLocateParameters& parameters,
       const VirtualCollectionCursor* startCursor, const VirtualCollectionCursor* endCursor) const
-      {  return implementation.queryCount(parameters, implementation(startCursor),
+      {  return tcImplementation.queryCount(parameters, implementation(startCursor),
             implementation(endCursor));
       }
    int _queryCount(const ExtendedLocateParameters& parameters,

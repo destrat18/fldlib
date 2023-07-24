@@ -70,6 +70,7 @@ class BasicList : public GenericList {
          {  if (doesDuplicate && peoElement)
                peoElement = peoElement->createCopy();
          }
+      BasicListElement& operator=(const BasicListElement& source) = default;
       DefineCopy(BasicListElement)
       DDefineAssign(BasicListElement)
       const PEnhancedObject& element() const { return peoElement; }
@@ -137,7 +138,9 @@ class BasicList : public GenericList {
       {  return castToElement(*GenericList::_getElement(parameters, cursor)); }
    EnhancedObject* _getElement(const ExtendedLocateParameters& parameters,
          const BasicListCursor* cursor=nullptr) const
-      {  return castToElement(*GenericList::_getElement(parameters, (GenericListCursor*) cursor)); }
+      {  return castToElement(*GenericList::_getElement(parameters,
+               const_cast<GenericListCursor*>((const GenericListCursor*) cursor)));
+      }
    virtual void _gotoReference(const EnhancedObject& element) { AssumeUncalled }
 
   public:
@@ -152,6 +155,7 @@ class BasicList : public GenericList {
       }
    BasicList(const BasicList& source, AddMode dupMode=AMNoDuplicate,
       const VirtualCast* retrieveRegistrationFromCopy=nullptr);
+   BasicList(BasicList&& source) { swap(source); }
 
    DefineCopy(BasicList)
    BasicList& operator=(const BasicList& source)
@@ -159,6 +163,8 @@ class BasicList : public GenericList {
          GenericList::_fullAssign(source, ExtendedReplaceParameters().setDuplicate());
          return *this;
       }
+   BasicList& operator=(BasicList&& source)
+      {  swap(source); return *this; }
 
    DefineCollectionForAbstractCollect(BasicList, BasicListCursor)
 
@@ -268,6 +274,8 @@ class TBasicList : public BasicList {
       }
    TBasicList(const TBasicList<Element, Cast>& source, AddMode dupMode=AMNoDuplicate)
       :  BasicList(source, dupMode) {}
+   TBasicList(TBasicList<Element, Cast>&& source)
+      :  BasicList(std::move(source)) {}
    Template2DefineCopy(TBasicList, Element, Cast)
    Template2DefineCollectionForAbstractCollect(TBasicList, TBasicListCursor, Element, Cast)
 

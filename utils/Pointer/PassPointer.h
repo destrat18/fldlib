@@ -99,7 +99,7 @@ class CPassPointer : public Pointer {
    CPassPointer() {}
    CPassPointer(Element* element, Init) : Pointer(Element::castToCopyHandler(element), Init()) {}
    CPassPointer(const Element& element) : Pointer(element.createCopy(), Init()) {}
-   CPassPointer(const CPassPointer<Element>& source)
+   CPassPointer(const CPassPointer<Element>& source) : Pointer()
       {  if (source.Pointer::isValid())
             Pointer::setElement(source.Pointer::getElement().createCopy());
       }
@@ -135,6 +135,8 @@ class CPassPointer : public Pointer {
 
 template<class Element, class PassDerived>
 class TPassPointer : public PassDerived {
+  private:
+   typedef TPassPointer<Element, PassDerived> thisType;
   public:
    typedef Element* PElement;
 
@@ -145,8 +147,11 @@ class TPassPointer : public PassDerived {
    TPassPointer(const PassDerived& source) : PassDerived(source) {}
    TPassPointer(const PassDerived& source, typename PassDerived::Duplicate duplicate)
       : PassDerived(source, duplicate) {}
+   TPassPointer(const thisType& source) = default;
+   TPassPointer& operator=(const thisType& source) = default;
 
    Template2DefineCopy(TPassPointer, Element, PassDerived)
+   DDefineAssign(thisType)
    void assign(const PassDerived& source) { PassDerived::assign(source); }
    void assign(Element* newElement, Pointer::Init) { PassDerived::assign(newElement, Pointer::Init()); }
    void setElement(const Element& element) { PassDerived::setElement(element); }

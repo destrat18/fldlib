@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualTree.template
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualTree.template
 // Description :
 //   Implementation of the iteration methods of the class VirtualTree.
 //
@@ -56,9 +56,9 @@ VirtualTree::foreachSonLevelSDo(TemplateParameters, Action& action,
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
 
    if (start)
-      *cursor = *start;
+      cursor->assign(*start);
    else if (end)
-      *cursor = *end;
+      cursor->assign(*end);
    else if (!cursor->setToRoot())
       return true;
    Element* oldElement = nullptr;
@@ -115,7 +115,7 @@ VirtualTree::foreachBrotherLevelSDo(TemplateParameters, Action& action,
             ? (action.init(thisTree, *cursor) && action.end(thisTree, *cursor)) : true;
       }
       else if (!start) { // end != nullptr
-         *cursor = *end;
+         cursor->assign(*end);
 
          if (!cursor->setToFirstBrother()
                || (cursor->isEqual(*end) && parameters.isLastExcluded()))
@@ -136,7 +136,7 @@ VirtualTree::foreachBrotherLevelSDo(TemplateParameters, Action& action,
          return action.end(thisTree, *cursor);
       }
       else { // (start != nullptr) && (end == nullptr)
-         *cursor = *start;
+         cursor->assign(*start);
 
          if (parameters.isFirstExcluded() && !cursor->setToNextBrother())
             return true;
@@ -153,7 +153,7 @@ VirtualTree::foreachBrotherLevelSDo(TemplateParameters, Action& action,
       };
    }
    else {
-      *cursor = *start;
+      cursor->assign(*start);
 
       if (parameters.isFirstExcluded()) {
          if (start->isEqual(*end) || (cursor->setToNextBrother()
@@ -190,7 +190,7 @@ VirtualTree::foreachMultiSonLevelSDo(TemplateParameters, Action& action,
    const TypeTree& thisTree = ((const TypeTree&) *this);
 
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
-   *cursor = *start;
+   cursor->assign(*start);
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
@@ -447,7 +447,7 @@ VirtualTree::foreachMultiBrotherLevelSDo(TemplateParameters, Action& action,
    const TypeTree& thisTree = ((const TypeTree&) *this);
 
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
-   *cursor = *start;
+   cursor->assign(*start);
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
@@ -572,7 +572,7 @@ VirtualTree::foreachInnerSonsLevelSDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if (hasSons(*cursor)) {
          cursor->setToInnerFirstSon();
          doesExcludeFirst = false;
@@ -646,7 +646,7 @@ VirtualTree::foreachBrothersSDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if ((startMode == VirtualTreeCursor::VMInvalidCursor) || (startMode == VirtualTreeCursor::VMDownCursor)) {
          cursor->setToFather();
          doesExcludeFirst = false;
@@ -756,7 +756,7 @@ VirtualTree::foreachSonsSDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if ((startMode == VirtualTreeCursor::VMInvalidCursor) || (startMode == VirtualTreeCursor::VMDownCursor)) {
          cursor->setToFather();
          doesExcludeFirst = false;
@@ -1018,9 +1018,9 @@ VirtualTree::foreachSonLevelSReverseDo(TemplateParameters, Action& action,
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
 
    if (start)
-      *cursor = *start;
+      cursor->assign(*start);
    else if (end)
-      *cursor = *end;
+      cursor->assign(*end);
    else if (!cursor->setToRoot())
       return true;
    Element* oldElement = nullptr;
@@ -1077,7 +1077,7 @@ VirtualTree::foreachBrotherLevelSReverseDo(TemplateParameters, Action& action,
             ? (action.init(thisTree, *cursor) && action.end(thisTree, *cursor)) : true;
       }
       else if (!start) { // end != nullptr
-         *cursor = *end;
+         cursor->assign(*end);
 
          if (!cursor->setToLastBrother()
                || (cursor->isEqual(*end) && parameters.isLastExcluded()))
@@ -1098,7 +1098,7 @@ VirtualTree::foreachBrotherLevelSReverseDo(TemplateParameters, Action& action,
          return action.end(thisTree, *cursor);
       }
       else { // (start != nullptr) && (end == nullptr)
-         *cursor = *start;
+         cursor->assign(*start);
 
          if (parameters.isFirstExcluded() && !cursor->setToPreviousBrother())
             return true;
@@ -1115,7 +1115,7 @@ VirtualTree::foreachBrotherLevelSReverseDo(TemplateParameters, Action& action,
       };
    }
    else {
-      *cursor = *start;
+      cursor->assign(*start);
 
       if (parameters.isFirstExcluded()) {
          if (start->isEqual(*end) || (cursor->setToPreviousBrother()
@@ -1152,7 +1152,7 @@ VirtualTree::foreachMultiSonLevelSReverseDo(TemplateParameters, Action& action,
    const TypeTree& thisTree = ((const TypeTree&) *this);
 
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
-   *cursor = *start;
+   cursor->assign(*start);
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
@@ -1409,7 +1409,7 @@ VirtualTree::foreachMultiBrotherLevelSReverseDo(TemplateParameters, Action& acti
    const TypeTree& thisTree = ((const TypeTree&) *this);
 
    typename TypeTree::PPCursor cursor = thisTree.newCursor();
-   *cursor = *start;
+   cursor->assign(*start);
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
@@ -1534,7 +1534,7 @@ VirtualTree::foreachInnerSonsLevelSReverseDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if (hasSons(*cursor)) {
          cursor->setToInnerLastSon();
          doesExcludeFirst = false;
@@ -1608,7 +1608,7 @@ VirtualTree::foreachBrothersSReverseDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if ((startMode == VirtualTreeCursor::VMInvalidCursor) || (startMode == VirtualTreeCursor::VMDownCursor)) {
          cursor->setToFather();
          doesExcludeFirst = false;
@@ -1718,7 +1718,7 @@ VirtualTree::foreachSonsSReverseDo(TemplateParameters, Action& action,
       endMode = end ? end->_getMode() : VirtualTreeCursor::VMTree;
    bool doesExcludeLast = parameters.isLastExcluded(), doesExcludeFirst = parameters.isFirstExcluded();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if ((startMode == VirtualTreeCursor::VMInvalidCursor) || (startMode == VirtualTreeCursor::VMDownCursor)) {
          cursor->setToFather();
          doesExcludeFirst = false;

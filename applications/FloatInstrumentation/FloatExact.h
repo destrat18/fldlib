@@ -33,6 +33,7 @@
 #define FloatInstrumentation_FloatExactH
 
 #include "NumericalAnalysis/FloatExactExecutionPath.h"
+#include <iostream>
 #include "FloatInstrumentation/FloatExact.inch"
 
 namespace NumericalDomains { namespace DDoubleExact {

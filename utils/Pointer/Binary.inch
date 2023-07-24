@@ -101,6 +101,7 @@ class DefineDeclareTypeBinaryTree : public CustomImplBinaryTree {
       Cursor(const Cursor& source) : inherited(source) {}
       Cursor& operator=(const Cursor& source) = default;
       DefineCopy(Cursor)
+      DDefineAssign(Cursor)
 
 #ifdef DefineTypeBinaryParent
       bool setToReference(Node* node)
@@ -326,19 +327,22 @@ class DefineDeclareTypeBinaryTree : public CustomImplBinaryTree {
    class InsertionNotification : public BinaryInsertionNotification {
      public:
       InsertionNotification() {}
-      InsertionNotification(const InsertionNotification& source) : BinaryInsertionNotification(source) {}
+      InsertionNotification(const InsertionNotification& source) = default;
+      InsertionNotification& operator=(const InsertionNotification& source) = default;
       void apply(Cursor& cursor) const { BinaryInsertionNotification::apply(trace(cursor)); }
    };
    class SuppressionNotification : public BinarySuppressionNotification {
      public:
       SuppressionNotification() {}
-      SuppressionNotification(const SuppressionNotification& source) : BinarySuppressionNotification(source) {}
+      SuppressionNotification(const SuppressionNotification& source) = default;
+      SuppressionNotification& operator=(const SuppressionNotification& source) = default;
       void apply(Cursor& cursor) const { BinarySuppressionNotification::apply(trace(cursor)); }
    };
    class ReplaceNotification : public BinaryReplaceNotification {
      public:
       ReplaceNotification() {}
-      ReplaceNotification(const ReplaceNotification& source) : BinaryReplaceNotification(source) {}
+      ReplaceNotification(const ReplaceNotification& source) = default;
+      ReplaceNotification& operator=(const ReplaceNotification& source) = default;
       void apply(Cursor& cursor) const { BinaryReplaceNotification::apply(trace(cursor)); }
    };
 #else // DefineTypeBinaryParent
@@ -348,15 +352,15 @@ class DefineDeclareTypeBinaryTree : public CustomImplBinaryTree {
    class SuppressionNotification : public BinaryParentSuppressionNotification {
      public:
       SuppressionNotification() {}
-      SuppressionNotification(const SuppressionNotification& source)
-         : BinaryParentSuppressionNotification(source) {}
+      SuppressionNotification(const SuppressionNotification& source) = default;
+      SuppressionNotification& operator=(const SuppressionNotification& source) = default;
       void apply(Cursor& cursor) const {  BinaryParentSuppressionNotification::apply(cursor); }
    };
    class ReplaceNotification : public BinaryParentReplaceNotification {
      public:
       ReplaceNotification() {}
-      ReplaceNotification(const ReplaceNotification& source)
-         : BinaryParentReplaceNotification(source) {}
+      ReplaceNotification(const ReplaceNotification& source) = default;
+      ReplaceNotification& operator=(const ReplaceNotification& source) = default;
       void apply(Cursor& cursor) const {  BinaryParentReplaceNotification::apply(cursor); }
    };
 #endif // DefineTypeBinaryParent
@@ -429,6 +433,7 @@ class DefineDeclareTypeBinaryTree : public CustomImplBinaryTree {
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
       :  inherited(source)
       {  if (doesDuplicate) duplicate(source, retrieveRegistrationFromCopy); }
+   DefineDeclareTypeBinaryTree& operator=(const DefineTypeBinaryTree& source) = default;
    DefineCopy(DefineDeclareTypeBinaryTree)
    DDefineAssign(DefineDeclareTypeBinaryTree)
 

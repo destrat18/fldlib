@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,9 +20,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualCollection.cpp
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualCollection.cpp
 // Description :
 //   Implementation of the class VirtualCollection.
 //
@@ -36,6 +34,7 @@ namespace COL {}
 
 #include "Pointer/Pointer.template"
 //#include "Collection/Collection.template"
+#include "Collection/VirtualCollection/VirtualCollection.template"
 
 namespace COL {
 
@@ -89,7 +88,7 @@ VirtualCollection::pqueryCount(const ExtendedLocateParameters& parameters,
    VirtualCollection::PPCursor cursor = newCursor();
    bool doesContinue = true;
    if (startCursor) {
-      *cursor = *startCursor;
+      cursor->assign(*startCursor);
       doesContinue = (parameters.isAfter() || parameters.isUndefined())
          ? cursor->setToNext() : (cursor->isValid() || cursor->setToFirst());
    };
@@ -239,4 +238,5 @@ VirtualCollectionCursor::operator-=(int add) {
 } // end of namespace COL
 
 // template int COL::ImplArray::merge<TemplateElementKeyCastParameters<EnhancedObject, COL::VirtualSortedCollection::SimpleKey, SimpleCast> >(TemplateElementKeyCastParameters<EnhancedObject, COL::VirtualSortedCollection::SimpleKey, SimpleCast> const&, COL::ImplArray const&, int, int, bool, VirtualCast const*);
+template bool COL::VirtualCollection::foreachDo<std::function<bool (EnhancedObject&)>, TemplateElementCastParameters<EnhancedObject, SimpleCast> >(TemplateElementCastParameters<EnhancedObject, SimpleCast>, std::function<bool (EnhancedObject&)>&, COL::DVirtualCollection::ExtendedLocateParameters const&, COL::VirtualCollectionCursor const*, COL::VirtualCollectionCursor const*) const;
 

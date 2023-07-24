@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : TreeCursorField.inline
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : TreeCursorField.inline
 // Description :
 //   Definition of intern classes to GenericTreeCursor.
 //
@@ -42,6 +42,7 @@ class CollectionCursorLevel : public ImplListElement {
             apvcCursor.absorbElement(cursor.extractElement());
       }
    CollectionCursorLevel(const CollectionCursorLevel& source) = default;
+   CollectionCursorLevel& operator=(const CollectionCursorLevel& source) = default;
    DefineCopy(CollectionCursorLevel)
    DDefineAssign(CollectionCursorLevel)
 
@@ -104,7 +105,7 @@ class CollectionCursorsStack : public TList<CollectionCursorLevel> {
       }
    VirtualCollectionCursor& lastCursor() const { return getLast().cursor(); }
    GenericTreeElement& lastElement() const 
-      {  return (GenericTreeElement&) getLast().getCursor().elementAt(); }
+      {  return (GenericTreeElement&) getLast().getCursor().elementSAt(); }
    VirtualCollectionCursor& parentCursor() const
       {  Cursor cursor(*this);
          bool isValid = cursor.setToLast() && cursor.setToPrevious();

@@ -80,7 +80,7 @@ class MngPointer : public Pointer {
       {  element->lock(); AssumeCondition(element->getReferencedCounter() == 1); }
    MngPointer(const MngPointer& source, Duplicate)
       :  Pointer(source.Pointer::isValid() ? source.Pointer::getElement().createCopy() : nullptr, Init())
-      {  getElement().lock(); }
+      {  if (Pointer::isValid()) getElement().lock(); }
    MngPointer(const MngPointer& source) : Pointer(source)
       {  if (Pointer::isValid()) getElement().lock(); }
    MngPointer& operator=(const MngPointer& source);
@@ -128,7 +128,8 @@ class TMngPointer : public MngPointer {
       :  MngPointer((MngElement*) Cast::castTo(element), Init()) {}
    TMngPointer(const TMngPointer<Element, Cast>& source, Duplicate)
       :  MngPointer(source, Duplicate()) {}
-   TMngPointer(const TMngPointer<Element, Cast>& source) : MngPointer(source) {}
+   TMngPointer(const TMngPointer<Element, Cast>& source) = default;
+   TMngPointer<Element, Cast>& operator=(const TMngPointer<Element, Cast>& source) = default;
 
    Template2DefineCopy(TMngPointer, Element, Cast)
    DTemplate2Assign(TMngPointer, Element, Cast)

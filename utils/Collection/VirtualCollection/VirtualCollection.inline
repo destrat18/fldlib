@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualCollection.inline
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualCollection.inline
 // Description :
 //   Définition of the inline methods of the class VirtualCollection.
 //

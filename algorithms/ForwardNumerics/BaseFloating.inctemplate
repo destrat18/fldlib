@@ -2883,7 +2883,9 @@ DefineBuiltDouble<TypeTraits>::divAssign(DefineBaseTypeConstReference value, Rea
       typedef UnsignedBaseStoreTraits BaseStoreTraits;
 #endif
       int shift = (bitSizeMantissa()+1 - mantissa.log_base_2());
+#if !defined(DefineGeneric) && (!defined(DefineDebugLevel) || DefineDebugLevel != 1)
       AssumeCondition((BaseStoreTraits::log_base_2(value) == shift) || (BaseStoreTraits::log_base_2(value) == (shift+1)))
+#endif
       DefineBaseType leftQuotient = 0x0;
       if ((shift == (int) (DefineSizeofBaseTypeInBits/2+1))
 #ifndef DefineGeneric

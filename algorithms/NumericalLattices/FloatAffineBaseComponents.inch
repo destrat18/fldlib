@@ -90,6 +90,7 @@
 #define DefineBuiltDoubleTraits GBuiltDoubleTraits
 #define DefineBuiltReal TGBuiltReal
 #define DefineReadDouble TGReadDouble
+#define DefineBuiltDoubleTraits GBuiltDoubleTraits
 #define DefineBuiltDouble TGBuiltDouble
 #define DefineRealMantissaExponentTemplateParameters(RealBitsNumber, SizeMantissa, SizeExponent) \
    <BaseStoreTraits, RealBitsNumber, SizeMantissa, SizeExponent>
@@ -355,14 +356,13 @@ DefineSetContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble,
 #pragma GCC diagnostic ignored "-Wshift-count-overflow"
 #endif
 
-      AssumeCondition((FloatDigits::UBitSizeExponent >= DefineSizeofBaseTypeInBits)
 #ifndef DefineGeneric
-            || (((~0U << FloatDigits::UBitSizeExponent) & exponent) == 0)
+      AssumeCondition((FloatDigits::UBitSizeExponent >= DefineSizeofBaseTypeInBits)
+            || (((~0U << FloatDigits::UBitSizeExponent) & exponent) == 0))
 #else
-            || BaseStoreTraits::isZeroValue(BaseStoreTraits::getHighPart(exponent,
-                  FloatDigits::UBitSizeExponent))
+      AssumeCondition((FloatDigits::UBitSizeExponent >= DefineSizeofBaseTypeInBits)
+            || BaseStoreTraits::isZeroValue(BaseStoreTraits::getHighPart(exponent, FloatDigits::UBitSizeExponent)))
 #endif
-         )
       // AssumeCondition((TypeBuiltDouble::BitSizeExponent == DefineSizeofBaseTypeInBits)
       //    #ifndef DefineGeneric
       //       || (((~1U << (FloatDigits::UBitSizeExponent-1)) & exponent) == 0)
@@ -1283,9 +1283,8 @@ class DefineEquation
 
    BuiltReal getNormalization(bool isNegative, bool* doesConstraint=nullptr,
          bool hasExternalCoefficient=false) const;
-
-   bool simplifyWith(const thisType& constraint, Symbol& definedSymbol,
-         const BuiltReal& constraintNormalization,
+   bool simplifyWith(const thisType& constraint, bool isNegative,
+         Symbol& definedSymbol, const BuiltReal& constraintNormalization,
          SymbolsManager& manager, bool hasExternalCoefficient=false);
    bool simplifyAllEquations(Symbol& symbol, bool isNegative, SymbolsManager& manager,
          bool hasExternalCoefficient=false) const;
@@ -2658,31 +2657,42 @@ class DefineConstraint : public PNT::MngElement, public STG::IOObject {
       Pointer(DefineConstraint DefineEquationTemplateParameters(URealBitsNumber)* constraint,
             typename inherited::Init init)
          :  inherited(constraint, init) {}
-      Pointer(const Pointer& source) : inherited(source) {}
+      Pointer(const Pointer& source) = default;
+      Pointer& operator=(const Pointer& source) = default;
 
       void release() { inherited::release(); }
    };
 
    class ValueForSymbol : public EnhancedObject {
+     public:
+      enum Side { SUndefined, SPositive, SNegative, SBoth };
      private:
       const Symbol* psSymbol;
-      bool fNegative;
+      Side sSide; // not a boolean, because of transferVertex
       BuiltReal dSymbolValue; // +1 if fNegative, -1 if !fNegative or other
 
      public:
       ValueForSymbol(const Symbol& symbol)
-         :  psSymbol(&symbol), fNegative(true), dSymbolValue(1U) {}
+         :  psSymbol(&symbol), sSide(SNegative), dSymbolValue(1U) {}
       ValueForSymbol(const ValueForSymbol& source) = default;
       ValueForSymbol& operator=(const ValueForSymbol& source) = default;
       DefineCopy(ValueForSymbol)
       DDefineAssign(ValueForSymbol)
 
-      bool isNegative() const { return fNegative; }
-      bool isPositive() const { return !fNegative; }
+      bool isSureNegative() const { return sSide == SNegative; }
+      bool isSurePositive() const { return sSide == SPositive; }
+      bool mayBeNegative() const { return sSide != SPositive; }
+      bool mayBePositive() const { return sSide != SNegative; }
+      Side getSide() const { return sSide; }
+      Side getOtherSide() const { return (sSide == SNegative) ? SPositive : (sSide == SPositive ? SNegative : sSide); }
+      void setSide(Side side) { sSide = side; }
       const Symbol& getSymbol() const { return *psSymbol; }
       const BuiltReal& getSymbolValue() const { return dSymbolValue; }
       BuiltReal& symbolValue() { return dSymbolValue; }
-      void changeDirection() { fNegative = !fNegative; }
+      void changeDirection()
+         {  if (sSide == SPositive) sSide = SNegative;
+            else if (sSide == SNegative) sSide = SPositive;
+         }
 
       class Key {
         public:
@@ -2994,6 +3004,24 @@ class DefineConstraint : public PNT::MngElement, public STG::IOObject {
    const Equation& getEquation() const { return eEquation; }
    Equation& getSEquation() { return eEquation; }
    bool isNegative() const { return fNegative; }
+   bool isSatisfiable() const 
+      {  BuiltReal normalization(eEquation.getCentral());
+         if (fNegative)
+            normalization.opposite();
+         typename Equation::Cursor cursor(eEquation);
+         auto& maxParams = TypeBaseFloatAffine::maxParams();
+         while (cursor.setToNext()) {
+            AssumeCondition(dynamic_cast<const typename Equation::Coefficient*>(&cursor.globalElementAt()))
+            const BuiltReal& coefficient = ((const typename Equation::Coefficient&)
+                  cursor.globalElementAt()).getValue();
+            if (coefficient.isPositive())
+               normalization.plusAssign(coefficient, maxParams);
+            else
+               normalization.minusAssign(coefficient, maxParams);
+            maxParams.clear();
+         };
+         return normalization.isPositive() || normalization.isZero();
+      }
 
    typedef typename BuiltReal::ReadParameters RealReadParameters;
    void swap(thisType& source)
@@ -3080,6 +3108,8 @@ class DefineConstraintsSet : public BaseConstraintsSet, public TypeBaseFloatAffi
             current = const_cast<Constraint*>(((const typename Constraint::Pointer&)
                   current->getParent()).key());
          }
+         if (current)
+            stack.insertAtEnd(current);
          int count = stack.count();
          if (count > 0) {
             stack[count-1].changeAdmissibleVertex(mpLast->getAdmissibleVertex());

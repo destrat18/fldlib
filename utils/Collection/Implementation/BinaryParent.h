@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation
-// File      : BinaryParent.h
+// Library     : Collection
+// Unit        : Low level implementation
+// File        : BinaryParent.h
 // Description :
 //   Definition of a class of balanced binary trees with parents. It provides an
 //   implementation for the COL::SortedParentAVL collection.
@@ -277,6 +277,7 @@ class ImplParentBinaryTreeCursor : public EnhancedObject {
    ImplParentBinaryTreeCursor(ImplParentBinaryNode* element=nullptr)
       :  pipbnElement(element) {}
    ImplParentBinaryTreeCursor(const ImplParentBinaryTreeCursor& source) = default;
+   ImplParentBinaryTreeCursor& operator=(const ImplParentBinaryTreeCursor& source) = default;
    DefineCopy(ImplParentBinaryTreeCursor)
    DDefineAssign(ImplParentBinaryTreeCursor)
 
@@ -311,6 +312,7 @@ class TImplParentBinaryTreeCursor : public ImplParentBinaryTreeCursor {
    TImplParentBinaryTreeCursor(TypeNode* node=nullptr)
       : ImplParentBinaryTreeCursor(node) {}
    TImplParentBinaryTreeCursor(const TImplParentBinaryTreeCursor<TypeNode>& source) = default;
+   TImplParentBinaryTreeCursor& operator=(const TImplParentBinaryTreeCursor<TypeNode>& source) = default;
    TemplateDefineCopy(TImplParentBinaryTreeCursor, TypeNode)
 };
 
@@ -359,7 +361,7 @@ class ImplParentExtendedBinaryNode : public ImplParentBinaryNode, protected Exte
   public:
    ImplParentExtendedBinaryNode() {}
    ImplParentExtendedBinaryNode(const ImplParentExtendedBinaryNode& source)
-      :  ImplParentBinaryNode(source) {}
+      :  ImplParentBinaryNode(source), ExtendedParameters() {}
    ImplParentExtendedBinaryNode& operator=(const ImplParentExtendedBinaryNode& source)
       {  return (ImplParentExtendedBinaryNode&) ImplParentBinaryNode::operator=(source); }
 };
@@ -387,6 +389,7 @@ class ImplParentBalancedNode : public TBalancedNode<ImplParentExtendedBinaryNode
   public:
    ImplParentBalancedNode() = default;
    ImplParentBalancedNode(const ImplParentBalancedNode& source) = default;
+   ImplParentBalancedNode& operator=(const ImplParentBalancedNode& source) = default;
 };
 
 /********************************************/
@@ -411,6 +414,7 @@ class CustomImplParentBinaryNode : public EnhancedObject, public ImplParentBalan
   public:
    CustomImplParentBinaryNode() {}
    CustomImplParentBinaryNode(const CustomImplParentBinaryNode& source) = default;
+   CustomImplParentBinaryNode& operator=(const CustomImplParentBinaryNode& source) = default;
    DefineCopy(CustomImplParentBinaryNode)
    DDefineAssign(CustomImplParentBinaryNode)
 

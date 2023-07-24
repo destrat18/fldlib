@@ -57,6 +57,7 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #include "FloatInstrumentation/FloatAffine.inch"
 
@@ -2212,9 +2213,15 @@ class TElementTraits<NumericalDomains::DAffine::TInstrumentedFloatZonotope<USize
       }
    static void copy(TypeElement& element, const TypeElement& source)
       {  element = source; }
+   static void move(TypeElement& element, TypeElement&& source)
+      {  element = std::move(source); }
    static void copyAll(TypeElement* array, const TypeElement* source, int count)
       {  for (int index = 0; index < count; ++index)
             copy(array[index], source[index]);
+      }
+   static void moveAll(TypeElement* array, TypeElement* source, int count)
+      {  for (int index = 0; index < count; ++index)
+            move(array[index], std::move(source[index]));
       }
 };
 

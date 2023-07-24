@@ -51,7 +51,8 @@ class Registration : public COL::ImplListElement {
 
   public:
    Registration() {}
-   Registration(const Registration& source) : inherited(source) {}
+   Registration(const Registration& source) = default;
+   Registration& operator=(const Registration& source) = default;
 };
 
 /*************************************/
@@ -128,6 +129,7 @@ class LocalElement : public SharedElement {
   public:
    LocalElement() {}
    LocalElement(const LocalElement& source) : inherited(source) {}
+   LocalElement& operator=(const LocalElement& source) = default;
    virtual ~LocalElement() { removeAllCalls(); }
    DefineCopy(LocalElement)
    DDefineAssign(LocalElement)
@@ -170,6 +172,7 @@ class UpdateCopyConnection : public COL::ImplBinaryTree::Node {
    UpdateCopyConnection(const EnhancedObject& source, EnhancedObject& target)
       :  peoSource(&source), peoTarget(&target) {}
    UpdateCopyConnection(const UpdateCopyConnection& source) = default;
+   UpdateCopyConnection& operator=(const UpdateCopyConnection& source) = default;
    DefineCopy(UpdateCopyConnection)
    DDefineAssign(UpdateCopyConnection)
       
@@ -291,7 +294,7 @@ class SharedCollection : public COL::TImplList<DSharedCollection::GlobalElement,
             {  int localization = inherited::localize(&parent, SortedParameters());
                bool hasResult = (localization & 1);
                if (!hasResult)
-                  inherited::insertAt(localization >> 1, (SharedCollection*) &parent);
+                  inherited::insertAt(localization >> 1, const_cast<SharedCollection*>(&parent));
                return hasResult;
             }
       };
@@ -432,7 +435,8 @@ class SharedCollection : public COL::TImplList<DSharedCollection::GlobalElement,
       
      public:
       Element() {}
-      Element(const Element& source) : inherited(source) {}
+      Element(const Element& source) = default;
+      Element& operator=(const Element& source) = default;
       DefineCopy(Element)
 
       typedef LinearGlobalNotification LinearUpdate;

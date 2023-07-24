@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Library   : Collection
-// Unit      : Low level implementation of tree collections
-// File      : ImplCommonTree.h
+// Library     : Collection
+// Unit        : Low level implementation of tree collections
+// File        : ImplCommonTree.h
 // Description :
 //   Definition of a common implementation for all tree collections.
 //
@@ -239,10 +239,10 @@ TImplTree<TypeNode, TypeCursor>::removeAtomic(TypeCursor& cursor, FlatExtendedSu
    AssumeCondition(cursor.isOnTree())
    if (cursor.hasFlatSupport()) {
       if (!parameters.isFree())
-         cursor.resetElementLevel((TypeNode&) *inherited::HandlerSonsAndSubTreeCast::castFrom(
+         cursor.resetElementLevel(const_cast<TypeNode&>((const TypeNode&) *inherited::HandlerSonsAndSubTreeCast::castFrom(
             (const typename inherited::HandlerSonsAndSubTreeCast::Base*) inherited::HandlerSonsAndSubTreeCast::Base::castFromCopyHandler(
             VirtualCollection::CollectionAccess::getElement(
-               cursor.lastSupport(), parameters, &cursor.lastCursor()))));
+               cursor.lastSupport(), parameters, &cursor.lastCursor())))));
       VirtualCollection::CollectionAccess::remove(cursor.lastSupport(),
          parameters, &cursor.lastCursor());
       if (!cursor.lastCursor().isValid())
@@ -269,10 +269,10 @@ TImplTree<TypeNode, TypeCursor>::remove(TypeCursor& cursor, FlatExtendedSuppress
          VirtualCollection::CollectionAccess::getElement(cursor.lastSupport(), parameters,
             lastCursor))));
       if (!parameters.isFree())
-         cursor.resetElementLevel((TypeNode&) *inherited::HandlerSonsAndSubTreeCast::castFrom(
+         cursor.resetElementLevel(const_cast<TypeNode&>((const TypeNode&) *inherited::HandlerSonsAndSubTreeCast::castFrom(
             (const typename inherited::HandlerSonsAndSubTreeCast::Base*) inherited::HandlerSonsAndSubTreeCast::Base::castFromCopyHandler(
                VirtualCollection::CollectionAccess::getElement(
-               cursor.lastSupport(), parameters, lastCursor))));
+               cursor.lastSupport(), parameters, lastCursor)))));
       VirtualCollection::CollectionAccess::remove(cursor.lastSupport(),
          parameters, lastCursor);
       if (!lastCursor->isValid())
@@ -295,16 +295,16 @@ TImplTree<TypeNode, TypeCursor>::removeAll(TypeCursor& parent, const FlatCursor*
    int removedElements = 0;
    {  VirtualCollection::PPCursor cursor = collection->newCursor();
       if (start)
-         *cursor = *start;
+         cursor->assign(*start);
       else
          cursor->setToFirst();
       while (cursor->isValid() && (!end || !cursor->isEqual(*end))) {
          removedElements += inherited::queryNumberOfElements(inherited::HandlerSonsAndSubTreeCast::castFrom(
             (const typename inherited::HandlerSonsAndSubTreeCast::Base*) inherited::HandlerSonsAndSubTreeCast::Base::castFromCopyHandler(
             &cursor->elementAt())));
-         parent.resetElementSubLevel((TypeNode&) inherited::HandlerSonsAndSubTreeCast::castFrom(
+         parent.resetElementSubLevel(const_cast<TypeNode&>((const TypeNode&) inherited::HandlerSonsAndSubTreeCast::castFrom(
             (const typename inherited::HandlerSonsAndSubTreeCast::Base&) inherited::HandlerSonsAndSubTreeCast::Base::castFromCopyHandler(
-            cursor->elementSAt())));
+            cursor->elementSAt()))));
       };
    };
    VirtualCollection::CollectionAccess::removeAll(*collection,

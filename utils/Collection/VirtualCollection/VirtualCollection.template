@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualCollection.template
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualCollection.template
 // Description :
 //   Définition of the template methods of the class VirtualCollection.
 //
@@ -45,7 +45,7 @@ VirtualCollection::foreachDo(TemplateParameters, Execute& fun,
       return true;
    PPCursor cursor = newCursor();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if (parameters.isFirstExcluded()) {
          if (end && cursor->isEqual(*end))
             return true;
@@ -110,7 +110,7 @@ VirtualCollection::foreachReverseDo(TemplateParameters, Execute& fun,
       return true;
    PPCursor cursor = newCursor();
    if (start) {
-      *cursor = *start;
+      cursor->assign(*start);
       if (parameters.isFirstExcluded()) {
          if (end && cursor->isEqual(*end))
             return true;

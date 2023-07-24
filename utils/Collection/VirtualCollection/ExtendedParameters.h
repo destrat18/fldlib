@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,9 +20,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : ExtendedParameters.h
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : ExtendedParameters.h
 // Description :
 //   Definition of extended parameters inherited by all collection classes.
 //
@@ -143,8 +141,8 @@ class ExtendedLocateParameters
   public:
    ExtendedLocateParameters(RelativePosition position = RPUndefined)
       {  mergeRelativePositionField(position); }
-   ExtendedLocateParameters(const ExtendedLocateParameters& source)
-      :  EnhancedObject(), ExtendedParameters(source), Definitions() {}
+   ExtendedLocateParameters(const ExtendedLocateParameters& source) = default;
+   ExtendedLocateParameters& operator=(const ExtendedLocateParameters& source) = default;
    DefineCopy(ExtendedLocateParameters)
    DDefineAssign(ExtendedLocateParameters)
 
@@ -237,6 +235,7 @@ class ExtendedInsertionParameters : public ExtendedLocateParameters {
          RelativePosition position=RPUndefined) : ExtendedLocateParameters(position)
       {  mergeDuplicateField(duplicate); mergeFreeOnErrorField(freeOnError); }
    ExtendedInsertionParameters(const ExtendedInsertionParameters& source) = default;
+   ExtendedInsertionParameters& operator=(const ExtendedInsertionParameters& source) = default;
    DefineCopy(ExtendedInsertionParameters)
 
    ExtendedInsertionParameters& setRelativePosition(RelativePosition position)
@@ -298,6 +297,7 @@ class ExtendedSuppressParameters : public ExtendedLocateParameters {
    ExtendedSuppressParameters(RemoveMode removeMode=RMRemove, RelativePosition position=RPUndefined)
       :  ExtendedLocateParameters(position) { mergeOwnField(removeMode); }
    ExtendedSuppressParameters(const ExtendedSuppressParameters& source) = default;
+   ExtendedSuppressParameters& operator=(const ExtendedSuppressParameters& source) = default;
    DefineCopy(ExtendedSuppressParameters)
 
    ExtendedSuppressParameters& setFree(RemoveMode mode) { setOwnField(mode); return *this; }
@@ -331,6 +331,7 @@ class ExtendedReplaceParameters
       :  ExtendedInsertionParameters(duplicate, freeOnError, RPExact),
          ExtendedSuppressParameters(free) {}
    ExtendedReplaceParameters(const ExtendedReplaceParameters& source) = default;
+   ExtendedReplaceParameters& operator=(const ExtendedReplaceParameters& source) = default;
    DefineCopy(ExtendedReplaceParameters)
    DDefineAssign(ExtendedReplaceParameters)
    StaticInheritConversions(ExtendedReplaceParameters, ExtendedInsertionParameters)

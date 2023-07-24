@@ -350,11 +350,15 @@ class SymbolsManager : public EnhancedObject {
    COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> > lsDefinedSymbols;
    COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> > lsHighLevelSymbols;
    int uHighLevelSymbolsCounter;
+   bool fPermanent;
+
+  protected:
+   void setPermanent() { fPermanent = true; }
 
   public:
-   SymbolsManager() : uHighLevelSymbolsCounter(0) {}
-   SymbolsManager(const SymbolsManager& /* source */)
-      :  EnhancedObject(), uHighLevelSymbolsCounter(0) {}
+   SymbolsManager() : uHighLevelSymbolsCounter(0), fPermanent(false) {}
+   SymbolsManager(const SymbolsManager& source)
+      : EnhancedObject(source), uHighLevelSymbolsCounter(0), fPermanent(source.fPermanent) {}
    DefineCopy(SymbolsManager)
 
    virtual VirtualSymbolDefinitionTracker* getSymbolDefinitionTracker() { return nullptr; }
@@ -494,7 +498,8 @@ class SymbolsManager : public EnhancedObject {
          return result;
       }
    void freeHighLevelSymbol(HighLevelSymbol* symbol) // [TODO] verify the manager for LinearInvariantSynthesis!!!
-      {  
+      {  if (fPermanent)
+            return;
 #if DefineDebugLevel >= 3
          AssumeCondition(!lsHighLevelSymbols.foreachDo([symbol](const Symbol& iterate)
             {  return &iterate != symbol; }))
@@ -504,7 +509,9 @@ class SymbolsManager : public EnhancedObject {
          lsHighLevelSymbols.freeAt(cursor);
       }
    void freeSymbol(Symbol* symbol, bool hasShift=false)
-      {  switch (symbol->getType()) {
+      {  if (fPermanent)
+            return;
+         switch (symbol->getType()) {
             case Symbol::TCentral:
                {  AssumeCondition(hasShift || symbol->getOrder() <= lsCentralSymbols.count())
 #if DefineDebugLevel >= 3
@@ -573,7 +580,11 @@ class SymbolsManager : public EnhancedObject {
       }
    template <class TypeTraits>
    Symbol& recordDefinedSymbol(TypeTraits /* traits */, Symbol* symbol)
-      {  AssumeCondition(dynamic_cast<const typename TypeTraits::DefinedSymbol*>(symbol)
+      {  
+#if !defined(DefineDebugLevel) || DefineDebugLevel != 1
+         typedef typename TypeTraits::DefinedSymbol DefinedSymbol;
+#endif
+         AssumeCondition(dynamic_cast<const DefinedSymbol*>(symbol)
                && !symbol->hasOrder())
          lsDefinedSymbols.insertNewAtEnd(symbol);
          symbol->setOrder(lsDefinedSymbols.count());
@@ -591,37 +602,54 @@ class SymbolsManager : public EnhancedObject {
    Symbol& findDefinedSymbol(int index) const
       {  COL::TList<Symbol, Symbol::Registration>::Cursor cursor(lsDefinedSymbols);
          Symbol* result = nullptr;
-         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index);
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
          AssumeCondition(cursor.isValid() && result->getOrder() == index)
          return *result;
       }
    Symbol& findCentralSymbol(int index) const
       {  COL::TList<Symbol, Symbol::Registration>::Cursor cursor(lsCentralSymbols);
          Symbol* result = nullptr;
-         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index);
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
          AssumeCondition(cursor.isValid() && result->getOrder() == index)
          return *result;
       }
    Symbol& findNoiseSymbol(int index) const
       {  COL::TList<Symbol, Symbol::Registration>::Cursor cursor(lsNoiseSymbols);
          Symbol* result = nullptr;
-         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index);
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
          AssumeCondition(cursor.isValid() && result->getOrder() == index)
          return *result;
       }
    Symbol& findHighLevelSymbol(int index) const
       {  COL::TList<Symbol, Symbol::Registration>::Cursor cursor(lsHighLevelSymbols);
          Symbol* result = nullptr;
-         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index);
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
          AssumeCondition(cursor.isValid() && result->getOrder() == index)
          return *result;
       }
    Symbol* locateHighLevelSymbol(int index) const
       {  COL::TList<Symbol, Symbol::Registration>::Cursor cursor(lsHighLevelSymbols);
          Symbol* result = nullptr;
-         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index);
-         return cursor.isValid() ? result : nullptr;
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
+         return (result && result->getOrder() == index) ? result : nullptr;
       }
+   Symbol* locateSymbol(const Symbol::Type type, int index) const
+      {  const COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> >* listSymbols = nullptr;
+         switch (type) {
+            case Symbol::TCentral: listSymbols = &lsCentralSymbols; break;
+            case Symbol::TNoise: listSymbols = &lsNoiseSymbols; break;
+            case Symbol::TMarkedNoise: listSymbols = &lsNoiseSymbols; break;
+            case Symbol::TDefined: listSymbols = &lsDefinedSymbols; break;
+            case Symbol::THighLevel:  listSymbols = &lsHighLevelSymbols; break;
+            default:
+               return nullptr;
+         }
+         COL::TList<Symbol, Symbol::Registration>::Cursor cursor(*listSymbols);
+         Symbol* result = nullptr;
+         while (cursor.setToPrevious() && (result = &cursor.elementSAt())->getOrder() > index) {}
+         return (result && result->getOrder() == index) ? result : nullptr;
+      }
+
 #if defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -675,8 +703,7 @@ class ClosedSymbolsSet : public EnhancedObject {
 
   public:
    ClosedSymbolsSet() : uClosedCounter(0) {}
-   ClosedSymbolsSet(const ClosedSymbolsSet& /* source */)
-      :  EnhancedObject(), uClosedCounter(0) {}
+   ClosedSymbolsSet(const ClosedSymbolsSet& source) : EnhancedObject(source), uClosedCounter(0) {}
    DefineCopy(ClosedSymbolsSet)
 
    Symbol* createClosedSymbol(int level)

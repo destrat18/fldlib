@@ -41,6 +41,79 @@
 
 #ifdef DefineImplementsIStreamMethods
 
+int
+DefineTypeObject::gcount()
+   { AssumeValidity(*this) return (int) DefineLinkStream.gcount(); }
+
+int
+DefineTypeObject::get()
+   { AssumeValidity(*this) return DefineLinkStream.get(); }
+
+int
+DefineTypeObject::peek()
+   { AssumeValidity(*this) return DefineLinkStream.peek(); }
+
+STG::IOObject::ISBase&
+DefineTypeObject::get(char& ch)
+   { AssumeValidity(*this) DefineLinkStream.get(ch); return *this; }
+
+int
+DefineTypeObject::readsome(const STG::VirtualStringProperty& source, int n)
+   { AssumeValidity(*this)
+     source.read(&DefineLinkStream, n);
+     return source.length();
+   }
+
+STG::IOObject::ISBase&
+DefineTypeObject::unget()
+   { AssumeValidity(*this) DefineLinkStream.unget(); return *this; }
+
+STG::IOObject::ISBase&
+DefineTypeObject::ignorespaces()
+   { AssumeValidity(*this)
+     while (isspace(DefineLinkStream.peek())) DefineLinkStream.get();
+     return *this;
+   }
+
+bool
+DefineTypeObject::canread()
+   { AssumeValidity(*this) return DefineLinkStream.peek() >= 0; }
+
+bool
+DefineTypeObject::good()
+   { AssumeValidity(*this) return DefineLinkStream.good(); }
+
+int
+DefineTypeObject::tellg()
+#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)))
+   { AssumeValidity(*this) return (int) (DefineLinkStream.tellg() - std::streampos()); }
+#else
+   { AssumeValidity(*this) return (int) DefineLinkStream.tellg(); }
+#endif
+
+STG::IOObject::ISBase&
+DefineTypeObject::seekg(int pos)
+   { AssumeValidity(*this) DefineLinkStream.seekg(pos); return *this; }
+
+#ifdef __GNUC__
+STG::IOObject::ISBase&
+DefineTypeObject::seekg(int pos, int origin)
+   { AssumeValidity(*this) DefineLinkStream.seekg((long int) pos, (std::ios::seekdir) origin); return *this; }
+#else
+STG::IOObject::ISBase&
+DefineTypeObject::seekg(int pos, int origin)
+   { AssumeValidity(*this) DefineLinkStream.seekg(pos, origin); return *this; }
+#endif
+
+STG::IOObject::ISBase&
+DefineTypeObject::readchunk(void* achunk)
+   { AssumeValidity(*this)
+     STG::TChunk<char>& chunk = *((STG::TChunk<char>*) achunk);
+     DefineLinkStream.read(chunk.string, chunk.length);
+     chunk.length = (int) DefineLinkStream.gcount();
+     return *this;
+   }
+
 STG::IOObject::ISBase&
 DefineTypeObject::assume(char ch) {
    AssumeValidity(*this)
@@ -93,6 +166,12 @@ DefineTypeObject::assume(const STG::VirtualStringProperty& text) {
    return *this;
 }
 
+STG::IOObject::ISBase&
+DefineTypeObject::ignore(int n) {
+   AssumeValidity(*this)
+   DefineLinkStream.ignore(n);
+   return *this;
+}
 
 STG::IOObject::ISBase&
 DefineTypeObject::read(char& ch, bool) {
@@ -117,7 +196,7 @@ DefineTypeObject::read(bool& b, bool isRaw) {
    AssumeValidity(*this)                                 \
    if (isRaw) {                                          \
       in.read((char*) &n, sizeof(n));                    \
-      if (in.good()) throw STG::EReadError();            \
+      if (!in.good()) throw STG::EReadError();           \
    }                                                     \
    else                                                  \
       in >> n;                                           \
@@ -203,6 +282,38 @@ DefineTypeObject::read(const STG::VirtualStringProperty& source, int n, bool) {
 #endif // DefineImplementsIStreamMethods
 
 #ifdef DefineImplementsOStreamMethods
+
+STG::IOObject::OSBase&
+DefineTypeObject::put(char c)
+   { AssumeValidity(*this) DefineLinkStream.put(c); return *this; }
+
+int
+DefineTypeObject::tellp()
+#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)))
+   { AssumeValidity(*this) return (int) (DefineLinkStream.tellp() - std::streampos()); }
+#else
+   { AssumeValidity(*this) return (int) DefineLinkStream.tellp(); }
+#endif
+
+STG::IOObject::OSBase&
+DefineTypeObject::seekp(int pos)
+   { AssumeValidity(*this) DefineLinkStream.seekp(pos); return *this; }
+
+STG::IOObject::OSBase&
+DefineTypeObject::seekp(int pos, int origin)
+#ifdef __GNUC__
+   { AssumeValidity(*this) DefineLinkStream.seekp((long int) pos, (std::ios::seekdir) origin); return *this; }
+#else
+   { AssumeValidity(*this) DefineLinkStream.seekp(pos, origin); return *this; }
+#endif
+   
+STG::IOObject::OSBase&
+DefineTypeObject::writeall(const STG::VirtualStringProperty& source)
+   { AssumeValidity(*this) source.write(&DefineLinkStream); return *this; }
+
+STG::IOObject::OSBase&
+DefineTypeObject::flush()
+   { AssumeValidity(*this) DefineLinkStream.flush(); return *this; }
 
 STG::IOObject::OSBase&
 DefineTypeObject::write(char ch, bool) {

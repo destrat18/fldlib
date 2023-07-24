@@ -22,9 +22,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualTree.h
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualTree.h
 // Description :
 //   Definition of the class VirtualTree.
 //
@@ -71,6 +71,7 @@ class VirtualTree : public VirtualCollection, public DVirtualTree::Definitions {
    VirtualTree() {}
    VirtualTree(const VirtualTree& source, AddMode mode=AMNoDuplicate)
       :  VirtualCollection(source, mode) {}
+   VirtualTree& operator=(const VirtualTree& source) = default;
 
    void pfullAssign(const VirtualTree& source, const ExtendedTreeReplaceParameters& parameters);
    void paddAll(const VirtualTree& source, const ExtendedTreeInsertionParameters& parameters,
@@ -307,7 +308,8 @@ class VirtualTreeCursor : public VirtualCollectionCursor, public DVirtualTree::D
 
      public:
       VirtualCursorPath() {}
-      VirtualCursorPath(const VirtualCursorPath& source) : inherited(source) {}
+      VirtualCursorPath(const VirtualCursorPath& source) = default;
+      VirtualCursorPath& operator=(const VirtualCursorPath& source) = default;
       virtual ~VirtualCursorPath() {}
 
       virtual bool hasAscent() const = 0;
@@ -329,8 +331,9 @@ class VirtualTreeCursor : public VirtualCollectionCursor, public DVirtualTree::D
    virtual ExtendedComparisonResult _fullCompare(const VirtualTreeCursor& source) const
       { return ExtendedComparisonResult().setEqual(); }
 
-   VirtualTreeCursor(const VirtualTreeCursor& source) : VirtualCollectionCursor(source) {}
+   VirtualTreeCursor(const VirtualTreeCursor& source) = default;
    VirtualTreeCursor(const VirtualTree& support) : VirtualCollectionCursor(support) {}
+   VirtualTreeCursor& operator=(const VirtualTreeCursor& source) = default;
 
   public:
    class TreePosition : public Position {
@@ -521,7 +524,7 @@ class VirtualTree::RouteLevelCopyAction : public VirtualTree::RouteCopyAction {
    RouteLevelCopyAction(VirtualTree& thisTree,
          const ExtendedTreeInsertionParameters& parameters)
       :  RouteCopyAction(thisTree, false), uLevel(0), rpPos(parameters.getRelativePosition()) {}
-   void setToCursor(const VirtualTreeCursor& cursor) { thisCursor() = cursor; }
+   void setToCursor(const VirtualTreeCursor& cursor) { thisCursor().assign(cursor); }
 
    bool ascent(const Cursor& sourceCursor, EnhancedObject& son)
       {  VirtualTree::RouteCopyAction::ascent(sourceCursor, son);

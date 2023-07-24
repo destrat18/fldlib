@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,9 +20,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualCollection.incc
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualCollection.incc
 // Description :
 //   Implementation of the polymorph methods of the class VirtualCollection.
 //   These methods are shared with the template class TVirtualMapCollection.
@@ -58,13 +56,13 @@ TVirtualMapCollection<TypeKeyTraits>::paddAll(const thisType& source, const Exte
    bool isForward = !parameters.isRemote() ? !parameters.isBefore() : !parameters.isAfter();
    if (isForward) {
       if (startSource)
-         *sourceCursor = *startSource;
+         sourceCursor->assign(*startSource);
       else
          sourceCursor->setToFirst();
    }
    else {
       if (endSource)
-         *sourceCursor = *endSource;
+         sourceCursor->assign(*endSource);
       else
          sourceCursor->setToLast();
    };

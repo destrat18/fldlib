@@ -48,7 +48,7 @@ TVector<TypeElement, TypeElementTraits, TypeReallocTraits>::realloc(int newAlloc
    AssumeAllocation(newArray)
    if (!TypeElementTraits::FInitialCleared)
       TypeElementTraits::clearAll(newArray, newAllocated);
-   TypeElementTraits::copyAll(newArray, ateArray, uCount);
+   TypeElementTraits::moveAll(newArray, ateArray, uCount);
    uAllocated = newAllocated;
    if (ateArray) delete [] ateArray;
    ateArray = newArray;

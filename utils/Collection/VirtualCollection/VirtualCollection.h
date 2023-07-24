@@ -3,8 +3,6 @@
 /*  This file is part of FLDLib                                           */
 /*                                                                        */
 /*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,9 +20,9 @@
 
 /////////////////////////////////
 //
-// Librairie   : Collection
-// Module      : Abstract collections
-// Fichier     : VirtualCollection.h
+// Library     : Collection
+// Unit        : Abstract collections
+// File        : VirtualCollection.h
 // Description :
 //   Definition of the class VirtualCollection.
 //   It is the base class of all collections and it brings a generic interface
@@ -55,6 +53,7 @@ class Access {
      public:
       InitialStoreValue(EnhancedObject& object) : inherited(), peoObject(&object) {}
       InitialStoreValue(const InitialStoreValue& source) = default;
+      InitialStoreValue& operator=(const InitialStoreValue& source) = default;
       DefineCopy(InitialStoreValue)
       DDefineAssign(InitialStoreValue)
 
@@ -398,7 +397,7 @@ class VirtualCollection
          else
             result = TypeQueryParameters::getInheritedElement(
                (const TypeInheritedCollection&) *this, parameters,
-               (typename TypeCollection::Cursor*) cursor);
+               const_cast<typename TypeCollection::Cursor*>((const typename TypeCollection::Cursor*) cursor));
          return result;
       }
 
@@ -488,7 +487,8 @@ class VirtualCollectionCursor : public AbstractCursor {
      public:
       Position() {}
       Position(Direction dir) { mergeOwnField(dir); }
-      Position(const Position& source) : EnhancedObject(), ExtendedParameters(source) {}
+      Position(const Position& source) = default;
+      Position& operator=(const Position& source) = default;
       DefineCopy(Position)
       DDefineAssign(Position)
 
@@ -536,7 +536,8 @@ class VirtualCollectionCursor : public AbstractCursor {
    typedef VirtualCollection::ExtendedInsertionParameters ExtendedInsertionParameters;
    typedef VirtualCollection::ExtendedReplaceParameters ExtendedReplaceParameters;
    VirtualCollectionCursor(const VirtualCollection& support) : AbstractCursor(support) {}
-   VirtualCollectionCursor(const VirtualCollectionCursor& source) : AbstractCursor(source) {}
+   VirtualCollectionCursor(const VirtualCollectionCursor& source) = default;
+   VirtualCollectionCursor& operator=(const VirtualCollectionCursor& source) = default;
 
    friend class CursorAccess;
    virtual bool _isPositionned(const ExtendedLocateParameters& /* pos */,
@@ -550,6 +551,7 @@ class VirtualCollectionCursor : public AbstractCursor {
 
   public:
    DefineCopy(VirtualCollectionCursor)
+   DDefineAssign(VirtualCollectionCursor)
    DefineCursorForAbstractCollect(VirtualCollection, VirtualCollectionCursor)
 
 #define DefCursor
@@ -605,6 +607,8 @@ class TCopyCollection : public TypeCollection {
       :  TypeCollection(initialValues) {}
    TCopyCollection(const typename TypeCollection::InitialNewValues& initialValues)
       :  TypeCollection(initialValues) {}
+   TCopyCollection(TCopyCollection<TypeCollection>&& source)
+      {  TypeCollection::swap(source); }
    TCopyCollection(const TCopyCollection<TypeCollection>& source)
       :  TypeCollection(source, TypeCollection::AMDuplicate) {}
    virtual ~TCopyCollection() { TypeCollection::_removeAll(ExtendedSuppressParameters().setFree()); }
@@ -613,6 +617,11 @@ class TCopyCollection : public TypeCollection {
    TCopyCollection<TypeCollection>& operator=(const TCopyCollection<TypeCollection>& source)
       {  TypeCollection::_fullAssign((const TypeCollection&) source,
             ExtendedReplaceParameters().setDuplicate().setFree());
+         return *this;
+      }
+   TCopyCollection<TypeCollection>& operator=(TCopyCollection<TypeCollection>&& source)
+      {  TypeCollection::swap(source);
+         source.TypeCollection::_removeAll(ExtendedSuppressParameters().setFree());
          return *this;
       }
 };
@@ -848,9 +857,10 @@ class TVirtualCollectionCursor : public VirtualCollectionCursor {
    typedef TVirtualCollectionCursor<TypeElement, Cast> thisType;
 
   protected:
-   TVirtualCollectionCursor(const thisType& source) : inherited(source) {}
    TVirtualCollectionCursor(const TVirtualCollection<TypeElement, Cast>& support)
       : inherited(support) {}
+   TVirtualCollectionCursor(const thisType& source) = default;
+   TVirtualCollectionCursor& operator=(const thisType& source) = default;
 
   public:
    Template2DefineCopy(TVirtualCollectionCursor, TypeElement, Cast)
@@ -1387,7 +1397,8 @@ class TInterfaceCollection : public TVirtualCollection<TypeElement, Cast> {
   public:
    TInterfaceCollection(const thisType& source, AddMode mode=VirtualCollection::AMDuplicate,
          const VirtualCast* retrieveRegistrationFromCopy=nullptr)
-      : tcImplementation(source.tcImplementation, mode, retrieveRegistrationFromCopy
+      :  inherited(),
+         tcImplementation(source.tcImplementation, mode, retrieveRegistrationFromCopy
             ? &const_cast<const ImplementationRegistrationCast&>(
                (const ImplementationRegistrationCast&) ImplementationRegistrationCast(*retrieveRegistrationFromCopy))
             : &const_cast<const ImplementationRegistrationCast&>(
@@ -1472,7 +1483,7 @@ class TInterfaceCollectionCursor : public TVirtualCollectionCursor<TypeElement, 
       {  return tccImplementation.isEqual(((const thisType&) cursor).tccImplementation); }
    virtual void _gotoReference(const EnhancedObject& element) override
       {  return ((VirtualCollectionCursor&) tccImplementation).gotoReference(
-            CastToImplementation::castTo(Cast::castFrom((typename Cast::Base&) element)));
+            CastToImplementation::castTo(Cast::castFrom((const typename Cast::Base&) element)));
       }
 
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override
