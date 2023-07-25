@@ -57,7 +57,6 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 #include "FloatInstrumentation/FloatAffine.inch"
 
@@ -811,9 +810,9 @@ class TInstrumentedFloatZonotope : public TFloatZonotope<ExecutionPath, USizeMan
             }
             catch (STG::EReadError& error) {
                if (const char* message = error.getMessage())
-                  std::cerr << "error: " << message << std::endl;
+                  ExecutionPath::getErrorStream() << "error: " << message << std::endl;
                else
-                  std::cerr << "error while reading input file!" << std::endl;
+                  ExecutionPath::getErrorStream() << "error while reading input file!" << std::endl;
                isCompleteFlow = false;
                ExecutionPath::clearSynchronizationBranches();
             }
@@ -862,9 +861,9 @@ class TInstrumentedFloatZonotope : public TFloatZonotope<ExecutionPath, USizeMan
             }
             catch (STG::EReadError& error) {
                if (const char* message = error.getMessage())
-                  std::cerr << "error: " << message << std::endl;
+                  ExecutionPath::getErrorStream() << "error: " << message << std::endl;
                else
-                  std::cerr << "error while reading input file!" << std::endl;
+                  ExecutionPath::getErrorStream() << "error while reading input file!" << std::endl;
                isCompleteFlow = false;
                ExecutionPath::clearSynchronizationBranches();
             }
@@ -915,9 +914,9 @@ class TInstrumentedFloatZonotope : public TFloatZonotope<ExecutionPath, USizeMan
             }
             catch (STG::EReadError& error) {
                if (const char* message = error.getMessage())
-                  std::cerr << "error: " << message << std::endl;
+                  ExecutionPath::getErrorStream() << "error: " << message << std::endl;
                else
-                  std::cerr << "error while reading input file!" << std::endl;
+                  ExecutionPath::getErrorStream() << "error while reading input file!" << std::endl;
                isCompleteFlow = false;
                ExecutionPath::clearSynchronizationBranches();
             }

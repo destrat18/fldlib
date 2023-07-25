@@ -143,6 +143,7 @@ class ExecutionPath : public BaseExecutionPath {
    static BuiltFloat brFloatMaximalAccuracy;
    static BuiltDouble brDoubleMaximalAccuracy;
    static BuiltLongDouble brLongDoubleMaximalAccuracy;
+   static std::ostream& getErrorStream();
 
    template <class TypeInterval>
    static COL::TVector<TypeInterval>& synchronisationVector(const TypeInterval& real)
@@ -179,7 +180,7 @@ class ExecutionPath : public BaseExecutionPath {
 #ifdef FLOAT_ALLOW_READ_EXCEPTION
          throw STG::EReadError(message);
 #else
-         STG::IOObject::OSStream out(std::cerr);
+         STG::IOObject::OSStream out(getErrorStream());
          out.writesome("warning: ");
          out.writesome(message);
          out.writesome(":\n\t");

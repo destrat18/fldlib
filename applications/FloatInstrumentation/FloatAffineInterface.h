@@ -35,8 +35,9 @@
 /* for log */
 #include <math.h>
 #include "FloatInstrumentation/AffineTypesSize.h"
-// #include <iosfwd>
-#include <iostream>
+
+#include <iosfwd>
+// #include <iostream>
 #include <vector>
 #include <functional>
 #include <cassert>

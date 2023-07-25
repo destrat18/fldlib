@@ -358,6 +358,7 @@ class ExecutionPath : public BaseExecutionPath {
 
    static BaseExecutionPathParams* pParams;
    static bool fClosedParams;
+   static std::ostream& getErrorStream();
 
    class ExpressionBuilder : public VirtualExpressionBuilder {
      private:
@@ -929,7 +930,7 @@ class ExecutionPath : public BaseExecutionPath {
 #ifdef FLOAT_ALLOW_READ_EXCEPTION
          throw STG::EReadError(message);
 #else
-         STG::IOObject::OSStream out(std::cerr);
+         STG::IOObject::OSStream out(getErrorStream());
          out.writesome("warning: ");
          out.writesome(message);
          out.writesome(":\n\t");
@@ -953,7 +954,7 @@ class ExecutionPath : public BaseExecutionPath {
 #ifdef FLOAT_ALLOW_READ_EXCEPTION
          throw STG::EReadError(message);
 #else
-         STG::IOObject::OSStream out(std::cerr);
+         STG::IOObject::OSStream out(getErrorStream());
          out.writesome("warning: ");
          out.writesome(message);
          out.put('\n');

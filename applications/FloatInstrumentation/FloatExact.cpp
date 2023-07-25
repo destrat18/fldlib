@@ -31,6 +31,7 @@
 
 #include "FloatInstrumentation/FloatExact.h"
 
+#include <iostream>
 #include "NumericalAnalysis/FloatExactExecutionPath.template"
 
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)

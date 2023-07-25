@@ -99,6 +99,7 @@ class ExecutionPath::DebugStream : public STG::IOObject::OSBase {
 
   private:
    std::ostringstream ssOut;
+   mutable std::string scache;
 
   public:
    DebugStream() {}
@@ -107,6 +108,7 @@ class ExecutionPath::DebugStream : public STG::IOObject::OSBase {
    bool isValid() const { return true; }
    void clear() { ssOut.str(""); ssOut.clear(); }
    std::string content() const { return ssOut.str(); }
+   const char* scontent() const { scache = ssOut.str(); return scache.c_str(); }
 
    #define DefineDeclareOMethods
    #include "StandardClasses/IOStreamMethods.inch"
@@ -218,6 +220,13 @@ ExecutionPath::acquireConstantStream(const char* content) {
 
 void
 ExecutionPath::releaseConstantStream(STG::IOObject::ISBase* /* in */) {}
+
+std::ostream&
+ExecutionPath::getErrorStream() { return std::cerr; }
+
+void
+ExecutionPath::writeCurrentPath(std::ostream& out)
+   {  out << uCurrentUnstableBranch; }
 
 void
 ExecutionPath::initializeGlobals(const char* fileSuffix) {

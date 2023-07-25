@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <iostream> // for std::cout
 
 #include <math.h>
 #include "float_diagnosis.h"

@@ -31,8 +31,8 @@
 
 #include "FloatInstrumentation/FloatAffine.h"
 
+#include <iostream>
 #include "NumericalAnalysis/FloatAffineExecutionPath.template"
-
 #include <fstream>
 #include <sstream>
 #include <vector>

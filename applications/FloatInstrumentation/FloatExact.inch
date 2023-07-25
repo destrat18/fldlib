@@ -65,6 +65,7 @@ class ExecutionPath : public BaseExecutionPath {
    static int uCurrentLine;
    static bool fHasNewFile, fHasNewLine;
 
+   static std::ostream& getErrorStream();
    template <class TypeReal>
    static COL::TVector<TypeReal>& realSynchronisationVector(const TypeReal& /* real */)
       {  static COL::TVector<TypeReal> result;
@@ -115,7 +116,7 @@ class ExecutionPath : public BaseExecutionPath {
 #ifdef FLOAT_ALLOW_READ_EXCEPTION
          throw STG::EReadError(message);
 #else
-         STG::IOObject::OSStream out(std::cerr);
+         STG::IOObject::OSStream out(getErrorStream());
          out.writesome("warning: ");
          out.writesome(message);
          out.writesome(":\n\t");
@@ -135,7 +136,7 @@ class ExecutionPath : public BaseExecutionPath {
 #ifdef FLOAT_ALLOW_READ_EXCEPTION
          throw STG::EReadError(message);
 #else
-         STG::IOObject::OSStream out(std::cerr);
+         STG::IOObject::OSStream out(getErrorStream());
          out.writesome("warning: ");
          out.writesome(message);
          out.put('\n');
@@ -310,6 +311,10 @@ class ExecutionPath : public BaseExecutionPath {
    static void readSynchronizedValue(TypeImplementation& implementation, ImplReadParameters& implParams,
          TypeReal& real, RealReadParameters& realParams, bool& hasImplementation)
       {  if (!fSupportUnstableInLoop) {
+#ifndef EOF
+#define HasDefinedEOF
+#define EOF -1
+#endif
             int ch = iTraceFile->get();
             bool doesContinue = true;
             do {
@@ -369,6 +374,9 @@ class ExecutionPath : public BaseExecutionPath {
                // };
                doesContinue = false;
             } while (doesContinue);
+#ifdef HasDefinedEOF
+#undef EOF
+#endif
          }
          else { // fSupportUnstableInLoop
             if (svSpecial == SVNoImplementation
@@ -449,7 +457,7 @@ class ExecutionPath : public BaseExecutionPath {
   public:
    static std::pair<const char*, int> querySplitInfo() { return std::make_pair(szFile, uLine); }
    static void flushOut() { if (oTraceFile) oTraceFile->flush(); }
-   static void writeCurrentPath(std::ostream& out) { out << uCurrentUnstableBranch; }
+   static void writeCurrentPath(std::ostream& out);
    static int getCurrentUnstableBranch() { return uCurrentUnstableBranch; }
    static void setSourceLine(const char* file, int line)
       {  if (!fHasNewFile)
