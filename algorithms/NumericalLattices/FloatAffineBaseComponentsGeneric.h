@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,15 +27,15 @@
 //   Definition of a class of affine relations.
 //
 
-#ifndef NumericalDomains_FloatAffineBaseComponentsGenericH
-#define NumericalDomains_FloatAffineBaseComponentsGenericH
+#pragma once
 
 #include "NumericalLattices/FloatAffineBaseCommon.h"
 
 #include "ForwardNumerics/BaseFloatingGeneric.h"
 #include "BackwardNumerics/BaseProjectionFloating.h"
-#include <math.h>
-#include <float.h>
+#include "Collection/VirtualCollection/VirtualMultiSortedCollection.h"
+#include <cmath>
+#include <cfloat>
 
 namespace NumericalDomains {
 
@@ -46,6 +44,4 @@ namespace NumericalDomains {
 #undef DefineGeneric
 
 } // end of namespace NumericalDomains::DAffine
-
-#endif // NumericalDomains_FloatAffineBaseComponentsGenericH
 

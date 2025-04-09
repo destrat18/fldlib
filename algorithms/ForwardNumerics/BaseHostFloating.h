@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,17 +28,18 @@
 //   with soft floating points.
 //
 
-#ifndef Numerics_BaseHostFloatingH
-#define Numerics_BaseHostFloatingH
+#pragma once
 
-#include <limits.h>
-#include <float.h>
+#include <climits>
+#include <cfloat>
 #include "ForwardNumerics/BaseFloating.h"
 
 namespace Numerics {
 
 class DoubleTraits {
   public:
+   typedef uint64_t UnsignedIntConversionType;
+   typedef int64_t SignedIntConversionType;
    typedef double TypeFloat;
    static double max()              { return DBL_MAX; }
    static double normalizedMin()    { return DBL_MIN; }
@@ -60,6 +59,8 @@ class DoubleTraits {
 
 class FloatTraits {
   public:
+   typedef uint64_t UnsignedIntConversionType;
+   typedef int64_t SignedIntConversionType;
    typedef float TypeFloat;
    static float max()              { return FLT_MAX; }
    static float normalizedMin()    { return FLT_MIN; }
@@ -79,6 +80,8 @@ class FloatTraits {
 
 class LongDoubleTraits {
   public:
+   typedef uint64_t UnsignedIntConversionType;
+   typedef int64_t SignedIntConversionType;
    typedef long double TypeFloat;
    static long double max()              { return LDBL_MAX; }
    static long double normalizedMin()    { return LDBL_MIN; }
@@ -103,7 +106,8 @@ class LongDoubleTraits {
 template <class TypeTraits>
 class TFloatingBase {
   public:
-   typedef TBuiltDouble<BuiltDoubleTraits<TypeTraits::UBitSizeMantissa, TypeTraits::UBitSizeExponent> >
+   typedef TBuiltDouble<BuiltDoubleTraits<TypeTraits::UBitSizeMantissa, TypeTraits::UBitSizeExponent,
+         typename TypeTraits::UnsignedIntConversionType, typename TypeTraits::SignedIntConversionType> >
       BuiltDouble;
 
   protected:
@@ -111,12 +115,12 @@ class TFloatingBase {
    typedef TFloatingBase<TypeTraits> thisType;
 
   private:
-   Implementation dDouble;
+   Implementation dDouble = 0.0;
 
   public:
-   TFloatingBase() : dDouble(0.0) {}
+   TFloatingBase() = default;
    TFloatingBase(const Implementation& implementation) : dDouble(implementation) {}
-   TFloatingBase(const BuiltDouble& softDouble) : dDouble(0.0) { operator=(softDouble); }
+   TFloatingBase(const BuiltDouble& softDouble) { operator=(softDouble); }
    TFloatingBase(const thisType& source) = default;
    thisType& operator=(const thisType& source) = default;
    thisType& operator=(const BuiltDouble& softDouble);
@@ -126,7 +130,7 @@ class TFloatingBase {
          result.setBasicExponent(typename BuiltDouble::Exponent(typename BuiltDouble::Exponent::Basic(), result.bitSizeExponent(), getBasicExponent()));
          result.setSign(isPositive());
          return result;
-	  }
+      }
    
    Implementation& implementation() { return dDouble; } 
    const Implementation& implementation() const { return dDouble; } 
@@ -138,6 +142,8 @@ class TFloatingBase {
       }
    
    bool isZero() const { return (dDouble == 0.0) || (-dDouble == 0.0); }
+   typedef TypeTraits::UnsignedIntConversionType UnsignedType;
+   typedef TypeTraits::SignedIntConversionType SignedType;
    
    typedef DDouble::Access::ReadParameters ReadParameters;
    thisType& plusAssign(const thisType& source, const ReadParameters& params);
@@ -400,7 +406,7 @@ class TDoubleElement : public FloatingBaseTraits, public DDouble::Access {
    typedef typename inherited::BuiltDouble BuiltDouble;
    typedef DDouble::Access::ReadParameters ReadParameters;
    TDoubleElement() : inherited() {}
-   TDoubleElement(int value, ReadParameters& params)
+   TDoubleElement(typename FloatingBaseTraits::SignedType value, ReadParameters& params)
       {  typename BuiltDouble::IntConversion conversionValue;
          conversionValue.setSigned().assign(value);
          BuiltDouble result(conversionValue, params);
@@ -438,20 +444,12 @@ class TDoubleElement : public FloatingBaseTraits, public DDouble::Access {
                : ((inherited::implementation() > source.inherited::implementation()) ? CRGreater : CREqual);
          return result;
       }
-   bool operator==(const thisType& source) const { return compare(source) == CREqual; }
-   bool operator!=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRLess) || (result == CRGreater);
-      }
-   bool operator<(const thisType& source) const { return compare(source) == CRLess; }
-   bool operator>(const thisType& source) const { return compare(source) == CRGreater; }
-   bool operator<=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRLess) || (result == CREqual);
-      }
-   bool operator>=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRGreater) || (result == CREqual);
+   std::partial_ordering operator<=>(const thisType& source) const
+      {  ComparisonResult comparisonResult = compare(source);
+         return (comparisonResult == CRLess
+            ? std::partial_ordering::less : (comparisonResult == CRGreater
+            ? std::partial_ordering::greater : (comparisonResult == CREqual
+            ? std::partial_ordering::equivalent : std::partial_ordering::unordered)));
       }
 
    static const int UByteSizeImplementation = inherited::UByteSizeImplementation;
@@ -524,6 +522,4 @@ class TDoubleElement : public FloatingBaseTraits, public DDouble::Access {
 };
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseHostFloatingH
 

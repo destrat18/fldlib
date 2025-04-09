@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,14 +27,18 @@
 //   Definition of a common part between BaseInteger.h and BaseIntegerGeneric.h
 //
 
-#ifndef Numerics_BaseIntegerCommonH
-#define Numerics_BaseIntegerCommonH
+#pragma once
 
-#ifndef StandardClassesHPP
+#include <cstdint>
+
+#ifndef DefineNoEnhancedObject
+#include "StandardClasses/Persistence.h"
+
+#else
 
 #include <iostream>
 #include <cstring>
-#include <assert.h>
+#include <cassert>
 #define AssumeUncalled assert(false);
 #define AssumeCondition(cond) assert(cond);
 
@@ -52,7 +54,7 @@ namespace DInteger {
 
 class Access {
   public:
-   static int log_base_2(unsigned int value)
+   static int log_base_2(uint32_t value)
       {  int result = 1;
          while ((value >>= 1) != 0)
             ++result;
@@ -64,209 +66,209 @@ class Access {
 
 class UnsignedBaseStoreTraits {
   public:
-   static const int USizeBaseInBits = sizeof(unsigned int)*8;
-   typedef unsigned int BaseType;
-   typedef unsigned int* BaseTypePointer;
-   typedef unsigned int& BaseTypeReference;
-   typedef unsigned int BaseTypeConstReference;
-   static int log_base_2(unsigned int value) { return DInteger::Access::log_base_2(value); }
-   static void clearArray(unsigned int* array, int count)
-      {  memset(array, 0, count*sizeof(unsigned int)); }
-   static void copyArray(unsigned int* target, const unsigned int* source, int count)
-      {  memcpy(target, source, count*sizeof(unsigned int)); }
+   static const int USizeBaseInBits = sizeof(uint32_t)*8;
+   typedef uint32_t BaseType;
+   typedef uint32_t* BaseTypePointer;
+   typedef uint32_t& BaseTypeReference;
+   typedef uint32_t BaseTypeConstReference;
+   static int log_base_2(uint32_t value) { return DInteger::Access::log_base_2(value); }
+   static void clearArray(uint32_t* array, int count)
+      {  memset(array, 0, count*sizeof(uint32_t)); }
+   static void copyArray(uint32_t* target, const uint32_t* source, int count)
+      {  memcpy(target, source, count*sizeof(uint32_t)); }
    template <typename TypeFst, typename TypeSnd>
    static void copyArray(TypeFst* target, const TypeSnd* source, int count)
-      {  memcpy(target, source, count*sizeof(unsigned int)); }
-   static int sizeBaseInBits() { return 8*sizeof(unsigned); }
+      {  memcpy(target, source, count*sizeof(uint32_t)); }
+   static int sizeBaseInBits() { return 8*sizeof(uint32_t); }
    static int minCellsCountToStoreBits(int bitsNumber)
-      {  return (int) ((bitsNumber + 8*sizeof(unsigned) - 1) / (8*sizeof(unsigned))); } 
+      {  return (int) ((bitsNumber + 8*sizeof(uint32_t) - 1) / (8*sizeof(uint32_t))); } 
 
-   static void swapArray(unsigned int* target, unsigned int* source, int count)
-      {  unsigned int temp;
+   static void swapArray(uint32_t* target, uint32_t* source, int count)
+      {  uint32_t temp;
          for (int i = 0; i < count; ++i) {
             temp = target[i];
             target[i] = source[i];
             source[i] = temp;
          };
       }
-   static unsigned int detectCarryAfterAddition(unsigned int result, unsigned int operand)
+   static uint32_t detectCarryAfterAddition(uint32_t result, uint32_t operand)
       {  return (result < operand) ? 1U : 0U; }
-   static unsigned int detectCarryBeforeSubstraction(unsigned int first, unsigned int second)
+   static uint32_t detectCarryBeforeSubstraction(uint32_t first, uint32_t second)
       {  return (first < second) ? 1U : 0U; }
-   static unsigned int getStoreMidHighPart(unsigned int value, unsigned int store)
-      {  return ((value << (4*sizeof(unsigned int))) | (store & ~(~0U << 4*sizeof(unsigned int)))); }
-   static void storeIntoMidHighPart(unsigned int value, unsigned int& store)
-      {  store &= ~(~0U << 4*sizeof(unsigned int));
-         store |= (value << (4*sizeof(unsigned int)));
+   static uint32_t getStoreMidHighPart(uint32_t value, uint32_t store)
+      {  return ((value << (4*sizeof(uint32_t))) | (store & ~(~(uint32_t) 0 << 4*sizeof(uint32_t)))); }
+   static void storeIntoMidHighPart(uint32_t value, uint32_t& store)
+      {  store &= ~(~(uint32_t) 0 << 4*sizeof(uint32_t));
+         store |= (value << (4*sizeof(uint32_t)));
       }
    template <typename TypeProperty>
-   static void storeIntoMidHighPart(unsigned int value, TypeProperty store)
-      {  store &= ~(~0U << 4*sizeof(unsigned int));
-         store |= (value << (4*sizeof(unsigned int)));
+   static void storeIntoMidHighPart(uint32_t value, TypeProperty store)
+      {  store &= ~(~(uint32_t) 0 << 4*sizeof(uint32_t));
+         store |= (value << (4*sizeof(uint32_t)));
       }
-   static unsigned int getStoreMidLowPart(unsigned int value, unsigned int store)
-      {  return ((store & (~0U << 4*sizeof(unsigned int))) | value); }
-   static void storeIntoMidLowPart(unsigned int value, unsigned int& store)
-      {  store &= (~0U << 4*sizeof(unsigned int));
+   static uint32_t getStoreMidLowPart(uint32_t value, uint32_t store)
+      {  return ((store & (~(uint32_t) 0 << 4*sizeof(uint32_t))) | value); }
+   static void storeIntoMidLowPart(uint32_t value, uint32_t& store)
+      {  store &= (~(uint32_t) 0 << 4*sizeof(uint32_t));
          store |= value;
       }
    template <typename TypeProperty>
-   static void storeIntoMidLowPart(unsigned int value, TypeProperty store)
-      {  store &= (~0U << 4*sizeof(unsigned int));
+   static void storeIntoMidLowPart(uint32_t value, TypeProperty store)
+      {  store &= (~(uint32_t) 0 << 4*sizeof(uint32_t));
          store |= value;
       }
-   static unsigned int getMidHighPart(unsigned int value)
-      {  return value >> 4*sizeof(unsigned int); }
-   static unsigned int getMidLowPart(unsigned int value)
-      {  return value & ~(~0U << 4*sizeof(unsigned int)); }
-   static unsigned int getLowPart(unsigned int value, int shift)
-      {  return value & ~(~0U << shift); }
-   static unsigned int getHighPart(unsigned int value, int shift)
+   static uint32_t getMidHighPart(uint32_t value)
+      {  return value >> 4*sizeof(uint32_t); }
+   static uint32_t getMidLowPart(uint32_t value)
+      {  return value & ~(~(uint32_t) 0 << 4*sizeof(uint32_t)); }
+   static uint32_t getLowPart(uint32_t value, int shift)
+      {  return value & ~(~(uint32_t) 0 << shift); }
+   static uint32_t getHighPart(uint32_t value, int shift)
       {  return (value >> shift); }
-   static unsigned int getMiddlePart(unsigned int value, int lowBit, int sizeInBits)
-      {  return (value >> lowBit) & ~(~0U << sizeInBits); }
-   static unsigned int getStoreHighPart(unsigned int value, int shift)
+   static uint32_t getMiddlePart(uint32_t value, int lowBit, int sizeInBits)
+      {  return (value >> lowBit) & ~(~(uint32_t) 0 << sizeInBits); }
+   static uint32_t getStoreHighPart(uint32_t value, int shift)
       {  return (value << shift); }
-   static unsigned int getStoreHighPart(unsigned int value, int shift, unsigned int store)
-      {  return (value << shift) | (store & ~(~0U << shift)); }
-   static void storeIntoHighPart(unsigned int value, int shift, unsigned int& store)
-      {  store &= ~(~0U << shift);
+   static uint32_t getStoreHighPart(uint32_t value, int shift, uint32_t store)
+      {  return (value << shift) | (store & ~(~(uint32_t) 0 << shift)); }
+   static void storeIntoHighPart(uint32_t value, int shift, uint32_t& store)
+      {  store &= ~(~(uint32_t) 0 << shift);
          store |= (value << shift);
       }
    template <typename TypeProperty>
-   static void storeIntoHighPart(unsigned int value, int shift, TypeProperty store)
-      {  store &= ~(~0U << shift);
+   static void storeIntoHighPart(uint32_t value, int shift, TypeProperty store)
+      {  store &= ~(~(uint32_t) 0 << shift);
          store |= (value << shift);
       }
-   static unsigned int getStoreLowPart(unsigned int value, int shift)
-      {  return value & ~(~0U << shift); }
-   static unsigned int getStoreLowPart(unsigned int value, int shift, unsigned int store)
-      {  return (store & (~0U << shift)) | (value & ~(~0U << shift)); }
-   static void storeIntoLowPart(unsigned int value, int shift, unsigned int& store)
-      {  store &= (~0U << shift);
-         store |= (value & ~(~0U << shift));
+   static uint32_t getStoreLowPart(uint32_t value, int shift)
+      {  return value & ~(~(uint32_t) 0 << shift); }
+   static uint32_t getStoreLowPart(uint32_t value, int shift, uint32_t store)
+      {  return (store & (~(uint32_t) 0 << shift)) | (value & ~(~(uint32_t) 0 << shift)); }
+   static void storeIntoLowPart(uint32_t value, int shift, uint32_t& store)
+      {  store &= (~(uint32_t) 0 << shift);
+         store |= (value & ~(~(uint32_t) 0 << shift));
       }
    template <typename TypeProperty>
-   static void storeIntoLowPart(unsigned int value, int shift, TypeProperty store)
-      {  store &= (~0U << shift);
-         store |= (value & ~(~0U << shift));
+   static void storeIntoLowPart(uint32_t value, int shift, TypeProperty store)
+      {  store &= (~(uint32_t) 0 << shift);
+         store |= (value & ~(~(uint32_t) 0 << shift));
       }
-   static void setTrueBit(unsigned int& result, int index) { result |= (1U << index); }
+   static void setTrueBit(uint32_t& result, int index) { result |= ((uint32_t) 1 << index); }
    template <typename TypeProperty>
-   static void setTrueBit(TypeProperty result, int index) { result |= (1U << index); }
-   static void setFalseBit(unsigned int& result, int index) { result &= ~(1U << index); }
+   static void setTrueBit(TypeProperty result, int index) { result |= ((uint32_t) 1 << index); }
+   static void setFalseBit(uint32_t& result, int index) { result &= ~((uint32_t) 1 << index); }
    template <typename TypeProperty>
-   static void setFalseBit(TypeProperty result, int index) { result &= ~(1U << index); }
-   static void setBit(unsigned int& result, int index, bool value)
+   static void setFalseBit(TypeProperty result, int index) { result &= ~((uint32_t) 1 << index); }
+   static void setBit(uint32_t& result, int index, bool value)
       {  if (value)
-            result |= (1U << index);
+            result |= ((uint32_t) 1 << index);
          else
-            result &= ~(1U << index);
+            result &= ~((uint32_t) 1 << index);
       }
    template <typename TypeProperty>
    static void setBit(TypeProperty result, int index, bool value)
       {  if (value)
-            result |= (1U << index);
+            result |= ((uint32_t) 1 << index);
          else
-            result &= ~(1U << index);
+            result &= ~((uint32_t) 1 << index);
       }
-   static bool getBit(unsigned int value, int index)
-      {  return (value & (1U << index)) ? true : false; }
-   static void leftShiftLocal(unsigned int& value, int index, int shift)
-      {  unsigned int temp = value;
-         temp &= (~0U << index);
+   static bool getBit(uint32_t value, int index)
+      {  return (value & ((uint32_t) 1 << index)) ? true : false; }
+   static void leftShiftLocal(uint32_t& value, int index, int shift)
+      {  uint32_t temp = value;
+         temp &= (~(uint32_t) 0 << index);
          temp <<= shift;
-         value = temp | (value & ~(~0U << index));
+         value = temp | (value & ~(~(uint32_t) 0 << index));
       }
    template <typename TypeProperty>
    static void leftShiftLocal(TypeProperty value, int index, int shift)
-      {  unsigned int temp = value;
-         temp &= (~0U << index);
+      {  uint32_t temp = value;
+         temp &= (~(uint32_t) 0 << index);
          temp <<= shift;
-         value = temp | (value & ~(~0U << index));
+         value = temp | (value & ~(~(uint32_t) 0 << index));
       }
-   static void rightShiftLocal(unsigned int& value, int index, int shift)
-      {  unsigned int temp = value;
-         temp &= (~0U << index);
+   static void rightShiftLocal(uint32_t& value, int index, int shift)
+      {  uint32_t temp = value;
+         temp &= (~(uint32_t) 0 << index);
          temp >>= shift;
-         value = temp | (value & ~(~0U << (index-shift)));
+         value = temp | (value & ~(~(uint32_t) 0 << (index-shift)));
       }
    template <typename TypeProperty>
    static void rightShiftLocal(TypeProperty value, int index, int shift)
-      {  unsigned int temp = value;
-         temp &= (~0U << index);
+      {  uint32_t temp = value;
+         temp &= (~(uint32_t) 0 << index);
          temp >>= shift;
-         value = temp | (value & ~(~0U << (index-shift)));
+         value = temp | (value & ~(~(uint32_t) 0 << (index-shift)));
       }
-   static void leftShiftAndClearLow(unsigned int& value, int shift, int low)
+   static void leftShiftAndClearLow(uint32_t& value, int shift, int low)
       {  value <<= shift;
-         value &= ~0U << low;
+         value &= ~(uint32_t) 0 << low;
       }
    template <typename TypeProperty>
    static void leftShiftAndClearLow(TypeProperty value, int shift, int low)
       {  value <<= shift;
-         value &= ~0U << low;
+         value &= ~(uint32_t) 0 << low;
       }
-   static void rightShiftAndClearHigh(unsigned int& value, int shift, int high)
+   static void rightShiftAndClearHigh(uint32_t& value, int shift, int high)
       {  value >>= shift;
-         value &= ~(~0U << high);
+         value &= ~(~(uint32_t) 0 << high);
       }
    template <typename TypeProperty>
    static void rightShiftAndClearHigh(TypeProperty value, int shift, int high)
       {  value >>= shift;
-         value &= ~(~0U << high);
+         value &= ~(~(uint32_t) 0 << high);
       }
-   static void rightShift(unsigned int& value, int shift) { value >>= shift; }
+   static void rightShift(uint32_t& value, int shift) { value >>= shift; }
    template <typename TypeProperty>
    static void rightShift(TypeProperty value, int shift) { value >>= shift; }
-   static void leftShift(unsigned int& value, int shift) { value <<= shift; }
+   static void leftShift(uint32_t& value, int shift) { value <<= shift; }
    template <typename TypeProperty>
    static void leftShift(TypeProperty value, int shift) { value <<= shift; }
-   static void negLowValuePart(unsigned int& value, int shift)
+   static void negLowValuePart(uint32_t& value, int shift)
       {  if (shift > 0)
-            value = (value & (~0U << shift)) | (~value & ~(~0U << shift));
+            value = (value & (~(uint32_t) 0 << shift)) | (~value & ~(~(uint32_t) 0 << shift));
       }
    template <typename TypeProperty>
    static void negLowValuePart(TypeProperty value, int shift)
       {  if (shift > 0)
-            value = (value & (~0U << shift)) | (~value & ~(~0U << shift));
+            value = (value & (~(uint32_t) 0 << shift)) | (~value & ~(~(uint32_t) 0 << shift));
       }
-   static void clearLowValuePart(unsigned int& value, int shift)
+   static void clearLowValuePart(uint32_t& value, int shift)
       {  if (shift > 0)
-            value &= (~0U << shift);
+            value &= (~(uint32_t) 0 << shift);
       }
    template <typename TypeProperty>
    static void clearLowValuePart(TypeProperty value, int shift)
       {  if (shift > 0)
-            value &= (~0U << shift);
+            value &= (~(uint32_t) 0 << shift);
       }
-   static void clearHighValuePart(unsigned int& value, int shift)
-      {  if (shift < (int) (8*sizeof(unsigned)))
-            value &= ~(~0U << shift);
+   static void clearHighValuePart(uint32_t& value, int shift)
+      {  if (shift < (int) (8*sizeof(uint32_t)))
+            value &= ~(~(uint32_t) 0 << shift);
       }
    template <typename TypeProperty>
    static void clearHighValuePart(TypeProperty value, int shift)
-      {  if (shift < (int) (8*sizeof(unsigned)))
-            value &= ~(~0U << shift);
+      {  if (shift < (int) (8*sizeof(uint32_t)))
+            value &= ~(~(uint32_t) 0 << shift);
       }
-   static unsigned int getSaturation() { return ~0U; }
-   static void saturateLowValuePart(unsigned int& value, int shift)
+   static uint32_t getSaturation() { return ~(uint32_t) 0; }
+   static void saturateLowValuePart(uint32_t& value, int shift)
       {  if (shift > 0)
-            value |= ~(~0U << shift);
+            value |= ~(~(uint32_t) 0 << shift);
       }
    template <typename TypeProperty>
    static void saturateLowValuePart(TypeProperty value, int shift)
       {  if (shift > 0)
-            value |= ~(~0U << shift);
+            value |= ~(~(uint32_t) 0 << shift);
       }
-   static bool isZeroValue(unsigned int value) { return value == 0U; }
-   static bool hasZeroValue(unsigned int value, int shift)
-      {  AssumeCondition(shift <= (int) (8*sizeof(unsigned int)))
-         return (shift <= 0) || ((value << (8*sizeof(unsigned int)-shift)) == 0U);
+   static bool isZeroValue(uint32_t value) { return value == (uint32_t) 0U; }
+   static bool hasZeroValue(uint32_t value, int shift)
+      {  AssumeCondition(shift <= (int) (8*sizeof(uint32_t)))
+         return (shift <= 0) || ((value << (8*sizeof(uint32_t)-shift)) == (uint32_t) 0U);
       }
-   static bool isOneValue(unsigned int value) { return value == 1U; }
-   static void writeValue(STG::IOObject::OSBase& out, unsigned int value, bool isRaw)
-#ifdef StandardClassesHPP
+   static bool isOneValue(uint32_t value) { return value == (uint32_t) 1U; }
+   static void writeValue(STG::IOObject::OSBase& out, uint32_t value, bool isRaw)
+#ifndef DefineNoEnhancedObject
       {  out.write(value, isRaw); }
 #else
       {  if (!isRaw)
@@ -275,9 +277,9 @@ class UnsignedBaseStoreTraits {
             out.write(reinterpret_cast<char*>(&value), sizeof(value));
       }
 #endif
-   static void readValue(STG::IOObject::ISBase& in, unsigned int& value, bool isRaw)
+   static void readValue(STG::IOObject::ISBase& in, uint32_t& value, bool isRaw)
       {
-#ifdef StandardClassesHPP
+#ifndef DefineNoEnhancedObject
          in.read(value, isRaw);
 #else
          if (isRaw) {
@@ -290,6 +292,4 @@ class UnsignedBaseStoreTraits {
 };
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseIntegerCommonH
 

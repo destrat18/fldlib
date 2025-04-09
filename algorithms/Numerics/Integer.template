@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,10 +27,8 @@
 //   Implementation of a class of integers with unbound size.
 //
 
-#ifndef Numerics_IntegerTemplate
-#define Numerics_IntegerTemplate
+#pragma once
 
 #include "Numerics/Integer.h"
 #include "ForwardNumerics/BaseInteger.template"
 
-#endif // Numerics_IntegerTemplate

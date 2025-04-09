@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   is likely to inherits for STG::IOObject.
 //
 
-#ifndef STG_PersistenceH
-#define STG_PersistenceH
+#pragma once
 
 #include "StandardClasses/StandardClasses.hpp"
 #include <cstring>
@@ -354,6 +351,8 @@ class IOObject : public EnhancedObject {
    void read(std::istream& in) { ISStream instream(in); _read(instream, FormatParameters()); }
    void write(std::ostream& out, const FormatParameters& params) const { OSStream outstream(out); _write(outstream, params); }
    void write(std::ostream& out) const { OSStream outstream(out); _write(outstream, FormatParameters()); }
+
+   virtual const char* debugWrite() const;
 };
 
 #define DefineInlineIStreamMethods
@@ -389,4 +388,3 @@ class Base {
 
 }} // end of namespace STG::Lexer
 
-#endif // STG_PersistenceH

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -24,9 +22,10 @@
 //
 // Library   : Numerics
 // Unit      : Floating
-// File      : Floating.cpp
+// File      : HostFloating.cpp
 // Description :
-//   Implementation of a class of floating points with unbound size.
+//   Implementation of a class of native floating points in connection
+//   with soft floating points.
 //
 
 #include "Numerics/HostFloating.h"

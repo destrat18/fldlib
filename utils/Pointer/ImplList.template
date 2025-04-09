@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Implementation of the template methods of the ImplList class.
 //
 
-#ifndef COL_ImplListTemplate
-#define COL_ImplListTemplate
+#pragma once
 
 #include "Pointer/ImplList.h"
 
@@ -83,4 +80,3 @@ ImplList::foreachReverseDo(TemplateParameters, Execute& function, ImplListElemen
 
 } // end of namespace COL
 
-#endif // COL_ImplListTemplate

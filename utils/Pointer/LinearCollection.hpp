@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,11 +27,9 @@
 //   Includes all implementations of linear collections.
 //
 
-#ifndef PNT_LinearCollectionHPP
-#define PNT_LinearCollectionHPP
+#pragma once
 
 #include "Pointer/ImplList.h"
 #include "Pointer/ImplArray.h"
 #include "Pointer/Binary.h"
 
-#endif // PNT_LinearCollectionHPP

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,11 +28,8 @@
 //   with soft floating points.
 //
 
-#ifndef Numerics_HostFloatingH
-#define Numerics_HostFloatingH
+#pragma once
 
 #include "Numerics/Floating.h"
 #include "ForwardNumerics/BaseHostFloating.h"
-
-#endif // Numerics_HostFloatingH
 

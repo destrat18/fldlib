@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //     decides of the type of collection for its sons.
 //
 
-#ifndef COL_TreeH
-#define COL_TreeH
+#pragma once
 
 #include "Collection/ConcreteCollection/TreeCommon.h"
 #include "Collection/Implementation/ImplTree.h"
@@ -259,4 +256,3 @@ Template2InlineCollectionForAbstractCollect(COL::Tree, TreeCursor, Element, Cast
 
 } // end of namespace COL
 
-#endif

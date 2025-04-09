@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,8 +27,7 @@
 //   Definition of the class VirtualTree.
 //
 
-#ifndef COL_VirtualTreeH
-#define COL_VirtualTreeH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 
@@ -324,8 +321,9 @@ class VirtualTreeCursor : public VirtualCollectionCursor, public DVirtualTree::D
    
    virtual int queryBaseDiff(const VirtualTreeCursor* cursor) const { AssumeUncalled return 0; }
    enum PathDirection { PDForward, PDBackward };
-   virtual PNT::PassPointer<VirtualCursorPath> newPath(const VirtualTreeCursor* source,
-         PathDirection direction=PDForward) const { AssumeUncalled return  PNT::PassPointer<VirtualCursorPath>(); }
+   virtual PNT::PPassPointer<VirtualCursorPath> newPath(const VirtualTreeCursor* source,
+         PathDirection direction=PDForward) const
+      {  AssumeUncalled return PNT::PPassPointer<VirtualCursorPath>(); }
 
    virtual ValidityMode _getMode() const { return VMUpRoot; }
    virtual ExtendedComparisonResult _fullCompare(const VirtualTreeCursor& source) const
@@ -616,6 +614,4 @@ class VirtualTreeCursor::CursorAccess {
 
 
 } // end of namespace COL
-
-#endif
 

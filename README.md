@@ -75,111 +75,197 @@ of options, the library provides three kinds of instrumentation:
 To build and install the FLDLib library, you can type the following
 commands
 
-    ./configure --prefix=TheInstallationDirectory
-    make
-    make install
+```sh
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=TheInstallationDirectory -DFLDLIB_ENABLE_TESTS=ON ..
+make
+make install
+```
 
 To check the library
 
-    cd tests
-    make
-
+```sh
+ctest
+```
+ 
 To generate a diagnostic for a project (it should automatically
 build the adequate library at top level)
 
-    export FLOATDIAGNOSISHOME=TheInstallationDirectory
-    cd tests
-    $FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim \
-      -atomic absorption.c -o absorption.instr_diagnosis_affine
+```sh
+export FLOATDIAGNOSISHOME=TheInstallationDirectory
+cd ../tests
+$FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim \
+  -atomic absorption.cpp -o absorption.instr_diagnosis_affine
+```
 
 To generate the diagnosis, simply execute
 
-    ./absorption.instr_diagnosis_affine
+```sh
+./absorption.instr_diagnosis_affine
+```
 
 The diagnosis file is then the new generated file
 `absorption_diag_aff_out`.
 
+# Experiment with your own code
+
+First, take a look at the examples in the `tests` directory and the
+commands run when instrumentating these unit tests.
+
+If your code contains a single source file with a `main` function,
+you just need to add
+
+* the macro `DECLARE_RESOURCES` to the beginning of the source file,  
+* the macro `INIT_MAIN` to the beginning of the `main` function and
+  the macro `END_MAIN` to the end of the `main` function, just
+  before the `return 0;` instruction. `END_MAIN` aims to catch some
+  exceptions that the instrumentation library may throw,  
+* the macro `DPRINT(output)` for the variables of interest from the
+  accuracy point of view,
+* the macro `DBETWEEN(min, max)` to broaden the check with
+  ranges on inputs rather than single values. For example,
+  if `double in = 3.5;` appears in your test case,
+  you can replace it with `double in = DBETWEEN(3.0, 4.0);` to check
+  the accuracy of the computations for all input values between `3.0`
+  and `4.0`.
+
+Then the command `$FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine
+-optim -atomic file.c(pp) -o file.instr_diagnosis_affine` will
+instrument your code with the `FLDLib` library, and running
+`file.instr_diagnosis_affine` will produce a file `file.instr_diagnosis_affine`
+containing the variables marked with a `DPRINT` along with their ideal range,
+their floating-point range and the (guaranteed/conservative) roundoff error
+accumulation range.
+
+If your code has multiple source files with a `cmake` build system, examine the
+instrumentation command `comp_float_diagnosis.sh` run on a single source file.
+For example, on the test file `absorption.cpp`, the command
+
+```sh
+$FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim -atomic absorption.cpp -o absorption.instr_diagnosis_affine
+```
+
+would display the following line
+
+```
+g++ -DPROG_NAME=absorption -DFLOAT_DIAGNOSIS -ITheInstallationDirectory/include/fldlib -std=c++20 -ITheInstallationDirectory/include/fldlib -ITheInstallationDirectory/include/fldlib/utils -ITheInstallationDirectory/include/fldlib/algorithms -ITheInstallationDirectory/include/fldlib/applications -DFLOAT_ATOMIC -include std_header.h -DFLOAT_AFFINE -DFLOAT_FIRST_FOLLOW_EXE -O3 -DDefineDebugLevel=1 -DFLOAT_SILENT_COMPUTATIONS absorption.cpp -o absorption.instr_diagnosis_affine -L/home/vedrine/git/fldlib_new/bil/install/lib/fldlib -lm -lFloatDiagnosis
+```
+
+You can then edit the `CMakeLists.txt` file with
+new verification targets for `FLDLib` instrumentation.
+These verification targets must contain the compilation options
+listed above.
+
+You must then modify the source file containing the `main` function
+with the `DECLARE_RESOURCES`, `INIT_MAIN` and `END_MAIN` macros.
+The `FLOAT_DIAGNOSIS` or `FLDLIB_VERSION_MAJOR` macros should protect
+their use like
+
+```c++
+#ifdef FLOAT_DIAGNOSIS
+#DECLARE_RESOURCES
+#endif
+```
+
+to continue compiling the original targets.
+
+The instrumentation modifies the `double` and `float` types with structured
+types. Hence, the compilation may fail, such as the `printf` function
+with the `%f`, `%e` flags. In this case, you can modify your source
+code with the methodes provided by `FLDLib` for instrumented structures while
+protecting them with the `FLOAT_DIAGNOSIS` or `FLDLIB_VERSION_MAJOR` macros.
+
+Unstable branches are likely to occur when running instrumented
+code. To cover all the possible cases, you should add the `FLOAT_SPLIT_ALL`
+and `FLOAT_MERGE_ALL` macros to synchronize these branches.
+For this, see the `tests/simple.cpp` file.
+
+```c++
+  FLOAT_SPLIT_ALL(1, y >> double::end(), x << double::end())
+  if (x < 1.0f) {
+    FPRINT(x);
+    y = 4*x-3;
+  }
+  else {
+    FPRINT(x);
+    y = x;
+  }
+  FLOAT_MERGE_ALL(1, y << double::end(), x >> double::end())
+```
+
+The macros create a loop to cover all branches and synchronize the
+results.
+
+* The variable `y` requires synchronization because it is modified
+  differently depending on the branch and is read after the
+  synchronization point.  
+* The variable `x` does not require synchronization because it is not read after
+  the synchronization point.  
+* The variable `x` must be restored before the loop body since its value
+  before the split section is read in the split section and `x` is modified
+  by the `if (x < 1)` statement: `x` $\in [0.0, 2.0]$ becomes `x` $\in [0.0, 1.0[$
+  in the `then` branch.  
+* The variable `y` does not need to be restored because its value before the
+  split section is not read in the split section.
+
+The FLDLib generic options do not allow synchronization/restoration of integer
+domains in the `FLOAT_SPLIT_ALL` and `FLOAT_MERGE_ALL` macros. An experimental
+version (see the cmake variable `FLDLIB_SUPPORT_INT_DOMAIN`) removes this limitation, but
+you must use the type `NumericalDomains::TFldlibIntegerBranchOption<int>`
+instead of the `int` type at certain points in your code, which significantly
+increases the instrumentation effort.
+
 ## Credits
 
 The library has been developed thanks to the feedback from the experiments
-carried out jointly with the IRSN (Institut de Radioprotection et de Sûreté
-Nucléaire) and the partners of the ANR project CAFEIN to improve the
-diagnosis of accuracy in numerical software.
-
-# Generate a comparison table
-
-Some advanced tests requires perl and the package File::ReadBackwards.
-
-To generate an accuracy summary table, you need
-- to install python to scan the results in the current directory
-- to install ocaml with yojson and biniou to create a summary table
-
-To create the result table in the directory tests, summarizing all
-the results for all the projects.
-
-    make diagnosis_affine
-    make diagnosis_exact
-    
-    make table.txt
+carried out jointly with the ASNR (Nuclear Safety and Radiation Protection
+Authority) and the partners of the ANR projects CAFEIN and INTERFLOP to
+improve the diagnosis of accuracy in numerical software.
 
 # Options for the instrumentation library
 
-More precisely, the instrumentation comp_float_diagnosis.sh comes
+More precisely, the instrumentation `comp_float_diagnosis.sh` comes
 with many options. Each set of options comes with a specific way to
 compile the instrumentation library. The simpler way to experiment
 with the options is to try a specific set of options. In case of
 failure at link-time, then the user should look at error message,
 identify the missing library, go into the parent directory ..,
 compile the missing library with 'make -j libFloat...a', go into the
-test_compiler directory and play back the specific set of options.
+`test_compiler` directory and play back the specific set of options.
 
 The following options are supported:
 
   * -interval or -exact or -affine 
-
   * -optim
-
   * -atomic
-
   * -loop
-
   * -verbose
-
-  * -interface if configure has received --enable-interface as option
-
   * -print-path
 
-The last options in the command line comp_float_diagnosis.sh are the
+The last options in the command line `comp_float_diagnosis.sh` are the
 compilation options of the project.
 
 You can see some macros in the source code
 
-  * DECLARE_RESOURCES
-
+  * `DECLARE_RESOURCES`  
     To put just after the header of the translation unit file.c(pp)
-    containing the main function.
-
-  * INIT_MAIN, END_MAIN
-
-    To put at the beginning and at the end of the main function.
-
-  * FPRINT, DPRINT
-
-    To define the variables whose accuracy is interesting to follow.
-
-  * FLOAT_SPLIT_ALL, FLOAT_MERGE_ALL
-
+    containing the main function.  
+  * `INIT_MAIN`, `END_MAIN`  
+    To put at the beginning and at the end of the main function.  
+  * `FPRINT`, `DPRINT`  
+    To define the variables whose accuracy is interesting to follow.  
+  * `FLOAT_SPLIT_ALL`, `FLOAT_MERGE_ALL`  
     The content of the these macros is defined as follow
 
-    ````
-      FLOAT_SPLIT_ALL(ident, out1 >> ... >> double::end(),
-          intermediate1 << ... << double::end())
+    ```c++
+    FLOAT_SPLIT_ALL(ident, out1 >> ... >> double::end(),
+        intermediate1 << ... << double::end())
 
-      /* code containing the unstable branch */
+    /* code containing the unstable branch */
 
-      FLOAT_MERGE_ALL(ident, ... << out1 << double::end(),
-          ... >> intermediate1 >> double::end())
-    ````
+    FLOAT_MERGE_ALL(ident, ... << out1 << double::end(),
+        ... >> intermediate1 >> double::end())
+    ```
 
     The variables out1, ... are floating-point variables that are
     assigned by at least one of the branches and that are used after
@@ -199,10 +285,6 @@ You can see some macros in the source code
     is no more useful (in the def/use sense used in Static Single
     Assignment transforms).
 
-    These rules are encoded in the Frama-C plugin
-    Frama-C/FLDCompiler, but the user should know them to integrate
-    and adapt the results of Frama-C/FLDCompiler in the source code.
-
 # Targetted numerical systems
 
 This library is likely to be used to deliver a diagnosis verdict
@@ -212,13 +294,10 @@ to sound static analyses.
 
 If you have questions about
 
- * the plugin Frama-C/FLDCompiler
-
- * the methodology
-
+ * the methodology  
  * how to obtain less overapproximated accuracy results, with
    less analysis time on bigger numerical systems
 
 do not hesitate to contact us at name@cea.fr with name =
-franck.vedrine, nikolai.kosmatov or florent.kirchner.
+franck.vedrine
 

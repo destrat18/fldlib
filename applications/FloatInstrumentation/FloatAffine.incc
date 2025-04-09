@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,7 +27,7 @@
 //   Implementation of a class of affine relations.
 //
 
-#include "FloatInstrumentation/BackTrace.h"
+#include "NumericalAnalysis/BackTrace.h"
 
 namespace NumericalDomains { namespace DAffine {
 
@@ -214,11 +212,11 @@ BuiltReal ExecutionPath::brThresholdDomain;
 BuiltReal ExecutionPath::brMaximalAccuracy;
 
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
-PNT::AutoPointer<TConstraintsSet<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+PNT::CPassPointer<TConstraintsSet<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #elif defined(FLOAT_GENERIC_BASE_LONG)
-PNT::AutoPointer<TGConstraintsSet<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+PNT::CPassPointer<TGConstraintsSet<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
-PNT::AutoPointer<TGConstraintsSet<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+PNT::CPassPointer<TGConstraintsSet<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #endif
 ExecutionPath::apcsConstraints;
 BaseExecutionPathParams* ExecutionPath::pParams = nullptr;
@@ -612,19 +610,19 @@ ExecutionPath::finalizeGlobals() {
          }
          else { // conversion
             AssumeCondition(pPathExplorer.currentStackPosition() >= (int) pPathExplorer.lastLogCases())
-            int index = (int) ((pPathExplorer.currentStackPosition()-pPathExplorer.lastLogCases())/(8*sizeof(unsigned)));
-            int shiftIndex = (int) ((pPathExplorer.currentStackPosition()-pPathExplorer.lastLogCases()) % (8*sizeof(unsigned)));
-            if ((int) (8*sizeof(unsigned) - shiftIndex) > (int) pPathExplorer.lastLogCases()) {
+            int index = (int) ((pPathExplorer.currentStackPosition()-pPathExplorer.lastLogCases())/(8*sizeof(uint32_t)));
+            int shiftIndex = (int) ((pPathExplorer.currentStackPosition()-pPathExplorer.lastLogCases()) % (8*sizeof(uint32_t)));
+            if ((int) (8*sizeof(uint32_t) - shiftIndex) > (int) pPathExplorer.lastLogCases()) {
                pPathExplorer.stackTrace()[index] &= ~(~(~0U << pPathExplorer.lastLogCases()) << shiftIndex);
                pPathExplorer.stackTrace()[index] |= pPathExplorer.lastResult() << shiftIndex;
             }
-            else { // pPathExplorer.lastLogCases() >= (8*sizeof(unsigned) - shiftIndex)
+            else { // pPathExplorer.lastLogCases() >= (8*sizeof(uint32_t) - shiftIndex)
                pPathExplorer.stackTrace()[index] &= ~(~0U << shiftIndex);
                pPathExplorer.stackTrace()[index+1]
-                  &= ~0U << (pPathExplorer.lastLogCases() - (8*sizeof(unsigned) - shiftIndex));
+                  &= ~0U << (pPathExplorer.lastLogCases() - (8*sizeof(uint32_t) - shiftIndex));
                pPathExplorer.stackTrace()[index] |= pPathExplorer.lastResult() << shiftIndex;
                pPathExplorer.stackTrace()[index+1] |= pPathExplorer.lastResult()
-                  >> (pPathExplorer.lastLogCases() - (8*sizeof(unsigned) - shiftIndex));
+                  >> (pPathExplorer.lastLogCases() - (8*sizeof(uint32_t) - shiftIndex));
             };
          }
       };
@@ -917,20 +915,20 @@ ExecutionPath::followNewBranch(int cases, BooleanChoice& realChoice, BooleanChoi
    }
 }
 
-unsigned
-ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
-      bool& implementationChoice, unsigned realNumber, unsigned implementationNumber,
-      unsigned commonNumber, unsigned firstRealCommon, unsigned firstImplementationCommon,
-      unsigned& alternativeResult) {
-   unsigned result;
+uint32_t
+ExecutionPath::followNewConversionBranch(uint64_t conversion, bool& realChoice,
+      bool& implementationChoice, uint64_t realNumber, uint64_t implementationNumber,
+      uint64_t commonNumber, uint64_t firstCommon, uint64_t firstReal, uint64_t firstImplementation,
+      uint64_t& alternativeResult) {
+   uint32_t result;
    int number = Numerics::DInteger::Access::log_base_2(conversion);
-   int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(unsigned)));
-   int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(unsigned)));
+   int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(uint32_t)));
+   int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(uint32_t)));
    bool initialDoesFollow = fDoesFollow;
    if (fDoesFollow) {
       result = (currentPathExplorer->stackTrace()[index] >> shiftIndex);
-      if ((int) (8*sizeof(unsigned) - shiftIndex) < number)
-         result |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(unsigned) - shiftIndex);
+      if ((int) (8*sizeof(uint32_t) - shiftIndex) < number)
+         result |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(uint32_t) - shiftIndex);
       result &= ~(~0U << number);
       fDoesFollow = ((currentPathExplorer->currentStackPosition() + number)
                < (int) currentPathExplorer->stackTrace().log_base_2())
@@ -940,18 +938,21 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
    }
    else
       result = 0;
-   unsigned oldResult = result;
+   uint32_t oldResult = result;
 
+   uint64_t maxPossiblePaths;
    bool isLastCaseIfFollow = false;
    if (realNumber == 0 || implementationNumber == 0) {
       if (implementationNumber != 0) {
-         AssumeCondition(result < implementationNumber)
+         maxPossiblePaths = implementationNumber;
+         AssumeCondition(result < maxPossiblePaths)
          realChoice = false;
          implementationChoice = true;
          currentPathExplorer->doesCurrentUnstableHasOtherBranches() = (result == 0); // result == implementationNumber-1
       }
       else {
-         AssumeCondition(result < realNumber)
+         maxPossiblePaths = realNumber;
+         AssumeCondition(result < maxPossiblePaths)
          realChoice = true;
          implementationChoice = false;
          currentPathExplorer->doesCurrentUnstableHasOtherBranches() = (result == 0); // result == realNumber-1
@@ -959,7 +960,8 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
    }
    else if (realNumber == 1 || implementationNumber == 1) {
       if (implementationNumber > 1) { // realNumber == 1
-         AssumeCondition(result < 2*implementationNumber-commonNumber)
+         maxPossiblePaths = 2*implementationNumber - commonNumber;
+         AssumeCondition(result < maxPossiblePaths)
          if (result == 0) {
             if (commonNumber == 1) {
                implementationChoice = true;
@@ -984,7 +986,8 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
          };
       }
       else { // implementationNumber == 1 && realNumber >= 1
-         AssumeCondition(result < 2*realNumber-commonNumber)
+         maxPossiblePaths = 2*realNumber - commonNumber;
+         AssumeCondition(result < maxPossiblePaths)
          if (result == 0) {
             if (commonNumber == 1) {
                implementationChoice = true;
@@ -1022,7 +1025,8 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
       };
    }
    else { // realNumber > 1 and implementationNumber > 1
-      AssumeCondition(result < 2*realNumber*implementationNumber - commonNumber)
+      maxPossiblePaths = 2*realNumber*implementationNumber - commonNumber;
+      AssumeCondition(result < maxPossiblePaths)
    
       if (result < commonNumber)
          realChoice = implementationChoice = true;
@@ -1046,7 +1050,7 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
 
    if (!fDoesFollow) {
       ++result;
-      if (result == (unsigned) (2*realNumber*implementationNumber - commonNumber))
+      if (result == maxPossiblePaths)
          result = 0;
       currentPathExplorer->lastResult() = result;
       currentPathExplorer->lastLogCases() = number;
@@ -1061,15 +1065,15 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
          currentPathExplorer->lastZeroBit() = currentPathExplorer->currentStackPosition()+number;
          currentPathExplorer->lastIncBit() = currentPathExplorer->currentStackPosition();
       };
-      if ((int) (8*sizeof(unsigned) - shiftIndex) > number) {
+      if ((int) (8*sizeof(uint32_t) - shiftIndex) > number) {
          currentPathExplorer->stackTrace()[index] &= ~(~(~0U << number) << shiftIndex);
          currentPathExplorer->stackTrace()[index] |= oldResult << shiftIndex;
       }
-      else { // number >= (8*sizeof(unsigned) - shiftIndex)
+      else { // number >= (8*sizeof(uint32_t) - shiftIndex)
          currentPathExplorer->stackTrace()[index] &= ~(~0U << shiftIndex);
-         currentPathExplorer->stackTrace()[index+1] &= ~0U << (number - (8*sizeof(unsigned) - shiftIndex));
+         currentPathExplorer->stackTrace()[index+1] &= ~0U << (number - (8*sizeof(uint32_t) - shiftIndex));
          currentPathExplorer->stackTrace()[index] |= oldResult << shiftIndex;
-         currentPathExplorer->stackTrace()[index+1] |= oldResult >> (number - (8*sizeof(unsigned) - shiftIndex));
+         currentPathExplorer->stackTrace()[index+1] |= oldResult >> (number - (8*sizeof(uint32_t) - shiftIndex));
       };
    }
    else if (result < conversion-1 && !isLastCaseIfFollow) {
@@ -1135,7 +1139,7 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
          bool isImplementation = result & 0x1;
          result >>= 1;
          // 0 <= result < implementationNumber*realNumber
-         unsigned implementation = (result / realNumber), real = (result % realNumber);
+         uint64_t implementation = (result / realNumber), real = (result % realNumber);
          AssumeCondition(realChoice != implementationChoice)
          alternativeResult = isImplementation ? real : implementation;
          return isImplementation ? implementation : real;
@@ -1144,25 +1148,25 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
       if (implementationNumber == 1 || realNumber == 1) {
          // 1 <= result < 2*implementationNumber*realNumber-1
          --result;
-         bool isImplementation = result & 0x1;
+         bool isImplementation = (commonNumber == 1) ? !(result & 0x1) : (result & 0x1);
          result >>= 1;
          // 0 <= result < implementationNumber*realNumber-1
          if (isImplementation) {
             if (implementationNumber == 1) {
-               alternativeResult = (result >= firstRealCommon) ? result+1 : result;
+               alternativeResult = (result + firstCommon >= firstReal) ? result+1 : result;
                return 0;
             };
             // 0 <= result < implementationNumber-1
             alternativeResult = 0;
-            return (result >= firstImplementationCommon) ? result+1 : result;
+            return (result+firstCommon >= firstImplementation) ? result+1 : result;
          };
          if (realNumber == 1) {
-            alternativeResult = (result >= firstImplementationCommon) ? result+1 : result;
+            alternativeResult = (result+firstCommon >= firstImplementation) ? result+1 : result;
             return 0;
          };
          // 0 <= result < realNumber-1
          alternativeResult = 0;
-         return (result >= firstRealCommon) ? result+1 : result;
+         return (result+firstCommon >= firstReal) ? result+1 : result;
       };
 
       // implementationNumber > 1 && realNumber > 1 && commonNumber > 0
@@ -1171,24 +1175,24 @@ ExecutionPath::followNewConversionBranch(unsigned conversion, bool& realChoice,
       bool isImplementation = !(result & 0x1);
       result >>= 1;
       // 0 <= result < implementationNumber*realNumber-commonNumber
-      unsigned implementationResult = result / realNumber;
-      if (implementationResult >= firstImplementationCommon + commonNumber)
+      uint64_t implementationResult = result / realNumber;
+      if (implementationResult+firstCommon >= firstImplementation + commonNumber)
          result += commonNumber;
-      else if (implementationResult >= firstImplementationCommon) {
-         // firstRealCommon <= result/realNumber < firstRealCommon + commonNumber
-         result += (implementationResult-firstImplementationCommon);
-         // result += (firstRealCommon-implementationResult);
+      else if (implementationResult+firstCommon >= firstImplementation) {
+         // firstReal-firstCommon <= result/realNumber < firstReal-firstCommon + commonNumber
+         result += (implementationResult+firstCommon-firstImplementation);
+         // result += (firstReal-firstCommon-implementationResult);
          if (result / realNumber > implementationResult)
             ++result;
       };
       implementationResult = result / realNumber;
-      unsigned realResult = result % realNumber;
-      if (implementationResult >= firstImplementationCommon) {
-         if (realResult - firstRealCommon >= implementationResult - firstImplementationCommon) {
+      uint64_t realResult = result % realNumber;
+      if (implementationResult+firstCommon >= firstImplementation) {
+         if (realResult+firstImplementation >= implementationResult+firstReal) {
             ++realResult;
             if (realResult == realNumber) {
                ++implementationResult;
-               realResult = (implementationResult == firstImplementationCommon) ? 1 : 0;
+               realResult = (implementationResult+firstCommon == firstImplementation) ? 1 : 0;
             };
          };
       };

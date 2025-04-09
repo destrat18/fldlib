@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -27,14 +25,13 @@
 // File      : FloatExactExecutionPath.h
 // Description :
 //   Definition of a class of floating point comparison
+//   Requires the definition of FLOAT_REAL_BITS_NUMBER.
 //
 
-#ifndef NumericalAnalysis_FloatExactExecutionPathH
-#define NumericalAnalysis_FloatExactExecutionPathH
+#pragma once
 
 #include <cfloat>
 
-#include "config.h"
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
 #include "NumericalDomains/FloatExactBase.h"
 #else
@@ -84,11 +81,13 @@ namespace DFloatDigitsHelper {
    };
 }
 
-class FloatDigitsHelper {
-  public:
+struct FloatDigitsHelper {
    template <typename TypeImplementation>
    class TFloatDigits : public DFloatDigitsHelper::TFloatDigits<TypeImplementation> {};
 };
+
+template <class TypeBuiltDouble, typename TypeImplementation>
+struct TFloatDigitsConnectionHelper {};
 
 #ifndef FLOAT_REAL_BITS_NUMBER
 #define FLOAT_REAL_BITS_NUMBER 123
@@ -100,18 +99,66 @@ typedef TBuiltFloat<FLOAT_REAL_BITS_NUMBER, 23, 8> BuiltFloat;
 typedef TBuiltFloat<FLOAT_REAL_BITS_NUMBER, 52, 11> BuiltDouble;
 typedef TBuiltFloat<FLOAT_REAL_BITS_NUMBER,
       FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa, FloatDigitsHelper::TFloatDigits<long double>::UBitSizeExponent> BuiltLongDouble;
+
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      float>
+   {  typedef BuiltFloat BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      double>
+   {  typedef BuiltDouble BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      long double>
+   {  typedef BuiltLongDouble BuiltType; };
 #elif defined(FLOAT_GENERIC_BASE_LONG)
 typedef TGBuiltReal<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER> BuiltReal;
 typedef TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, 23, 8> BuiltFloat;
 typedef TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, 52, 11> BuiltDouble;
 typedef TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER,
       FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa, FloatDigitsHelper::TFloatDigits<long double>::UBitSizeExponent> BuiltLongDouble;
+
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      float>
+   {  typedef BuiltFloat BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      double>
+   {  typedef BuiltDouble BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedLongBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      long double>
+   {  typedef BuiltLongDouble BuiltType; };
 #else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
 typedef TGBuiltReal<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER> BuiltReal;
 typedef TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, 23, 8> BuiltFloat;
 typedef TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, 52, 11> BuiltDouble;
 typedef TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER,
         FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa, FloatDigitsHelper::TFloatDigits<long double>::UBitSizeExponent> BuiltLongDouble;
+
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      float>
+   {  typedef BuiltFloat BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      double>
+   {  typedef BuiltDouble BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TGBuiltFloat<Numerics::UnsignedBaseStoreTraits, UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      long double>
+   {  typedef BuiltLongDouble BuiltType; };
 #endif
 
 class BaseExecutionPath {
@@ -233,9 +280,9 @@ class TBaseFloatExact : public TypeExecutionPath {
 
    template <class TFloatExact>
    void notifyForCompare(const TFloatExact& source) const
-      {  BaseExecutionPath::SpecialValue mode;
-         bool doesAssume;
-         bool hasOutput;
+      {  BaseExecutionPath::SpecialValue mode = BaseExecutionPath::SVNone;
+         bool doesAssume = false;
+         bool hasOutput = false;
          if (inherited::fSupportVerbose || inherited::fSupportThreshold) {
             mode = inherited::getMode();
             doesAssume = inherited::doesFollowFlow() && mode == BaseExecutionPath::SVNone;
@@ -414,11 +461,9 @@ class TFloatExact
    friend class TBaseFloatExact<TypeExecutionPath>;
 
   public:
-   TFloatExact() {}
-   TFloatExact(int value) : inherited(value) {}
-   TFloatExact(unsigned value) : inherited(value) {}
-   TFloatExact(long value) : inherited(value) {}
-   TFloatExact(unsigned long value) : inherited(value) {}
+   TFloatExact() = default;
+   template <typename TypeValue> TFloatExact(TypeValue value) requires std::integral<TypeValue>
+      :  inherited(value) {}
    TFloatExact(const thisType& source) = default;
    TFloatExact& operator=(const thisType& source) = default;
 
@@ -528,6 +573,4 @@ class BaseExecutionPath::QuickDouble
 };
 
 }} // end of namespace NumericalDomains::DDoubleExact
-
-#endif // NumericalAnalysis_FloatExactExecutionPathH
 

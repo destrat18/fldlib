@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -40,7 +38,7 @@
 #define DefineRealMantissaExponentTemplateParameters(RealBitsNumber, SizeMantissa, SizeExponent) \
    <RealBitsNumber, SizeMantissa, SizeExponent>
 #define DefineSizeofBaseTypeInBits                                   \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineEquationTemplateHeader(RealBitsNumber)                 \
    template <int RealBitsNumber, class TypeBaseFloatAffine>
 #define DefineSEquationTemplateHeader(RealBitsNumber)                \
@@ -99,7 +97,8 @@ class DefineBaseFloatZonotope : public TypeBaseFloatAffine {
 #endif
 
   public:
-   typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
+   typedef typename TypeBaseFloatAffine::BuiltReal BuiltReal;
+   // typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
    typedef DefineEquation DefineEquationTemplateParameters(URealBitsNumber) Equation;
    typedef DefineConstraint DefineEquationTemplateParameters(URealBitsNumber) Constraint;
    typedef DefineConstraintsSet DefineEquationTemplateParameters(URealBitsNumber) ConstraintsSet;
@@ -183,6 +182,8 @@ class DefineBaseFloatZonotope : public TypeBaseFloatAffine {
                && (special >= SVNoError && special <= SVNoErrorTopReal))
          }
       }
+   BuiltReal computeNonRelationalPartOfIntPower(const BuiltReal& implementationInput,
+         const BuiltReal& realInput, bool isMin, int powValue, const BuiltReal& powValueReal) const;
 
   public:
    class GuardStateZonotope {
@@ -280,8 +281,12 @@ class DefineBaseFloatZonotope : public TypeBaseFloatAffine {
             && (svSpecial >= SVNoError && svSpecial <= SVNoErrorTopReal))
          return (svSpecial == SVNoError) ? LSNone : LSTopReal;
       }
+
+  public:
    void updateLocalState()
       {  updateLocalState(eRealDomain, eError, svSpecial, inherited::getMode(), symbolsManager()); }
+
+  protected:
    bool shouldChangeLocalState() const
       {  typename inherited::Mode mode = inherited::getMode();
          bool result = false;
@@ -470,6 +475,30 @@ class DefineBaseFloatZonotope : public TypeBaseFloatAffine {
          out.writesome("], e=[");
          eError.write(out, intervalParams);
          out.put(']');
+      }
+   void writeBasicInterval(STG::IOObject::OSBase& out) const
+      {  typename Equation::WriteParameters intervalParams;
+         intervalParams.setInterval();
+         if (!hasNoReal()) {
+            if (!hasTopReal()) {
+               out.writesome("r=");
+               eRealDomain.write(out, intervalParams);
+            }
+            else
+               out.writesome("r=T");
+         }
+         else
+            out.writesome("r=xxx");
+         if (!hasNoError() && !hasNoReal()) {
+            if (!hasTopError()) {
+               out.writesome(", e=");
+               eError.write(out, intervalParams);
+            }
+            else
+               out.writesome(", e=T");
+         }
+         else
+            out.writesome(", e=xxx");
       }
 
   public:
@@ -755,12 +784,12 @@ class DefineBaseFloatZonotopeWithSymbolic
    void oppositeAssign();
    typedef Numerics::DDouble::Access::ReadParameters ReadParametersBase;
    // roundMode=RMZero for C conversions, roundMode=RMNearest for Ada conversions, roundMode=RMLowest for floor
-   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
-   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
-   long int asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
-      {  return asInt(roundMode); }
-   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
-      {  return asUnsigned(roundMode); }
+   long int asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
+   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
+   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
+      {  return asLongInt(roundMode); }
+   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
+      {  return asUnsignedLong(roundMode); }
 
    void sqrtAssign();
    void sinAssign();
@@ -779,7 +808,8 @@ class DefineBaseFloatZonotopeWithSymbolic
 DefineEquationTemplateHeader(URealBitsNumber)
 class TSimplificationRules {
   private:
-   typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
+   typedef typename TypeBaseFloatAffine::BuiltReal BuiltReal;
+   // typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
    typedef DefineEquation DefineEquationTemplateParameters(URealBitsNumber) Equation;
    Equation* peDomainResult;
    Equation* peErrorResult;
@@ -827,6 +857,88 @@ class TSimplificationRules {
       }
 };
 
+class BasePathExplorer {
+  public:
+   class AbstractImplementation : public EnhancedObject {
+      public:
+       AbstractImplementation() = default;
+       AbstractImplementation(const AbstractImplementation&) = default;
+       DefineCopy(AbstractImplementation)
+   };
+   template <class TypeImplementation>
+   class ImplementationContent : public AbstractImplementation {
+     private:
+      TypeImplementation tiContent;
+
+     public:
+      ImplementationContent(const TypeImplementation& content) : tiContent(content) {}
+      ImplementationContent(TypeImplementation&& content) : tiContent(content) {}
+      ImplementationContent(const ImplementationContent&) = default;
+      ImplementationContent(ImplementationContent&&) = default;
+      TemplateDefineCopy(ImplementationContent, TypeImplementation)
+
+      const TypeImplementation& content() const { return tiContent; }
+      TypeImplementation& content() { return tiContent; }
+   };
+   typedef COL::TCopyCollection<COL::TArray<AbstractImplementation> > AbstractImplementationArray;
+
+   class AbstractEquation : public EnhancedObject {
+      public:
+       AbstractEquation() = default;
+       AbstractEquation(const AbstractEquation&) = default;
+       DefineCopy(AbstractEquation)
+   };
+   template <class TypeEquation>
+   class EquationContent : public AbstractEquation {
+     private:
+      TypeEquation teContent;
+
+     public:
+      EquationContent(const TypeEquation& content) : teContent(content) {}
+      EquationContent(TypeEquation&& content) : teContent(content) {}
+      EquationContent(const EquationContent&) = default;
+      EquationContent(EquationContent&&) = default;
+      TemplateDefineCopy(EquationContent, TypeEquation)
+
+      const TypeEquation& content() const { return teContent; }
+      TypeEquation& content() { return teContent; }
+   };
+   typedef COL::TCopyCollection<COL::TArray<AbstractEquation> > AbstractEquationArray;
+
+   template <class TypeImplementation>
+   static const TypeImplementation& firstSynchronisation(const AbstractImplementationArray& implementationArray)
+      {  const auto& result = implementationArray.getFirst();
+         AssumeCondition(dynamic_cast<const ImplementationContent<TypeImplementation>*>(&result))
+         return ((const ImplementationContent<TypeImplementation>&) result).content();
+      }
+   template <class TypeEquation>
+   static const TypeEquation& firstSynchronisation(const AbstractEquationArray& realArray)
+      {  const auto& result = realArray.getFirst();
+         AssumeCondition(dynamic_cast<const EquationContent<TypeEquation>*>(&result))
+         return ((const EquationContent<TypeEquation>&) result).content();
+      }
+};
+
+template <class TypeEquation>
+struct THighLevelUpdate {
+   TypeEquation* equation;
+   typename TypeEquation::BuiltReal highLevelError;
+
+   THighLevelUpdate() : equation(nullptr) {}
+   THighLevelUpdate(TypeEquation& equationSource, const typename TypeEquation::BuiltReal& highLevelErrorSource)
+      :  equation(&equationSource), highLevelError(highLevelErrorSource) {}
+};
+
+template <class TypeEquation>
+class THighLevelUpdateVector : public COL::TVector<THighLevelUpdate<TypeEquation>> {
+  private:
+   typedef COL::TVector<THighLevelUpdate<TypeEquation>> inherited;
+
+  public:
+   void insertAtEnd(TypeEquation& equation, const typename TypeEquation::BuiltReal& highLevelError)
+      {  inherited::insertAtEnd(THighLevelUpdate<TypeEquation>(equation, highLevelError)); }
+};
+
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
 class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)
                            /* DefineBaseFloatZonotopeWithSymbolic DefineEquationTemplateParameters(URealBitsNumber) */ {
@@ -841,7 +953,9 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
    typedef DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber) inherited;
    typedef DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent) thisType;
 
+#ifdef FLOAT_CONCRETE
    TypeImplementation dValue;
+#endif
    BuiltDouble bfMin;
    BuiltDouble bfMax; // [bfMin, bfMax] = eError + eRealDomain
    BuiltDouble bfMinRelativeError;
@@ -857,7 +971,8 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
       source);
 
   public:
-   typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
+   typedef typename TypeBaseFloatAffine::BuiltReal BuiltReal;
+   // typedef DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber) BuiltReal;
    typedef DefineEquation DefineEquationTemplateParameters(URealBitsNumber) Equation;
    typedef TSimplificationRules DefineEquationTemplateParameters(URealBitsNumber) SimplificationRules;
 
@@ -869,7 +984,9 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
   public:
    void mergeWith(const thisType& source)
       {  inherited::mergeWith(source);
+#ifdef FLOAT_CONCRETE
          dValue = source.dValue;
+#endif
          if (bfMin > source.bfMin)
             bfMin = source.bfMin;
          if (bfMax < source.bfMax)
@@ -901,6 +1018,7 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
    void writeZonotope(STG::IOObject::OSBase& out) const;
    void assumeInterval(STG::IOObject::ISBase& in) const;
    void writeInterval(STG::IOObject::OSBase& out) const;
+   void writeBasicInterval(STG::IOObject::OSBase& out) const;
    void retrieveRelativeError(BuiltReal& result) const;
 
    typedef Numerics::DDouble::Access::ReadParameters ReadParametersBase;
@@ -927,6 +1045,9 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
    typename inherited::EquationHolder& getSRealDomain() { return inherited::getSRealDomain(); }
    const typename inherited::EquationHolder& getRealDomain() const { return inherited::getRealDomain(); }
    typename inherited::EquationHolder& getSError() { return inherited::getSError(); }
+   void addHighLevelUpdateError(THighLevelUpdateVector<typename inherited::Equation>& highLevelUpdates,
+         const BuiltReal& highLevelError)
+      {  highLevelUpdates.insertAtEnd(inherited::getSError(), highLevelError); }
    const typename inherited::EquationHolder& getError() const { return inherited::getError(); }
 
    SymbolsManager& symbolsManager() const { return inherited::symbolsManager(); }
@@ -936,10 +1057,7 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
   public:
    DefineBasicFloatZonotope() = default;
    DefineBasicFloatZonotope(TypeImplementation min, TypeImplementation max);
-   DefineBasicFloatZonotope(int value);
-   DefineBasicFloatZonotope(long int value);
-   DefineBasicFloatZonotope(unsigned value);
-   DefineBasicFloatZonotope(unsigned long value);
+   template <typename TypeValue> DefineBasicFloatZonotope(TypeValue value) requires std::integral<TypeValue>;
    DefineBasicFloatZonotope(const thisType& source) = default;
    DefineBasicFloatZonotope(thisType&& source) = default; // [TODO] keep symbolic for constraints
    DefineBasicFloatZonotope& operator=(const thisType& source) = default;
@@ -977,7 +1095,7 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
             <BaseStoreTraits, URealBitsNumber, TypeBaseFloatAffine, USizeMantissaArgument, USizeExponentArgument, TypeImplementationArgument>&&
 #endif
          source)
-      {  return operator=(thisType(source)); }
+      {  return operator=(thisType(std::move(source))); }
 
    void setError(TypeImplementation errmin, TypeImplementation errmax);
    void setFromReal(const Equation& realDomain, typename Equation::PolicyCall policyCall);
@@ -995,7 +1113,9 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
 
    void oppositeAssign()
       {  inherited::oppositeAssign();
+#ifdef FLOAT_CONCRETE
          dValue = -dValue;
+#endif
          bfMin.swap(bfMax);
          bfMin.opposite();
          bfMax.opposite();
@@ -1005,13 +1125,17 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
       }
 
    typedef TypeImplementation ImplementationType;
+#ifdef FLOAT_CONCRETE
    TypeImplementation asImplementation() const { return dValue; }
+   TypeImplementation& getSImplementation() { return dValue; }
+#endif
+   void retrieveImplementationBounds(TypeImplementation& min, TypeImplementation& max) const;
    // roundMode=RMZero for C conversions, roundMode=RMNearest for Ada conversions, roundMode=RMLowest for floor
    template <typename TypeConversion>
    bool retrieveConcreteChoicesForConversion(ReadParametersBase::RoundMode roundMode,
          typename inherited::EquationHolder& implementation, TypeConversion& baseResult,
-         unsigned& firstReal, unsigned& lastReal, unsigned& firstImplementation,
-         unsigned& lastImplementation, TypeConversion& realResultMin, TypeConversion& realResultMax,
+         uint64_t& firstReal, uint64_t& lastReal, uint64_t& firstImplementation,
+         uint64_t& lastImplementation, TypeConversion& realResultMin, TypeConversion& realResultMax,
          TypeConversion& implementationResultMin, TypeConversion& implementationResultMax,
          TypeConversion& realPlusErrorResultMin, TypeConversion& realPlusErrorResultMax,
          TypeConversion& implementationBoundResultMin, TypeConversion& implementationBoundResultMax) const;
@@ -1023,13 +1147,13 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
          TypeConversion realResultMin, TypeConversion realResultMax, TypeConversion implementationResultMin,
          TypeConversion implementationResultMax, TypeConversion realPlusErrorResultMin, TypeConversion realPlusErrorResultMax,
          TypeConversion implementationBoundResultMin, TypeConversion implementationBoundResultMax);
-   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
-   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
-   long int asLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
-      {  return asInt(roundMode); }
-   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
-      {  return asUnsigned(roundMode); }
 
+   long int asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
+   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
+   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
+      {  return asLongInt(roundMode); }
+   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
+      {  return asUnsignedLong(roundMode); }
    const BuiltDouble& getMinImplementation() const { return bfMin; }
    const BuiltDouble& getMaxImplementation() const { return bfMax; }
    BuiltDouble& getSMinImplementation() { return bfMin; }
@@ -1049,6 +1173,140 @@ class DefineBasicFloatZonotope : public DefineBaseFloatZonotope DefineEquationTe
    void log10Assign();
    void powAssign(const thisType& value, typename Equation::PolicyCall policyCall);
    void atan2Assign(const thisType& value, typename Equation::PolicyCall policyCall);
+
+   // support unstable branches in loop
+   static void writeImplementationHeader(STG::IOObject::OSBase& outFile)
+      {  outFile.writesome("ut_f"); }
+   static void writeRealHeader(STG::IOObject::OSBase& outFile)
+      {  outFile.writesome("ut_r"); }
+   void readImplementationSynchronizationFromFile(STG::IOObject::ISBase& inFile,
+         typename BuiltDouble::ReadParameters& readParameters,
+         typename Equation::ReadParameters& equationReadParameters,
+         STG::IOObject::OSBase& outFile,
+         typename BuiltDouble::WriteParameters& writeParameters,
+         typename Equation::WriteParameters& equationWriteParameters,
+         SymbolsManager& symbolsManager, BuiltReal& highLevelError)
+      {  bfMin.read(inFile, readParameters);
+         readParameters.clear();
+         inFile.assume(", ");
+         bfMax.read(inFile, readParameters);
+         readParameters.clear();
+         inherited::mergeComputeErrorIfNeeded();
+         inFile.assume(", ");
+         getSError().read(inFile, equationReadParameters);
+         equationReadParameters.clear();
+
+         writeImplementationHeader(outFile);
+         outFile.put(' ');
+         bfMin.write(outFile, writeParameters);
+         outFile.writesome(", ");
+         bfMax.write(outFile, writeParameters);
+         outFile.writesome(", ");
+         getError().write(outFile, equationWriteParameters);
+         getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue,
+               symbolsManager, highLevelError, true /* isMinus */,
+               false /* hasExternalCoefficient */);
+         computeRelativeError();
+      }
+   void writeImplementationSynchronizationToFile(STG::IOObject::OSBase& outFile,
+         const typename BuiltDouble::WriteParameters& writeParameters,
+         const typename Equation::WriteParameters& equationWriteParameters) const
+      {  writeImplementationHeader(outFile);
+         outFile.put(' ');
+         bfMin.write(outFile, writeParameters);
+         outFile.writesome(", ");
+         bfMax.write(outFile, writeParameters);
+         outFile.writesome(", ");
+         getError().write(outFile, equationWriteParameters);
+      }
+   void readRealSynchronizationFromFile(STG::IOObject::ISBase& inFile,
+         typename Equation::ReadParameters& equationReadParameters,
+         STG::IOObject::OSBase& outFile,
+         typename Equation::WriteParameters& equationWriteParameters,
+         SymbolsManager& symbolsManager, BuiltReal& highLevelError)
+      {  inherited::mergeComputeRealIfNeeded();
+         getSRealDomain().read(inFile, equationReadParameters);
+         equationReadParameters.clear();
+
+         writeRealHeader(outFile);
+         outFile.put(' ');
+         getRealDomain().write(outFile, equationWriteParameters);
+         getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue,
+               symbolsManager, highLevelError, true /* isMinus */,
+               false /* hasExternalCoefficient */);
+         computeRelativeError();
+      }
+   void writeRealSynchronizationToFile(STG::IOObject::OSBase& outFile,
+         const typename Equation::WriteParameters& equationWriteParameters) const
+      {  writeRealHeader(outFile);
+         outFile.put(' ');
+         getRealDomain().write(outFile, equationWriteParameters);
+      }
+   void readImplementationSynchronizationFromMemory(
+         BasePathExplorer::AbstractImplementationArray& implementationArray,
+         BasePathExplorer::AbstractEquationArray& equationArray,
+         COL::TVector<int>& codeArray, SymbolsManager& symbolsManager, BuiltReal& highLevelError)
+      {  bfMin = BasePathExplorer::firstSynchronisation<BuiltDouble>(implementationArray);
+         implementationArray.freeFirst();
+         bfMax = BasePathExplorer::firstSynchronisation<BuiltDouble>(implementationArray);
+         implementationArray.freeFirst();
+         inherited::mergeComputeErrorIfNeeded();
+
+         getSError() = BasePathExplorer::firstSynchronisation<Equation>(equationArray);
+         equationArray.freeFirst();
+         implementationArray.insertNewAtEnd(
+               new BasePathExplorer::ImplementationContent<BuiltDouble>(bfMin));
+         implementationArray.insertNewAtEnd(
+               new BasePathExplorer::ImplementationContent<BuiltDouble>(bfMax));
+         equationArray.insertNewAtEnd(
+               new BasePathExplorer::EquationContent<Equation>(getError()));
+         getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue,
+               symbolsManager, highLevelError, true /* isMinus */, false /* hasExternalCoefficient */);
+         computeRelativeError();
+      }
+   void writeImplementationSynchronizationToMemory(
+         BasePathExplorer::AbstractImplementationArray& implementationArray,
+         BasePathExplorer::AbstractEquationArray& equationArray, COL::TVector<int>& codeArray) const
+      {  implementationArray.insertNewAtEnd(
+               new BasePathExplorer::ImplementationContent<BuiltDouble>(bfMin));
+         implementationArray.insertNewAtEnd(
+               new BasePathExplorer::ImplementationContent<BuiltDouble>(bfMax));
+         equationArray.insertNewAtEnd(new BasePathExplorer::EquationContent<Equation>(getError()));
+      }
+   void readRealSynchronizationFromMemory(
+         BasePathExplorer::AbstractEquationArray& equationArray,
+         COL::TVector<int>& codeArray, SymbolsManager& symbolsManager, BuiltReal& highLevelError)
+      {  inherited::mergeComputeRealIfNeeded();
+         getSRealDomain() = BasePathExplorer::firstSynchronisation<Equation>(equationArray);
+         equationArray.freeFirst();
+         equationArray.insertNewAtEnd(
+               new BasePathExplorer::EquationContent<Equation>(getRealDomain()));
+         getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue,
+               symbolsManager, highLevelError, true /* isMinus */, false /* hasExternalCoefficient */);
+         computeRelativeError();
+      }
+   void writeRealSynchronizationToMemory(BasePathExplorer::AbstractEquationArray& equationArray,
+         COL::TVector<int>& codeArray) const
+      {  equationArray.insertNewAtEnd(new BasePathExplorer::EquationContent<Equation>(getRealDomain()));
+      }
+   void moveImplementationInMemory(
+         BasePathExplorer::AbstractImplementationArray& implementationArray,
+         BasePathExplorer::AbstractEquationArray& equationArray, COL::TVector<int>& codeArray)
+      {  implementationArray.insertNewAtEnd(new BasePathExplorer::ImplementationContent<BuiltDouble>(
+               BasePathExplorer::firstSynchronisation<BuiltDouble>(implementationArray)));
+         implementationArray.freeFirst();
+         implementationArray.insertNewAtEnd(new BasePathExplorer::ImplementationContent<BuiltDouble>(
+               BasePathExplorer::firstSynchronisation<BuiltDouble>(implementationArray)));
+         implementationArray.freeFirst();
+         equationArray.insertNewAtEnd(new BasePathExplorer::EquationContent<Equation>(
+               BasePathExplorer::firstSynchronisation<Equation>(equationArray)));
+         equationArray.freeFirst();
+      }
+   void moveRealInMemory(BasePathExplorer::AbstractEquationArray& equationArray, COL::TVector<int>& codeArray)
+      {  equationArray.insertNewAtEnd(new BasePathExplorer::EquationContent<Equation>(
+               BasePathExplorer::firstSynchronisation<Equation>(equationArray)));
+         equationArray.freeFirst();
+      }
 };
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
@@ -1063,7 +1321,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 #endif
       source) {
    auto& nearestParams = TypeBaseFloatAffine::nearestParams();
-   typename DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber)::FloatConversion conversion;
+   typename BuiltDouble::FloatConversion conversion;
    conversion.setSizeMantissa(source.bfMin.bitSizeMantissa()).setSizeExponent(source.bfMin.bitSizeExponent());
    int sizeMantissa = (source.bfMin.bitSizeMantissa() + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
    for (int index = 0; index < sizeMantissa; ++index)
@@ -1092,7 +1350,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
          auto& minParams = TypeBaseFloatAffine::minParams();
          auto& maxParams = TypeBaseFloatAffine::maxParams();
-         typename DefineBuiltReal DefineSingleTemplateParameters(URealBitsNumber)::FloatConversion conversion;
+         typename BuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(source.bfMinRelativeError.bitSizeMantissa())
                .setSizeExponent(source.bfMinRelativeError.bitSizeExponent());
          int sizeMantissa = (source.bfMinRelativeError.bitSizeMantissa() + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
@@ -1128,7 +1386,10 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
             <BaseStoreTraits, URealBitsNumber, TypeBaseFloatAffine, USizeMantissaArgument, USizeExponentArgument, TypeImplementationArgument>&
 #endif
          source)
-   :  inherited(source), dValue((TypeImplementation) source.dValue)
+   :  inherited(source)
+#ifdef FLOAT_CONCRETE
+      , dValue((TypeImplementation) source.dValue)
+#endif
    {  buildImplementationFrom(source); }
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
@@ -1142,7 +1403,10 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
             <BaseStoreTraits, URealBitsNumber, TypeBaseFloatAffine, USizeMantissaArgument, USizeExponentArgument, TypeImplementationArgument>&&
 #endif
          source)
-   :  inherited(source), dValue(source.dValue)
+   :  inherited(source)
+#ifdef FLOAT_CONCRETE
+      , dValue(source.dValue)
+#endif
    {  buildImplementationFrom(source); }
 
 } // end of namespace DAffine

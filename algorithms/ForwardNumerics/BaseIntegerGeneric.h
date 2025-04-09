@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of integers with unbound size.
 //
 
-#ifndef Numerics_BaseIntegerGenericH
-#define Numerics_BaseIntegerGenericH
+#pragma once
 
 #include "ForwardNumerics/BaseIntegerCommon.h"
 
@@ -38,149 +35,149 @@ namespace Numerics {
 
 class UnsignedLongBaseStoreTraits {
   public:
-   static const int USizeBaseInBits = sizeof(unsigned long)*8;
-   typedef unsigned long BaseType;
-   typedef unsigned long* BaseTypePointer;
-   typedef unsigned long& BaseTypeReference;
-   typedef unsigned long BaseTypeConstReference;
-   static int log_base_2(unsigned long value)
+   static const int USizeBaseInBits = sizeof(uint64_t)*8;
+   typedef uint64_t BaseType;
+   typedef uint64_t* BaseTypePointer;
+   typedef uint64_t& BaseTypeReference;
+   typedef uint64_t BaseTypeConstReference;
+   static int log_base_2(uint64_t value)
       {  int result = 1;
          while ((value >>= 1) != 0)
             ++result;
          return result;
       }
-   static void clearArray(unsigned long* array, int count)
-      {  memset(array, 0, count*sizeof(unsigned long)); }
-   static void copyArray(unsigned long* target, const unsigned long* source, int count)
-      {  memcpy(target, source, count*sizeof(unsigned long)); }
-   static int sizeBaseInBits() { return 8*sizeof(unsigned long); }
+   static void clearArray(uint64_t* array, int count)
+      {  memset(array, 0, count*sizeof(uint64_t)); }
+   static void copyArray(uint64_t* target, const uint64_t* source, int count)
+      {  memcpy(target, source, count*sizeof(uint64_t)); }
+   static int sizeBaseInBits() { return 8*sizeof(uint64_t); }
    static int minCellsCountToStoreBits(int bitsNumber)
-      {  return (int) ((bitsNumber + 8*sizeof(unsigned long) - 1) / (8*sizeof(unsigned long))); } 
-   static void swapArray(unsigned long* target, unsigned long* source, int count)
-      {  unsigned long temp;
+      {  return (int) ((bitsNumber + 8*sizeof(uint64_t) - 1) / (8*sizeof(uint64_t))); } 
+   static void swapArray(uint64_t* target, uint64_t* source, int count)
+      {  uint64_t temp;
          for (int i = 0; i < count; ++i) {
             temp = target[i];
             target[i] = source[i];
             source[i] = temp;
          };
       }
-   static unsigned long detectCarryAfterAddition(unsigned long result, unsigned long operand)
-      {  return (result < operand) ? 1UL : 0UL; }
-   static unsigned long detectCarryBeforeSubstraction(unsigned long first, unsigned long second)
-      {  return (first < second) ? 1UL : 0UL; }
-   static unsigned long getStoreMidHighPart(unsigned long value, unsigned long store)
-      {  return ((value << (4*sizeof(unsigned long))) | (store & ~(~0UL << 4*sizeof(unsigned long)))); }
-   static void storeIntoMidHighPart(unsigned long value, unsigned long& store)
-      {  store &= ~(~0UL << 4*sizeof(unsigned long));
-         store |= (value << (4*sizeof(unsigned long)));
+   static uint64_t detectCarryAfterAddition(uint64_t result, uint64_t operand)
+      {  return (result < operand) ? (uint64_t) 1 : (uint64_t) 0; }
+   static uint64_t detectCarryBeforeSubstraction(uint64_t first, uint64_t second)
+      {  return (first < second) ? (uint64_t) 1 : (uint64_t) 0; }
+   static uint64_t getStoreMidHighPart(uint64_t value, uint64_t store)
+      {  return ((value << (4*sizeof(uint64_t))) | (store & ~(~(uint64_t) 0 << 4*sizeof(uint64_t)))); }
+   static void storeIntoMidHighPart(uint64_t value, uint64_t& store)
+      {  store &= ~(~(uint64_t) 0 << 4*sizeof(uint64_t));
+         store |= (value << (4*sizeof(uint64_t)));
       }
-   static unsigned long getStoreMidLowPart(unsigned long value, unsigned long store)
-      {  return ((store & (~0UL << 4*sizeof(unsigned long))) | value); }
-   static void storeIntoMidLowPart(unsigned long value, unsigned long& store)
-      {  store &= (~0UL << 4*sizeof(unsigned long));
+   static uint64_t getStoreMidLowPart(uint64_t value, uint64_t store)
+      {  return ((store & (~(uint64_t) 0 << 4*sizeof(uint64_t))) | value); }
+   static void storeIntoMidLowPart(uint64_t value, uint64_t& store)
+      {  store &= (~(uint64_t) 0 << 4*sizeof(uint64_t));
          store |= value;
       }
-   static unsigned long getMidHighPart(unsigned long value)
-      {  return value >> 4*sizeof(unsigned long); }
-   static unsigned long getMidLowPart(unsigned long value)
-      {  return value & ~(~0UL << 4*sizeof(unsigned long)); }
-   static unsigned long getLowPart(unsigned long value, int shift)
-      {  return value & ~(~0UL << shift); }
-   static unsigned long getHighPart(unsigned long value, int shift)
+   static uint64_t getMidHighPart(uint64_t value)
+      {  return value >> 4*sizeof(uint64_t); }
+   static uint64_t getMidLowPart(uint64_t value)
+      {  return value & ~(~(uint64_t) 0 << 4*sizeof(uint64_t)); }
+   static uint64_t getLowPart(uint64_t value, int shift)
+      {  return value & ~(~(uint64_t) 0 << shift); }
+   static uint64_t getHighPart(uint64_t value, int shift)
       {  return (value >> shift); }
-   static unsigned long getMiddlePart(unsigned long value, int lowBit, int sizeInBits)
-      {  return (value >> lowBit) & ~(~0UL << sizeInBits); }
-   static unsigned long getStoreHighPart(unsigned long value, int shift)
+   static uint64_t getMiddlePart(uint64_t value, int lowBit, int sizeInBits)
+      {  return (value >> lowBit) & ~(~(uint64_t) 0 << sizeInBits); }
+   static uint64_t getStoreHighPart(uint64_t value, int shift)
       {  return (value << shift); }
-   static unsigned long getStoreHighPart(unsigned long value, int shift, unsigned long store)
-      {  return (value << shift) | (store & ~(~0UL << shift)); }
-   static void storeIntoHighPart(unsigned long value, int shift, unsigned long& store)
-      {  store &= ~(~0UL << shift);
+   static uint64_t getStoreHighPart(uint64_t value, int shift, uint64_t store)
+      {  return (value << shift) | (store & ~(~(uint64_t) 0 << shift)); }
+   static void storeIntoHighPart(uint64_t value, int shift, uint64_t& store)
+      {  store &= ~(~(uint64_t) 0 << shift);
          store |= (value << shift);
       }
-   static unsigned long getStoreLowPart(unsigned long value, int shift)
-      {  return value & ~(~0UL << shift); }
-   static unsigned long getStoreLowPart(unsigned long value, int shift, unsigned long store)
-      {  return (store & (~0UL << shift)) | (value & ~(~0UL << shift)); }
-   static void storeIntoLowPart(unsigned long value, int shift, unsigned long& store)
-      {  store &= (~0UL << shift);
-         store |= (value & ~(~0UL << shift));
+   static uint64_t getStoreLowPart(uint64_t value, int shift)
+      {  return value & ~(~(uint64_t) 0 << shift); }
+   static uint64_t getStoreLowPart(uint64_t value, int shift, uint64_t store)
+      {  return (store & (~(uint64_t) 0 << shift)) | (value & ~(~(uint64_t) 0 << shift)); }
+   static void storeIntoLowPart(uint64_t value, int shift, uint64_t& store)
+      {  store &= (~(uint64_t) 0 << shift);
+         store |= (value & ~(~(uint64_t) 0 << shift));
       }
-   static void setTrueBit(unsigned long& result, int index) { result |= (1UL << index); }
-   static void setFalseBit(unsigned long& result, int index) { result &= ~(1UL << index); }
-   static void setBit(unsigned long& result, int index, bool value)
+   static void setTrueBit(uint64_t& result, int index) { result |= ((uint64_t) 1 << index); }
+   static void setFalseBit(uint64_t& result, int index) { result &= ~((uint64_t) 1 << index); }
+   static void setBit(uint64_t& result, int index, bool value)
       {  if (value)
-            result |= (1UL << index);
+            result |= ((uint64_t) 1 << index);
          else
-            result &= ~(1UL << index);
+            result &= ~((uint64_t) 1 << index);
       }
-   static bool getBit(unsigned long value, int index)
-      {  return (value & (1UL << index)) ? true : false; }
-   static void leftShiftLocal(unsigned long& value, int index, int shift)
-      {  unsigned long temp = value;
-         temp &= (~0UL << index);
+   static bool getBit(uint64_t value, int index)
+      {  return (value & ((uint64_t) 1 << index)) ? true : false; }
+   static void leftShiftLocal(uint64_t& value, int index, int shift)
+      {  uint64_t temp = value;
+         temp &= (~(uint64_t) 0 << index);
          temp <<= shift;
-         value = temp | (value & ~(~0UL << index));
+         value = temp | (value & ~(~(uint64_t) 0 << index));
       }
-   static void rightShiftLocal(unsigned long& value, int index, int shift)
-      {  unsigned long temp = value;
-         temp &= (~0UL << index);
+   static void rightShiftLocal(uint64_t& value, int index, int shift)
+      {  uint64_t temp = value;
+         temp &= (~(uint64_t) 0 << index);
          temp >>= shift;
-         value = temp | (value & ~(~0UL << (index-shift)));
+         value = temp | (value & ~(~(uint64_t) 0 << (index-shift)));
       }
-   static void leftShiftAndClearLow(unsigned long& value, int shift, int low)
+   static void leftShiftAndClearLow(uint64_t& value, int shift, int low)
       {  value <<= shift;
-         value &= ~0UL << low;
+         value &= ~(uint64_t) 0 << low;
       }
-   static void rightShiftAndClearHigh(unsigned long& value, int shift, int high)
+   static void rightShiftAndClearHigh(uint64_t& value, int shift, int high)
       {  value >>= shift;
-         value &= ~(~0UL << high);
+         value &= ~(~(uint64_t) 0 << high);
       }
-   static void rightShift(unsigned long& value, int shift) { value >>= shift; }
-   static void leftShift(unsigned long& value, int shift) { value <<= shift; }
-   static void negLowValuePart(unsigned long& value, int shift)
+   static void rightShift(uint64_t& value, int shift) { value >>= shift; }
+   static void leftShift(uint64_t& value, int shift) { value <<= shift; }
+   static void negLowValuePart(uint64_t& value, int shift)
       {  if (shift > 0)
-            value = (value & (~0UL << shift)) | (~value & ~(~0UL << shift));
+            value = (value & (~(uint64_t) 0 << shift)) | (~value & ~(~(uint64_t) 0 << shift));
       }
-   static void clearLowValuePart(unsigned long& value, int shift)
+   static void clearLowValuePart(uint64_t& value, int shift)
       {  if (shift > 0)
-            value &= (~0UL << shift);
+            value &= (~(uint64_t) 0 << shift);
       }
-   static void clearHighValuePart(unsigned long& value, int shift)
-      {  if (shift < (int) (8*sizeof(unsigned long)))
-            value &= ~(~0UL << shift);
+   static void clearHighValuePart(uint64_t& value, int shift)
+      {  if (shift < (int) (8*sizeof(uint64_t)))
+            value &= ~(~(uint64_t) 0 << shift);
       }
-   static unsigned long getSaturation() { return ~0UL; }
-   static void saturateLowValuePart(unsigned long& value, int shift)
+   static uint64_t getSaturation() { return ~(uint64_t) 0; }
+   static void saturateLowValuePart(uint64_t& value, int shift)
       {  if (shift > 0)
-            value |= ~(~0UL << shift);
+            value |= ~(~(uint64_t) 0 << shift);
       }
-   static bool isZeroValue(unsigned long value) { return value == 0UL; }
-   static bool hasZeroValue(unsigned long value, int shift)
-      {  AssumeCondition(shift <= (int) (8*sizeof(unsigned long)))
-         return (shift <= 0) || ((value << (8*sizeof(unsigned long)-shift)) == 0UL);
+   static bool isZeroValue(uint64_t value) { return value == (uint64_t) 0; }
+   static bool hasZeroValue(uint64_t value, int shift)
+      {  AssumeCondition(shift <= (int) (8*sizeof(uint64_t)))
+         return (shift <= 0) || ((value << (8*sizeof(uint64_t)-shift)) == (uint64_t) 0);
       }
-   static bool isOneValue(unsigned long value) { return value == 1UL; }
-   static void writeValue(STG::IOObject::OSBase& out, unsigned long value, bool isRaw)
-#ifdef StandardClassesHPP
-      {  out.write(value, isRaw); }
-#else
+   static bool isOneValue(uint64_t value) { return value == (uint64_t) 1; }
+   static void writeValue(STG::IOObject::OSBase& out, uint64_t value, bool isRaw)
+#ifdef DefineNoEnhancedObject
       {  if (!isRaw)
             out << value;
          else
             out.write(reinterpret_cast<char*>(&value), sizeof(value));
       }
-#endif
-   static void readValue(STG::IOObject::ISBase& in, unsigned long& value, bool isRaw)
-      {
-#ifdef StandardClassesHPP
-         in.read(value, isRaw);
 #else
+      {  out.write(value, isRaw); }
+#endif
+   static void readValue(STG::IOObject::ISBase& in, uint64_t& value, bool isRaw)
+      {
+#ifdef DefineNoEnhancedObject
          if (isRaw) {
             in.read(reinterpret_cast<char*>(&value), sizeof(value));
          }
          else
             in >> value;
+#else
+         in.read(value, isRaw);
 #endif
       }
 };
@@ -322,7 +319,7 @@ class TGBasicCellIntegerTraits<BaseStoreTraits, 0> : public GCellIntegerTraitsCo
    ArrayProperty array(int index) { AssumeUncalled typename BaseStoreTraits::BaseType* result = nullptr; return *result; }
    typename BaseStoreTraits::BaseTypeConstReference array(int index) const { AssumeUncalled return 0; }
    typename BaseStoreTraits::BaseTypeConstReference carray(int index) const { AssumeUncalled return 0; }
-   ArrayProperty operator[](int index) { AssumeUncalled typename BaseStoreTraits::BaseTypePointer* result = nullptr; return *result; }
+   ArrayProperty operator[](int index) { AssumeUncalled typename BaseStoreTraits::BaseTypePointer result = nullptr; return *result; }
    typename BaseStoreTraits::BaseTypeConstReference operator[](int index) const { AssumeUncalled return 0; }
 
    static int getSize() { return 0; }
@@ -459,7 +456,7 @@ class TGBigCellInt<BaseStoreTraits, DInteger::TGCellIntegerTraits<BaseStoreTrait
    void setFalseBitArray(int index)
       {  BaseStoreTraits::setFalseBit(svalue(), index); }
 
-   TGBigCellInt() : inherited() {}
+   TGBigCellInt() = default;
    TGBigCellInt(BaseTypeConstReference value) : inherited(value) {}
    TGBigCellInt(const thisType& source) = default;
    thisType& operator=(const thisType& source) = default;
@@ -471,12 +468,8 @@ class TGBigCellInt<BaseStoreTraits, DInteger::TGCellIntegerTraits<BaseStoreTrait
       {  return (value() < source.value()) ? CRLess
             : ((value() > source.value()) ? CRGreater : CREqual);
       }
-   bool operator<(const thisType& source) const { return value() < source.value(); }
-   bool operator>(const thisType& source) const { return value() > source.value(); }
-   bool operator<=(const thisType& source) const { return value() <= source.value(); }
-   bool operator>=(const thisType& source) const { return value() >= source.value(); }
+   std::strong_ordering operator<=>(const thisType& source) const { return value() <=> source.value(); }
    bool operator==(const thisType& source) const { return value() == source.value(); }
-   bool operator!=(const thisType& source) const { return value() != source.value(); }
    thisType& operator<<=(int shift) { value() <<= shift; return *this; }
    thisType& operator>>=(int shift) { value() >>= shift; return *this; }
    void leftShiftLocal(int index, int shift) { BaseStoreTraits::leftShiftLocal(value(), index, shift); }
@@ -560,27 +553,27 @@ struct genable_if_two<2> { static const int value = 2; };
 
 template <>
 class TGBasicCellIntegerTraits<UnsignedBaseStoreTraits,
-         genable_if_two<sizeof(unsigned long long int)/(sizeof(unsigned))>::value>
+         genable_if_two<sizeof(uint64_t)/(sizeof(uint32_t))>::value>
    :  public GCellIntegerTraitsContract<UnsignedBaseStoreTraits> {
   private:
-   unsigned long long int ulValue;
+   uint64_t ulValue;
    typedef TGBasicCellIntegerTraits<UnsignedBaseStoreTraits, 2> thisType;
 
   protected:
-   unsigned long long int& svalue() { return ulValue; }
-   unsigned long long int& value() { return ulValue; }
-   const unsigned long long int& value() const { return ulValue; }
+   uint64_t& svalue() { return ulValue; }
+   uint64_t& value() { return ulValue; }
+   const uint64_t& value() const { return ulValue; }
 
   public:
    TGBasicCellIntegerTraits() : ulValue(0) {}
-   TGBasicCellIntegerTraits(unsigned int value) : ulValue(value) {}
+   TGBasicCellIntegerTraits(uint32_t value) : ulValue(value) {}
    TGBasicCellIntegerTraits(const thisType& source)
       :  GCellIntegerTraitsContract<UnsignedBaseStoreTraits>(), ulValue(source.ulValue) {}
    thisType& operator=(const thisType& source) { ulValue = source.ulValue; return *this; }
-   thisType& operator=(unsigned int source) { ulValue = source; return *this; }
+   thisType& operator=(uint32_t source) { ulValue = source; return *this; }
    class ArrayProperty {
      private:
-      unsigned long long int* pulValue;
+      uint64_t* pulValue;
       int uIndex;
 
      public:
@@ -590,142 +583,142 @@ class TGBasicCellIntegerTraits<UnsignedBaseStoreTraits,
       ArrayProperty(const ArrayProperty& source) = default;
       // ArrayProperty& operator=(ArrayProperty&& source) = default;
       ArrayProperty& operator=(const ArrayProperty& source) = delete;
-      ArrayProperty& operator=(unsigned value)
-         {  unsigned long long int val = value;
+      ArrayProperty& operator=(uint32_t value)
+         {  uint64_t val = value;
             if (uIndex != 0) {
-               val <<= (sizeof(unsigned)*8);
-               *pulValue &= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               *pulValue &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else
-               *pulValue &= (~0ULL << (sizeof(unsigned)*8));
+               *pulValue &= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             *pulValue |= val;
             return *this;
          }
-      ArrayProperty& operator|=(unsigned value)
-         {  unsigned long long int val = value;
+      ArrayProperty& operator|=(uint32_t value)
+         {  uint64_t val = value;
             if (uIndex != 0)
-               val <<= (sizeof(unsigned)*8);
+               val <<= (sizeof(uint32_t)*8);
             *pulValue |= val;
             return *this;
          }
-      ArrayProperty& operator^=(unsigned value)
-         {  unsigned long long int val = value;
+      ArrayProperty& operator^=(uint32_t value)
+         {  uint64_t val = value;
             if (uIndex != 0)
-               val <<= (sizeof(unsigned)*8);
+               val <<= (sizeof(uint32_t)*8);
             *pulValue ^= val;
             return *this;
          }
-      ArrayProperty& operator&=(unsigned value)
-         {  unsigned long long int val = value;
+      ArrayProperty& operator&=(uint32_t value)
+         {  uint64_t val = value;
             if (uIndex != 0) {
-               val <<= (sizeof(unsigned)*8);
-               val |= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               val |= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else
-               val |= (~0ULL << (sizeof(unsigned)*8));
+               val |= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             *pulValue &= val;
             return *this;
          }
       ArrayProperty& operator++()
-         {  unsigned long long int val = *pulValue;
+         {  uint64_t val = *pulValue;
             if (uIndex == 0) {
                ++val;
-               val &= ~(~0ULL << (sizeof(unsigned)*8));
-               *pulValue &= (~0ULL << (sizeof(unsigned)*8));
+               val &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
+               *pulValue &= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else {
-               val >>= (sizeof(unsigned)*8);
+               val >>= (sizeof(uint32_t)*8);
                ++val;
-               val <<= (sizeof(unsigned)*8);
-               *pulValue &= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               *pulValue &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             };
             *pulValue |= val;
             return *this;
          }
-      ArrayProperty& operator+=(unsigned inc)
-         {  unsigned long long int val = *pulValue;
+      ArrayProperty& operator+=(uint32_t inc)
+         {  uint64_t val = *pulValue;
             if (uIndex == 0) {
                val += inc;
-               val &= ~(~0ULL << (sizeof(unsigned)*8));
-               *pulValue &= (~0ULL << (sizeof(unsigned)*8));
+               val &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
+               *pulValue &= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else {
-               val >>= (sizeof(unsigned)*8);
+               val >>= (sizeof(uint32_t)*8);
                val += inc;
-               val <<= (sizeof(unsigned)*8);
-               *pulValue &= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               *pulValue &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             };
             *pulValue |= val;
             return *this;
          }
       ArrayProperty& operator--()
-         {  unsigned long long int val = *pulValue;
+         {  uint64_t val = *pulValue;
             if (uIndex == 0) {
                --val;
-               val &= ~(~0ULL << (sizeof(unsigned)*8));
-               *pulValue &= (~0ULL << (sizeof(unsigned)*8));
+               val &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
+               *pulValue &= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else {
-               val >>= (sizeof(unsigned)*8);
+               val >>= (sizeof(uint32_t)*8);
                --val;
-               val <<= (sizeof(unsigned)*8);
-               *pulValue &= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               *pulValue &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             };
             *pulValue |= val;
             return *this;
          }
-      ArrayProperty& operator-=(unsigned dec)
-         {  unsigned long long int val = *pulValue;
+      ArrayProperty& operator-=(uint32_t dec)
+         {  uint64_t val = *pulValue;
             if (uIndex == 0) {
                val -= dec;
-               val &= ~(~0ULL << (sizeof(unsigned)*8));
-               *pulValue &= (~0ULL << (sizeof(unsigned)*8));
+               val &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
+               *pulValue &= (~(uint64_t) 0 << (sizeof(uint32_t)*8));
             }
             else {
-               val >>= (sizeof(unsigned)*8);
+               val >>= (sizeof(uint32_t)*8);
                val -= dec;
-               val <<= (sizeof(unsigned)*8);
-               *pulValue &= ~(~0ULL << (sizeof(unsigned)*8));
+               val <<= (sizeof(uint32_t)*8);
+               *pulValue &= ~(~(uint64_t) 0 << (sizeof(uint32_t)*8));
             };
             *pulValue |= val;
             return *this;
          }
-      operator unsigned() const
-         {  unsigned result;
+      operator uint32_t() const
+         {  uint32_t result;
             if (uIndex == 0)
-               result = (unsigned) *pulValue;
+               result = (uint32_t) *pulValue;
             else {
-               unsigned long long int val = *pulValue;
-               val >>= (sizeof(unsigned)*8);
-               result = (unsigned) val;
+               uint64_t val = *pulValue;
+               val >>= (sizeof(uint32_t)*8);
+               result = (uint32_t) val;
             }
             return result;
          }
    };
    ArrayProperty array(int index)
-      {  AssumeCondition(!(index & ~1U))
+      {  AssumeCondition(!(index & ~(uint32_t) 1))
          return ArrayProperty(*this, index);
       }
-   unsigned int array(int index) const
+   uint32_t array(int index) const
       {  AssumeCondition(index >= 0)
-         unsigned int result;
+         uint32_t result;
          if (index == 0)
-            result = (unsigned int) ulValue;
+            result = (uint32_t) ulValue;
          else if (index == 1) {
-            unsigned long long int val = ulValue;
-            val >>= (sizeof(unsigned)*8);
-            result = (unsigned int) val;
+            uint64_t val = ulValue;
+            val >>= (sizeof(uint32_t)*8);
+            result = (uint32_t) val;
          }
          else
             result = 0;
          return result;
       }
-   unsigned int carray(int index) const { return array(index); }
+   uint32_t carray(int index) const { return array(index); }
    ArrayProperty operator[](int index)
-      {  AssumeCondition(!(index & ~1U))
+      {  AssumeCondition(!(index & ~(uint32_t) 1))
          return ArrayProperty(*this, index);
       }
-   unsigned int operator[](int index) const
+   uint32_t operator[](int index) const
       {  AssumeCondition(index >= 0)
          return array(index);
       }
@@ -735,16 +728,16 @@ class TGBasicCellIntegerTraits<UnsignedBaseStoreTraits,
    void adjustSize(int /* newSize */) { AssumeUncalled }
    void assertSize(int newSize) { AssumeCondition(newSize <= 2) }
    void setSize(int exactSize) { AssumeCondition(exactSize == 2) }
-   void setBitSize(int exactSize) { AssumeCondition((exactSize + 8*sizeof(unsigned)-1)/(8*sizeof(unsigned)) == 2) }
+   void setBitSize(int exactSize) { AssumeCondition((exactSize + 8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t)) == 2) }
    void setCellSize(int exactSize) { AssumeCondition(exactSize == 2) }
    void clear() { ulValue = 0; }
    void swap(thisType& source)
-      {  unsigned long long int temp = ulValue;
+      {  uint64_t temp = ulValue;
          ulValue = source.ulValue;
          source.ulValue = temp;
       }
-   unsigned long long int* arrayStart() { return &ulValue; }
-   const unsigned long long int* arrayStart() const { return &ulValue; }
+   uint64_t* arrayStart() { return &ulValue; }
+   const uint64_t* arrayStart() const { return &ulValue; }
 };
 
 } // end of namespace DInteger
@@ -755,42 +748,42 @@ typedef DInteger::TGBigCellInt<UnsignedBaseStoreTraits,
 template <>
 class TGBigCellInt<UnsignedBaseStoreTraits,
    DInteger::TGCellIntegerTraits<UnsignedBaseStoreTraits,
-         DInteger::genable_if_two<sizeof(unsigned long long int)/(sizeof(unsigned))>::value> >
+         DInteger::genable_if_two<sizeof(uint64_t)/(sizeof(uint32_t))>::value> >
    :  public GDoubleBigCellInt {
   private:
    typedef TGBigCellInt<UnsignedBaseStoreTraits,
          DInteger::TGCellIntegerTraits<UnsignedBaseStoreTraits, 2> > thisType;
    typedef GDoubleBigCellInt inherited;
 
-   unsigned long long int& value() { return inherited::value(); } // { return *((unsigned long long int*) _array()); }
-   unsigned long long int& svalue() { return inherited::value(); } // { return *((unsigned long long int*) _array()); }
-   const unsigned long long int& value() const { return inherited::value(); } // { return *((unsigned long long int*) _array()); }
+   uint64_t& value() { return inherited::value(); } // { return *((uint64_t*) _array()); }
+   uint64_t& svalue() { return inherited::value(); } // { return *((uint64_t*) _array()); }
+   const uint64_t& value() const { return inherited::value(); } // { return *((uint64_t*) _array()); }
 
-   static unsigned int add(unsigned int& cell, unsigned int value)
-      {  unsigned int temp = cell;
+   static uint32_t add(uint32_t& cell, uint32_t value)
+      {  uint32_t temp = cell;
          cell += value;
          return (cell < temp) ? 1U : 0U;
       }
-   static unsigned int sub(unsigned int& cell, unsigned int value)
-      {  unsigned int temp = cell;
+   static uint32_t sub(uint32_t& cell, uint32_t value)
+      {  uint32_t temp = cell;
          cell -= value;
          return (cell > temp) ? 1U : 0U;
       }
 
   protected:
-   static int log_base_2(unsigned long long int value)
+   static int log_base_2(uint64_t value)
       {  int result = 1;
          while ((value >>= 1) != 0)
             ++result;
          return result;
       }
-   static int log_base_2(unsigned int value)
+   static int log_base_2(uint32_t value)
       {  return UnsignedBaseStoreTraits::log_base_2(value); }
 
   public:
    class MidArray {
      private:
-      unsigned long long int* plluValue;
+      uint64_t* plluValue;
       int uIndex;
 
      public:
@@ -798,106 +791,102 @@ class TGBigCellInt<UnsignedBaseStoreTraits,
          : plluValue(&source.value()), uIndex(index) { AssumeCondition(uIndex < 4) }
       MidArray(MidArray&&) = default;
       MidArray(const MidArray&) = delete;
-      MidArray& operator=(unsigned int value)
-         {  *plluValue &= (~(~0ULL << 4*sizeof(unsigned int)) << (uIndex*4*sizeof(unsigned int)));
-            *plluValue |= (((unsigned long long int) value) << (uIndex*4*sizeof(unsigned int)));
+      MidArray& operator=(uint32_t value)
+         {  *plluValue &= (~(~(uint64_t) 0 << 4*sizeof(uint32_t)) << (uIndex*4*sizeof(uint32_t)));
+            *plluValue |= (((uint64_t) value) << (uIndex*4*sizeof(uint32_t)));
             return *this;
          }
-      operator unsigned int() const
-         {  return (unsigned int) ((*plluValue >> (uIndex*4*sizeof(unsigned int)))
-               & ~(~0ULL << 4*sizeof(unsigned int)));
+      operator uint32_t() const
+         {  return (uint32_t) ((*plluValue >> (uIndex*4*sizeof(uint32_t)))
+               & ~(~(uint64_t) 0 << 4*sizeof(uint32_t)));
          }
    };
    friend class MidArray;
    MidArray midArray(int index) { return MidArray(*this, index); }
-   unsigned int midArray(int index) const
+   uint32_t midArray(int index) const
       {  AssumeCondition(index < 4)
-         return (unsigned int) ((value() >> (index*4*sizeof(unsigned int)))
-               & ~(~0ULL << 4*sizeof(unsigned int)));
+         return (uint32_t) ((value() >> (index*4*sizeof(uint32_t)))
+               & ~(~(uint64_t) 0 << 4*sizeof(uint32_t)));
       }
-   unsigned int cmidArray(int index) const { return midArray(index); }
-   void setMidArray(int index, unsigned int value)
+   uint32_t cmidArray(int index) const { return midArray(index); }
+   void setMidArray(int index, uint32_t value)
       {  AssumeCondition(index < 4)
-         svalue() &= (~(~0ULL << 4*sizeof(unsigned int)) << (index*4*sizeof(unsigned int)));
-         svalue() |= (((unsigned long long int) value) << (index*4*sizeof(unsigned int)));
+         svalue() &= (~(~(uint64_t) 0 << 4*sizeof(uint32_t)) << (index*4*sizeof(uint32_t)));
+         svalue() |= (((uint64_t) value) << (index*4*sizeof(uint32_t)));
       }
 
    class BitArray {
      private:
-      unsigned long long int* plluValue;
+      uint64_t* plluValue;
       int uIndex;
 
      public:
       BitArray(thisType& source, int index)
          :  plluValue(&source.value()), uIndex(index)
-         {  AssumeCondition((unsigned) index < 2*8*sizeof(unsigned int)) }
+         {  AssumeCondition((uint32_t) index < 2*8*sizeof(uint32_t)) }
       BitArray(BitArray&&) = default;
       BitArray(const BitArray&) = delete;
       // BitArray& operator=(BitArray&& source) = default;
       BitArray& operator=(const BitArray& source) = delete;
       BitArray& operator=(bool value)
          {  if (value)
-               *plluValue |= (1ULL << uIndex);
+               *plluValue |= ((uint64_t) 1 << uIndex);
             else
-               *plluValue &= ~(1ULL << uIndex);
+               *plluValue &= ~((uint64_t) 1 << uIndex);
             return *this;
          }
       operator bool() const
-         {  return (*plluValue & (1ULL << uIndex)) != 0ULL; }
+         {  return (*plluValue & ((uint64_t) 1 << uIndex)) != (uint64_t) 0; }
    };
    friend class BitArray;
    BitArray bitArray(int index)
       {  return BitArray(*this, index); }
    bool bitArray(int index) const
-      {  AssumeCondition((unsigned) index < 2*8*sizeof(unsigned int))
-         return (value() & (1ULL << index)) != 0ULL;
+      {  AssumeCondition((uint32_t) index < 2*8*sizeof(uint32_t))
+         return (value() & ((uint64_t) 1 << index)) != (uint64_t) 0;
       }
    bool cbitArray(int index) const { return bitArray(index); }
    void setBitArray(int index, bool value)
-      {  AssumeCondition((unsigned) index < 2*8*sizeof(unsigned int))
+      {  AssumeCondition((uint32_t) index < 2*8*sizeof(uint32_t))
          if (value)
-            svalue() |= (1ULL << index);
+            svalue() |= ((uint64_t) 1 << index);
          else
-            svalue() &= ~(1ULL << index);
+            svalue() &= ~((uint64_t) 1 << index);
       }
    void setTrueBitArray(int index)
-      {  AssumeCondition((unsigned) index < 2*8*sizeof(unsigned int))
-         value() |= (1ULL << index);
+      {  AssumeCondition((uint32_t) index < 2*8*sizeof(uint32_t))
+         value() |= ((uint64_t) 1 << index);
       }
    void setFalseBitArray(int index)
-      {  AssumeCondition((unsigned) index < 2*8*sizeof(unsigned int))
-         value() &= ~(1ULL << index);
+      {  AssumeCondition((uint32_t) index < 2*8*sizeof(uint32_t))
+         value() &= ~((uint64_t) 1 << index);
       }
 
    TGBigCellInt() : inherited() {}
-   TGBigCellInt(unsigned int value) : inherited(value) {}
+   TGBigCellInt(uint32_t value) : inherited(value) {}
    TGBigCellInt(const thisType& source) = default;
    thisType& operator=(const thisType& source) = default;
-   thisType& operator=(unsigned int value) { svalue() = value; return *this; }
+   thisType& operator=(uint32_t value) { svalue() = value; return *this; }
 
    ComparisonResult compare(const thisType& source) const
       {  return (value() < source.value()) ? CRLess
             : ((value() > source.value()) ? CRGreater : CREqual);
       }
-   bool operator<(const thisType& source) const { return value() < source.value(); }
-   bool operator>(const thisType& source) const { return value() > source.value(); }
-   bool operator<=(const thisType& source) const { return value() <= source.value(); }
-   bool operator>=(const thisType& source) const { return value() >= source.value(); }
+   std::strong_ordering operator<=>(const thisType& source) const { return value() <=> source.value(); }
    bool operator==(const thisType& source) const { return value() == source.value(); }
-   bool operator!=(const thisType& source) const { return value() != source.value(); }
    thisType& operator<<=(int shift) { value() <<= shift; return *this; }
    thisType& operator>>=(int shift) { value() >>= shift; return *this; }
    void leftShiftLocal(int index, int shift)
-      {  unsigned long long int temp = value();
-         temp &= (~0ULL << index);
+      {  uint64_t temp = value();
+         temp &= (~(uint64_t) 0 << index);
          temp <<= shift;
-         value() = temp | (value() & ~(~0ULL << index));
+         value() = temp | (value() & ~(~(uint64_t) 0 << index));
       }
    void rightShiftLocal(int index, int shift)
-      {  unsigned long long int temp = value();
-         temp &= (~0ULL << index);
+      {  uint64_t temp = value();
+         temp &= (~(uint64_t) 0 << index);
          temp >>= shift;
-         value() = temp | (value() & ~(~0ULL << (index-shift)));
+         value() = temp | (value() & ~(~(uint64_t) 0 << (index-shift)));
       }
    thisType& operator|=(const thisType& source) { value() |= source.value(); return *this; }
    thisType& operator^=(const thisType& source) { value() ^= source.value(); return *this; }
@@ -908,29 +897,29 @@ class TGBigCellInt<UnsignedBaseStoreTraits,
       }
    thisType& neg(int shift)
       {  if (shift > 0)
-            value() = (value() & (~0ULL << shift)) | (~value() & ~(~0ULL << shift));
+            value() = (value() & (~(uint64_t) 0 << shift)) | (~value() & ~(~(uint64_t) 0 << shift));
          return *this;
       }
    thisType& clear(int shift)
       {  if (shift > 0)
-            value() = (value() & (~0ULL << shift));
+            value() = (value() & (~(uint64_t) 0 << shift));
          return *this;
       }
    thisType& clearHigh(int shift)
-      {  if (shift < (int) (8*sizeof(unsigned long long)))
-            value() = (value() & ~(~0ULL << shift));
+      {  if (shift < (int) (8*sizeof(uint64_t)))
+            value() = (value() & ~(~(uint64_t) 0 << shift));
          return *this;
       }
    thisType& saturate(int shift)
       {  if (shift > 0)
-            value() = (value() | ~(~0ULL << shift));
+            value() = (value() | ~(~(uint64_t) 0 << shift));
          return *this;
       }
-   bool isZero() const { return value() == 0U; }
+   bool isZero() const { return value() == (uint64_t) 0; }
    bool hasZero(int shift) const
-      {  AssumeCondition((unsigned) shift <= 8*sizeof(unsigned long long int))
+      {  AssumeCondition((uint32_t) shift <= 8*sizeof(uint64_t))
          return (shift <= 0)
-            || ((value() << (8*sizeof(unsigned long long int)-shift)) == 0ULL);
+            || ((value() << (8*sizeof(uint64_t)-shift)) == (uint64_t) 0);
       }
  
    Carry add(const thisType& source)
@@ -944,8 +933,8 @@ class TGBigCellInt<UnsignedBaseStoreTraits,
       }
    Carry plusAssign(const thisType& source) { return add(source); }
    Carry minusAssign(const thisType& source) { return sub(source); }
-   Carry inc() { return Carry(++value() == 0U ? 1U : 0U); }
-   Carry dec() { return Carry(value()-- == 0U ? 1U : 0U); }
+   Carry inc() { return Carry(++value() == (uint32_t) 0 ? 1U : 0U); }
+   Carry dec() { return Carry(value()-- == (uint32_t) 0 ? 1U : 0U); }
 
    thisType& operator+=(const thisType& source) { add(source); return *this; }
    thisType operator+(const thisType& source) const
@@ -960,25 +949,25 @@ class TGBigCellInt<UnsignedBaseStoreTraits,
    void assertSize(int newSize) { AssumeCondition(newSize <= 2) }
    
    thisType& operator/=(const thisType& source)
-      {  AssumeCondition(source.value() != 0U)
+      {  AssumeCondition(source.value() != (uint32_t) 0)
          value() /= source.value();
          return *this;
       }
-   thisType& operator/=(unsigned int source)
-      {  AssumeCondition(source != 0U)
+   thisType& operator/=(uint64_t source)
+      {  AssumeCondition(source != (uint64_t) 0)
          value() /= source;
          return *this;
       }
-   unsigned long long int operator%(unsigned int source) const
+   uint64_t operator%(uint64_t source) const
       {  return value() % source; }
    thisType& operator%=(const thisType& source)
       {  value() %= source.value(); return *this; }
 
-   unsigned int log_base_2() const { return log_base_2(value()); }
-   unsigned int getValue() const { return (unsigned int) value(); }
+   int log_base_2() const { return log_base_2(value()); }
+   uint64_t getValue() const { return value(); }
    bool isAtomic() const { return !carray(1); }
    void swap(thisType& source) { inherited::swap(source); }
-   void clear() { value() = 0U; }
+   void clear() { value() = (uint64_t) 0; }
 };
 
 #define DefineGeneric
@@ -988,6 +977,4 @@ class TGBigCellInt<UnsignedBaseStoreTraits,
 #undef DefineBigIntClass
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseIntegerGenericH
 

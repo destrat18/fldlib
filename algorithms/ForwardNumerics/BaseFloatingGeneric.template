@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,15 +27,12 @@
 //   Implementation of a class of floating points with unbound size.
 //
 
-#ifndef Numerics_BaseFloatingGenericTemplate
-#define Numerics_BaseFloatingGenericTemplate
+#pragma once
 
 #include "ForwardNumerics/BaseFloatingGeneric.h"
+#include <cmath>
 
-namespace Numerics {} // for precompiled headers
-
-#include <math.h>
-#ifdef StandardClassesHPP
+#ifndef DefineHasNoEnhancedObject
 #include "Pointer/Vector.h"
 #include "Pointer/Vector.template"
 #else
@@ -55,4 +50,3 @@ namespace Numerics {
 
 } // end of namespace Numerics
 
-#endif // Numerics_BaseFloatingGenericTemplate

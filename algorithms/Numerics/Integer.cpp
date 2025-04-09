@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,9 +28,6 @@
 //
 
 #include "Numerics/Integer.h"
-
-namespace Numerics {}
-
 #include "Pointer/Vector.template"
 #include "Numerics/Integer.template"
 
@@ -49,12 +44,12 @@ BigInteger::_read(ISBase& in, const IOObject::FormatParameters& aparams) {
          if (params.isBinary()) {
             while (achar == '0')
                achar = in.get();
-            unsigned int value = 0;
+            uint32_t value = 0;
             if (achar == '1') {
                while ((achar == '0') || (achar == '1')) {
                   value = ((achar == '1') ? 1U : 0U);
                   int bitIndex = 0;
-                  while ((++bitIndex < (int) sizeof(unsigned int)*8)
+                  while ((++bitIndex < (int) sizeof(uint32_t)*8)
                            && (((achar = in.get()) == '0') || (achar == '1'))) {
                      value <<= 1;
                      if (achar == '1')
@@ -62,7 +57,7 @@ BigInteger::_read(ISBase& in, const IOObject::FormatParameters& aparams) {
                   };
                   *this <<= bitIndex;
                   inheritedImplementation::operator[](0) |= value;
-                  if (bitIndex == (int) sizeof(unsigned int)*8)
+                  if (bitIndex == (int) sizeof(uint32_t)*8)
                      achar = in.get();
                };
             };
@@ -72,12 +67,12 @@ BigInteger::_read(ISBase& in, const IOObject::FormatParameters& aparams) {
                if (achar == ' ')
                   achar = in.get();
                if ((achar >= '0') && (achar <= '9')) {
-                  unsigned int value = achar - '0';
+                  uint32_t value = achar - '0';
                   while (((achar = in.get()) >= '0') && (achar <= '9')) {
                      value *= 10;
                      value += (achar-'0');
                   };
-                  *this <<= sizeof(unsigned int)*8;
+                  *this <<= sizeof(uint32_t)*8;
                   inheritedImplementation::operator[](0) = value;
                };
             };
@@ -116,32 +111,32 @@ BigInteger::_read(ISBase& in, const IOObject::FormatParameters& aparams) {
 
 void
 BigInteger::writeFullBinary(OSBase& out, const FormatParameters& params) const {
-   int index = (int) ((params.getLength()+sizeof(unsigned int)*8-1) / (sizeof(unsigned int)*8));
-   int bitIndex = (int) ((params.getLength()+sizeof(unsigned int)*8-1) % (sizeof(unsigned int)*8))+1;
+   int index = (int) ((params.getLength()+sizeof(uint32_t)*8-1) / (sizeof(uint32_t)*8));
+   int bitIndex = (int) ((params.getLength()+sizeof(uint32_t)*8-1) % (sizeof(uint32_t)*8))+1;
    
    while (--index >= 0) {
-      unsigned int value = array(index) << (sizeof(unsigned int)*8 - bitIndex);
+      uint32_t value = array(index) << (sizeof(uint32_t)*8 - bitIndex);
       while (--bitIndex >= 0) {
-         out.put(((value & (1U << (sizeof(unsigned int)*8-1))) == 0) ? '0' : '1');
+         out.put(((value & (1U << (sizeof(uint32_t)*8-1))) == 0) ? '0' : '1');
          value <<= 1;
       };
-      bitIndex = sizeof(unsigned int)*8;
+      bitIndex = sizeof(uint32_t)*8;
    };
 }
 
 void
 BigInteger::writeFullHexaDecimal(OSBase& out, const FormatParameters& params) const {
-   int index = (int) ((params.getLength()+sizeof(unsigned int)*8-1) / (sizeof(unsigned int)*8));
-   int hexaIndex = (int) ((params.getLength()+sizeof(unsigned int)*8-1) % (sizeof(unsigned int)*2))+1;
+   int index = (int) ((params.getLength()+sizeof(uint32_t)*8-1) / (sizeof(uint32_t)*8));
+   int hexaIndex = (int) ((params.getLength()+sizeof(uint32_t)*8-1) % (sizeof(uint32_t)*2))+1;
    
    while (--index >= 0) {
-      unsigned int value = array(index) << (4*(sizeof(unsigned int)*2 - hexaIndex));
+      uint32_t value = array(index) << (4*(sizeof(uint32_t)*2 - hexaIndex));
       while (--hexaIndex >= 0) {
-         unsigned int uShow = (value >> (sizeof(unsigned int)*8-4)) & 15U;
+         uint32_t uShow = (value >> (sizeof(uint32_t)*8-4)) & 15U;
          out.put((uShow < 10) ? (char) (uShow + '0') : (char) (uShow-10 + 'a'));
          value <<= 4;
       };
-      hexaIndex = sizeof(unsigned int)*2;
+      hexaIndex = sizeof(uint32_t)*2;
    };
 }
 
@@ -150,11 +145,11 @@ BigInteger::_write(OSBase& out, const IOObject::FormatParameters& aparams) const
    const FormatParameters& params = (const FormatParameters&) aparams;
    if (params.isText()) {
       if (params.isDecimal()) {
-         unsigned int* decimal = new unsigned int[(log_base_2()-1)/3+1];
+         uint32_t* decimal = new uint32_t[(log_base_2()-1)/3+1];
          AssumeAllocation(decimal)
          int index = -1;
          thisType thisCopy(*this);
-         while (thisCopy != 0U)
+         while (!thisCopy.isZero())
             decimal[++index] = thisCopy.divAssign(10).remainder();
          if (index == -1)
             out.put('0');
@@ -171,11 +166,11 @@ BigInteger::_write(OSBase& out, const IOObject::FormatParameters& aparams) const
             writeFullHexaDecimal(out, params);
       }
       else if (params.isHexaDecimal()) {
-         unsigned int* decimal = new unsigned int[(log_base_2()-1)/4+1];
+         uint32_t* decimal = new uint32_t[(log_base_2()-1)/4+1];
          AssumeAllocation(decimal)
          int index = -1;
          thisType thisCopy(*this);
-         while (thisCopy != 0U)
+         while (!thisCopy.isZero())
             decimal[++index] = thisCopy.divAssign(16).remainder();
          if (index == 0)
             out.put('0');
@@ -191,23 +186,23 @@ BigInteger::_write(OSBase& out, const IOObject::FormatParameters& aparams) const
             delete [] decimal;
       }
       else { // !params.isDecimal()
-         int index = (int) ((log_base_2()-1)/(sizeof(unsigned int)*8)) + 1;
+         int index = (int) ((log_base_2()-1)/(sizeof(uint32_t)*8)) + 1;
          while ((index > 0) && (inheritedImplementation::operator[](--index) == 0U));
          if (inheritedImplementation::operator[](index) == 0U)
             out.put('0');
          else {
             if (params.isBinary()) {
-               unsigned int value = inheritedImplementation::operator[](index);
+               uint32_t value = inheritedImplementation::operator[](index);
                int bitIndex = 0;
-               while ((value & (1U << (sizeof(unsigned int)*8-1))) == 0) {
+               while ((value & (1U << (sizeof(uint32_t)*8-1))) == 0) {
                   value <<= 1;
                   ++bitIndex;
                };
                out.put('1');
                value <<= 1;
                
-               while (++bitIndex < (int) sizeof(unsigned int)*8) {
-                  out.put(((value & (1U << (sizeof(unsigned int)*8-1))) == 0) ? '0' : '1');
+               while (++bitIndex < (int) sizeof(uint32_t)*8) {
+                  out.put(((value & (1U << (sizeof(uint32_t)*8-1))) == 0) ? '0' : '1');
                   value <<= 1;
                };
             }
@@ -215,10 +210,10 @@ BigInteger::_write(OSBase& out, const IOObject::FormatParameters& aparams) const
                out.write(inheritedImplementation::operator[](index), false);
             while (--index >= 0) {
                if (params.isBinary()) {
-                  unsigned int value = inheritedImplementation::operator[](index);
-                  int bitIndex = sizeof(unsigned int)*8;
+                  uint32_t value = inheritedImplementation::operator[](index);
+                  int bitIndex = sizeof(uint32_t)*8;
                   while (--bitIndex >= 0) {
-                     out.put(((value & (1U << (sizeof(unsigned int)*8-1))) == 0) ? '0' : '1');
+                     out.put(((value & (1U << (sizeof(uint32_t)*8-1))) == 0) ? '0' : '1');
                      value <<= 1;
                   };
                }
@@ -237,11 +232,11 @@ BigInteger::_write(OSBase& out, const IOObject::FormatParameters& aparams) const
    };
 }
 
-PNT::PassPointer<BigInteger>
+PNT::PPassPointer<BigInteger>
 BigInteger::mult(const thisType& source) const {
    Implementation::MultResult multResult;
    inheritedImplementation::mult(source, multResult);
-   PNT::PassPointer<BigInteger> result(new BigInteger(), PNT::Pointer::Init());
+   PNT::PPassPointer<BigInteger> result(new BigInteger(), PNT::Pointer::Init());
    result->inheritedImplementation::implementation().swap(multResult);
    result->inheritedImplementation::implementation().normalize();
    return result;
@@ -260,13 +255,13 @@ BigInteger::divNormalized(const BigInteger& source, int abitSize, NormalizedDivi
    AssumeCondition(abitSize >= 0);
    unsigned bitSize = abitSize;
    AssumeCondition(log_base_2() <= bitSize && source.log_base_2() <= bitSize)
-   if (!((bitSize % (8*sizeof(unsigned int))) == 0)) {
+   if (!((bitSize % (8*sizeof(uint32_t))) == 0)) {
       Implementation::DivisionResult atomicResult;
-      int quotientCellSize = (int) ((bitSize + 8*sizeof(unsigned int) -1)/(8*sizeof(unsigned int)));
+      int quotientCellSize = (int) ((bitSize + 8*sizeof(uint32_t) -1)/(8*sizeof(uint32_t)));
       atomicResult.quotient().adjustSize(quotientCellSize);
-      atomicResult.remainder().assertSize((int) (bitSize/(8*sizeof(unsigned int))+1));
+      atomicResult.remainder().assertSize((int) (bitSize/(8*sizeof(uint32_t))+1));
       BigIntegerImplementation thisCells, sourceCells;
-      int sourceCellSize = (int) (bitSize/(8*sizeof(unsigned int))+1);
+      int sourceCellSize = (int) (bitSize/(8*sizeof(uint32_t))+1);
       thisCells.assertSize(sourceCellSize);
       sourceCells.assertSize(sourceCellSize);
       for (int numeratorIndex = 0; numeratorIndex < implementation().getSize(); ++numeratorIndex)
@@ -277,8 +272,8 @@ BigInteger::divNormalized(const BigInteger& source, int abitSize, NormalizedDivi
       sourceCells.setTrueBitArray(bitSize);
 
       thisCells.div(sourceCells, atomicResult);
-      int shift = (int) ((8*sizeof(unsigned int)- ((bitSize+8*sizeof(unsigned int)-1) % (8*sizeof(unsigned int))+1)));
-      unsigned int divLeft = atomicResult.quotient()[0] & ~(~0U << shift);
+      int shift = (int) ((8*sizeof(uint32_t)- ((bitSize+8*sizeof(uint32_t)-1) % (8*sizeof(uint32_t))+1)));
+      uint32_t divLeft = atomicResult.quotient()[0] & ~(~0U << shift);
       ((BigIntegerImplementation&) atomicResult.quotient()) >>= shift;
 
       BigIntegerImplementation::Carry mult = sourceCells.multAssign(divLeft);
@@ -287,12 +282,12 @@ BigInteger::divNormalized(const BigInteger& source, int abitSize, NormalizedDivi
       AssumeCondition(((sourceCells[0] & ~(~0U << shift)) == 0) && (mult.carry() <= 1))
       sourceCells >>= shift;
       if (mult.hasCarry())
-         sourceCells[sourceCellSize-1] |= (mult.carry() << ((source.log_base_2()-1) % (8*sizeof(unsigned int) + 1)));
+         sourceCells[sourceCellSize-1] |= (mult.carry() << ((source.log_base_2()-1) % (8*sizeof(uint32_t) + 1)));
 
       int additionalShift = implementation().getSize() - quotientCellSize;
       while (--additionalShift >= 0) {
          divLeft = atomicResult.quotient()[0];
-         ((BigIntegerImplementation&) atomicResult.quotient()) >>= 8*sizeof(unsigned int);
+         ((BigIntegerImplementation&) atomicResult.quotient()) >>= 8*sizeof(uint32_t);
 
          BigIntegerImplementation newSource;
          newSource.assertSize(sourceCellSize);
@@ -304,35 +299,35 @@ BigInteger::divNormalized(const BigInteger& source, int abitSize, NormalizedDivi
          if (sourceCells.add(newSource).hasCarry())
             ++mult.carry();
          AssumeCondition((sourceCells[0] == 0) && (mult.carry() <= 1))
-         sourceCells >>= 8*sizeof(unsigned int);
+         sourceCells >>= 8*sizeof(uint32_t);
          if (mult.hasCarry())
-            sourceCells[sourceCellSize-1] |= (mult.carry() << ((source.log_base_2()-1) % (8*sizeof(unsigned int) + 1)));
+            sourceCells[sourceCellSize-1] |= (mult.carry() << ((source.log_base_2()-1) % (8*sizeof(uint32_t) + 1)));
       };
       for (int quotientIndex = 0; quotientIndex < atomicResult.quotient().getSize(); ++quotientIndex)
-         result.quotient()[quotientIndex] = (unsigned) atomicResult.quotient()[quotientIndex];
+         result.quotient()[quotientIndex] = (uint32_t) atomicResult.quotient()[quotientIndex];
       for (int remainderIndex = 0; remainderIndex < sourceCells.getSize(); ++remainderIndex)
-         result.remainder()[remainderIndex] = (unsigned) sourceCells[remainderIndex];
+         result.remainder()[remainderIndex] = (uint32_t) sourceCells[remainderIndex];
       result.comma() = atomicResult.comma();
    }
    else {
       inheritedImplementation::NormalizedDivisionResult atomicResult;
-      int quotientCellSize = (int) ((bitSize + 8*sizeof(unsigned int) -1)/(8*sizeof(unsigned int)));
+      int quotientCellSize = (int) ((bitSize + 8*sizeof(uint32_t) -1)/(8*sizeof(uint32_t)));
       atomicResult.quotient().adjustSize(quotientCellSize);
-      atomicResult.remainder().assertSize((int) (bitSize/(8*sizeof(unsigned int))+1));
+      atomicResult.remainder().assertSize((int) (bitSize/(8*sizeof(uint32_t))+1));
       implementation().divNormalized(source, atomicResult);
       for (int quotientIndex = 0; quotientIndex < atomicResult.quotient().getSize(); ++quotientIndex)
-         result.quotient()[quotientIndex] = (unsigned) atomicResult.quotient()[quotientIndex];
+         result.quotient()[quotientIndex] = (uint32_t) atomicResult.quotient()[quotientIndex];
       for (int remainderIndex = 0; remainderIndex < atomicResult.remainder().getSize(); ++remainderIndex)
-         result.remainder()[remainderIndex] = (unsigned) atomicResult.remainder()[remainderIndex];
+         result.remainder()[remainderIndex] = (uint32_t) atomicResult.remainder()[remainderIndex];
       result.comma() = atomicResult.comma();
    };
 }
 
 void
 BigInteger::div(const thisType& source, DivisionResult& result) const {
-   if (inheritedImplementation::operator>=(source)) {
+   if (inheritedImplementation::operator<=>(source) >= 0) {
       if ((source.inheritedImplementation::getSize() <= 1)
-            && (source.inheritedImplementation::operator[](0) < (1U << 4*sizeof(unsigned int)))) {
+            && (source.inheritedImplementation::operator[](0) < (1U << 4*sizeof(uint32_t)))) {
          Implementation copy = *this;
          Implementation::AtomicDivisionResult atomicResult = copy.divAssign(source.inheritedImplementation::operator[](0));
          result.ppbiQuotient.absorbElement(new BigInteger());
@@ -346,22 +341,22 @@ BigInteger::div(const thisType& source, DivisionResult& result) const {
       
       Implementation::DivisionResult implementationResult;
       int size = (int) ((inheritedImplementation::log_base_2()
-            - source.inheritedImplementation::log_base_2())/(sizeof(unsigned int)*8)+1);
+            - source.inheritedImplementation::log_base_2())/(sizeof(uint32_t)*8)+1);
       implementationResult.quotient().adjustSize(size);
       inheritedImplementation::div(source, implementationResult);
-      int shift = (int) (implementationResult.quotient().getSize()*sizeof(unsigned int)*8 - implementationResult.comma());
-      AssumeCondition(shift <= (int) (sizeof(unsigned int)*8 + 1))
+      int shift = (int) (implementationResult.quotient().getSize()*sizeof(uint32_t)*8 - implementationResult.comma());
+      AssumeCondition(shift <= (int) (sizeof(uint32_t)*8 + 1))
       if (((const Implementation&) implementationResult.remainder()).isZero()
             && ((const Implementation&) implementationResult.quotient()).hasZero(shift)) {
          ((Implementation&) implementationResult.quotient()) >>= shift;
-         ((Implementation&) implementationResult.quotient()).bitArray((int) (size*sizeof(unsigned int)*8-shift)) = true;
+         ((Implementation&) implementationResult.quotient()).bitArray((int) (size*sizeof(uint32_t)*8-shift)) = true;
       }
       else if (shift > 0) {
          result.mergeRemainderField(1);
          if (!result.hasPartialField()) {
-            unsigned int left = implementationResult.quotient()[0];
-            if (shift <= (int) sizeof(unsigned int)*8) {
-               if (shift < (int) sizeof(unsigned int)*8)
+            uint32_t left = implementationResult.quotient()[0];
+            if (shift <= (int) sizeof(uint32_t)*8) {
+               if (shift < (int) sizeof(uint32_t)*8)
                   left &= ~(~0U << shift);
                Implementation mult(source);
                mult.multAssign(left);
@@ -373,7 +368,7 @@ BigInteger::div(const thisType& source, DivisionResult& result) const {
                ((Implementation&) implementationResult.remainder()) += mult;
                if (implementationResult.quotient()[1] & 1)
                   ((Implementation&) implementationResult.remainder())
-                     += (Implementation(source) <<= sizeof(unsigned int)*8);
+                     += (Implementation(source) <<= sizeof(uint32_t)*8);
             };
             AssumeCondition((Implementation().neg(shift)
                   &= ((Implementation&) implementationResult.remainder())).isZero())
@@ -390,7 +385,7 @@ BigInteger::div(const thisType& source, DivisionResult& result) const {
          //    ((Implementation&) implementationResult.remainder()) = newRemainder;
          // };
          ((Implementation&) implementationResult.quotient()) >>= shift;
-         ((Implementation&) implementationResult.quotient()).bitArray((int) (size*sizeof(unsigned int)*8-shift)) = true;
+         ((Implementation&) implementationResult.quotient()).bitArray((int) (size*sizeof(uint32_t)*8-shift)) = true;
       };
 
       result.ppbiQuotient.absorbElement(new BigInteger());
@@ -408,23 +403,23 @@ BigInteger::div(const thisType& source, DivisionResult& result) const {
    };
 }
 
-PNT::PassPointer<BigInteger>
+PNT::PPassPointer<BigInteger>
 BigInteger::pgcd(const thisType& source) const {
    DivisionResult result;
-   PNT::PassPointer<BigInteger> fst, snd;
+   PNT::PPassPointer<BigInteger> fst, snd;
    if (*this >= source) {
       div(source, result);
       if (!result.hasRemainder())
          return source;
       fst.absorbElement(new BigInteger(source));
-      snd = result.ppbiRemainder;
+      snd = std::move(result.ppbiRemainder);
    }
    else {
       source.div(*this, result);
       if (!result.hasRemainder())
          return *this;
       fst.absorbElement(new BigInteger(*this));
-      snd = result.ppbiRemainder;
+      snd = std::move(result.ppbiRemainder);
    };
 
    do {
@@ -439,7 +434,7 @@ BigInteger::pgcd(const thisType& source) const {
 void
 BigInteger::retrieveBezout(const thisType& source, BezoutResult& result) const { // pgcd = a*u+b*v
    DivisionResult divisionResult;
-   PNT::PassPointer<BigInteger> fst, snd;
+   PNT::PPassPointer<BigInteger> fst, snd;
    BigInteger i,j(1),k(1),l; // u = j et v = l
    // i_{n+1} <- k_n and j_{n+1} <- l_n
    // k_{n+1} <- i_n - q*k_n and l_{n+1} <- j_n - q*l_n
@@ -472,7 +467,7 @@ BigInteger::retrieveBezout(const thisType& source, BezoutResult& result) const {
       fst.absorbElement(new BigInteger(*this));
       isInverse = true;
    };
-   snd = divisionResult.ppbiRemainder;
+   snd = std::move(divisionResult.ppbiRemainder);
    divisionResult.ppbiQuotient->swap(l);
 
    do {
@@ -525,5 +520,5 @@ template class Numerics::DInteger::TBigCellInt<Numerics::DInteger::ExtensibleCel
 // template Numerics::DInteger::TBigCellInt<Numerics::DInteger::ExtensibleCellIntegerTraits>::verifyAtomicity() const;
 // template Numerics::DInteger::TBigCellInt<Numerics::DInteger::ExtensibleCellIntegerTraits>::operator |=(const Numerics::DInteger::TBigCellInt<Numerics::DInteger::ExtensibleCellIntegerTraits>&);
 
-template class COL::TVector<unsigned int, COL::DVector::TSystemElementTraits<unsigned int> >;
+template class COL::TVector<uint32_t, COL::DVector::TSystemElementTraits<uint32_t> >;
 

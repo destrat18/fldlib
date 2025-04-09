@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -449,10 +447,12 @@ TMergeBranches<TypeExecutionPath>::operator<<(TFloatExact<TypeExecutionPath, Typ
          else
             value.retrieveReal(value.bfImplementation, value.brReal);
       }
+#ifdef FLOAT_CONCRETE
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
       DDoubleExact::setContent(value.dValue, value.bfImplementation, DDoubleExact::FloatDigitsHelper());
 #else
       DDoubleExact::gsetContent(value.dValue, value.bfImplementation, DDoubleExact::FloatDigitsHelper());
+#endif
 #endif
    };
    inherited::writeSynchronizedValue(

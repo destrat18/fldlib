@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2013-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -32,8 +30,7 @@
 //   duplicated for each TVector instantiation.
 //
 
-#ifndef COL_VectorTEMPLATE
-#define COL_VectorTEMPLATE
+#pragma once
 
 #include "Pointer/Vector.h"
 #include <memory.h>
@@ -133,7 +130,7 @@ TVector<TypeElement, TypeElementTraits, TypeReallocTraits>::addAll(const thisTyp
          memmove((void*) (ateArray+destinationIndex), (void*) (ateArray+lastSourceIndex+1),
             (1+lastSourceIndex-firstSourceIndex)*sizeof(TypeElement));
       }
-      else if (destinationIndex > lastSourceIndex) // pas de décalage
+      else if (destinationIndex > lastSourceIndex) // no shift
          memmove((void*) (ateArray+destinationIndex), (void*) (ateArray+firstSourceIndex),
             (1+lastSourceIndex-firstSourceIndex)*sizeof(TypeElement));
       else { // firstSourceIndex < destinationIndex <= lastSourceIndex
@@ -305,6 +302,4 @@ TVector<TypeElement, TypeElementTraits, TypeReallocTraits>::moveToAtEnd(thisType
 }
 
 } // end of namespace COL
-
-#endif // COL_VectorTEMPLATE
 

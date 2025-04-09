@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   with soft floating points.
 //
 
-#ifndef Numerics_BaseHostFloatingTemplate
-#define Numerics_BaseHostFloatingTemplate
+#pragma once
 
 #include "ForwardNumerics/BaseHostFloating.h"
 
@@ -245,7 +242,6 @@ TDoubleElement<FloatingBaseTraits>::write(STG::IOObject::OSBase& out, WriteParam
    };
 }
 
-
 template <class FloatingBaseTraits>
 bool
 TDoubleElement<FloatingBaseTraits>::isPuiss2() const {
@@ -281,6 +277,4 @@ TDoubleElement<FloatingBaseTraits>::read(STG::IOObject::ISBase& in, ReadParamete
 }
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseHostFloatingTemplate
 

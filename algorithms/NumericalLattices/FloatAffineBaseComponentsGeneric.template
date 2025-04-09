@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,11 +27,12 @@
 //   Implementation of a class of affine relations.
 //
 
-#ifndef NumericalDomains_FloatAffineBaseComponentsGenericTemplate
-#define NumericalDomains_FloatAffineBaseComponentsGenericTemplate
+#pragma once
 
 #include "NumericalLattices/FloatAffineBaseComponentsGeneric.h"
 
+#include <climits>
+#include <iostream>
 #include "Pointer/Vector.template"
 #include "Pointer/ImplList.template"
 
@@ -44,6 +43,4 @@ namespace NumericalDomains {
 #undef DefineGeneric
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatAffineBaseComponentsGenericTemplate
 

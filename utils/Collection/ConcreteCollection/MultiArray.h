@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of multi-sets based on sorted arrays.
 //
 
-#ifndef COL_MultiArrayH
-#define COL_MultiArrayH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualMultiSortedCollection.h"
 #include "Pointer/ImplArray.h"
@@ -99,7 +96,7 @@ class MultiArray : public GenericMultiArray {
       }
    Element* getInheritedElement(const ExtendedLocateParameters& parameters,
          const thisCursorType* cursor=nullptr) const
-      {  return (Element*) Cast::castFrom(inherited::_getElement(parameters, cursor)); }
+      {  return (Element*) Cast::castFrom((typename Cast::Base*) inherited::_getElement(parameters, cursor)); }
    friend class VirtualCollection::TemplateQueryParameters<thisType, inherited, Element, KeyTraits, Cast>;
 
   public:
@@ -123,7 +120,7 @@ class MultiArray : public GenericMultiArray {
    Template3DefineCollectionForAbstractCollect(MultiArray, MultiArrayCursor, Element, Key, Cast)
 
    virtual const EnhancedObject& key(const EnhancedObject& element) const override
-      { return TypeOfKey::castToCopyHandler(Key::key((const Element&) Cast::castFrom(element))); }
+      { return TypeOfKey::castToCopyHandler(Key::key((const Element&) Cast::castFrom((const typename Cast::Base&) element))); }
 
 #define DefTypeElement Element
 #define DefTypeCollection MultiArray<Element, Key, Cast>
@@ -258,15 +255,16 @@ class TMultiArray : public GenericMultiArray {
    virtual bool acceptElement(const EnhancedObject& /* source */) const override { return true; }
 
    virtual ComparisonResult _compareElement(const EnhancedObject& fst, const EnhancedObject& snd) const override
-      { return TypeKey::compare(key((const TypeElement&) TypeCast::castFrom(fst)), key((const TypeElement&) TypeCast::castFrom(snd))); }
+      { return TypeKey::compare(key((const TypeElement&) TypeCast::castFrom((const typename TypeCast::Base&) fst)), key((const TypeElement&) TypeCast::castFrom((const typename TypeCast::Base&) snd))); }
    LocationResult _locateKey(typename TypeKey::KeyType key, const ExtendedLocateParameters& parameters,
          Cursor* cursor=nullptr, const Cursor* start=nullptr, const Cursor* end=nullptr) const
       {  return tlocate<thisType, TypeElement, TypeKey, TypeCast>(*this, key, parameters, cursor, start, end); }
    virtual LocationResult _locate(const EnhancedObject& source, const ExtendedLocateParameters& parameters,
          VirtualMultiSortedCollectionCursor* cursor=nullptr, const VirtualMultiSortedCollectionCursor* start=nullptr,
          const VirtualMultiSortedCollectionCursor* end=nullptr) const override
-      {  return _locateKey(key((const TypeElement&) TypeCast::castFrom(source)), parameters,
-            (Cursor*) cursor, const_cast<Cursor*>((const Cursor*) start), const_cast<Cursor*>((const Cursor*) end));
+      {  return _locateKey(key((const TypeElement&) TypeCast::castFrom(
+            (const typename TypeCast::Base&) source)), parameters, (Cursor*) cursor,
+            const_cast<Cursor*>((const Cursor*) start), const_cast<Cursor*>((const Cursor*) end));
       }
 
    virtual int _merge(const COL::ImplArray& source, int firstSourceIndex, int lastSourceIndex, bool doesDuplicate=false) override
@@ -285,7 +283,7 @@ class TMultiArray : public GenericMultiArray {
       }
    TypeElement* getInheritedElement(const ExtendedLocateParameters& parameters,
          const thisCursorType* cursor=nullptr) const
-      {  return (TypeElement*) TypeCast::castFrom(inherited::_getElement(parameters, cursor)); }
+      {  return (TypeElement*) TypeCast::castFrom((typename TypeCast::Base*) inherited::_getElement(parameters, cursor)); }
    friend class VirtualCollection::TemplateQueryParameters<thisType, inherited, TypeElement, KeyTraits, TypeCast>;
 
   public:
@@ -369,7 +367,10 @@ class TMultiArrayCursor : public GenericMultiArrayCursor {
    Template3DefineCopy(TMultiArrayCursor, TypeElement, Key, Cast)
    Template3DefineCursorForAbstractCollect(TMultiArray, TMultiArrayCursor, TypeElement, Key, Cast)
 
-   TypeElement* getSElement() const { return (TypeElement*) Cast::castFrom(GenericMultiArrayCursor::_getSElement()); }
+   TypeElement* getSElement() const
+      {  return (TypeElement*) Cast::castFrom((typename Cast::Base*)
+               GenericMultiArrayCursor::_getSElement());
+      }
    const TypeElement* getElement() const { return getSElement(); }
    const TypeElement& elementAt() const { return *getSElement(); }
    TypeElement& elementSAt() const { return *getSElement(); }
@@ -384,4 +385,3 @@ Template2InlineCollectionIteratorForConcreteCollect(TMultiArray, TypeElement, Ke
 
 } // end of namespace COL
 
-#endif // COL_MultiArrayH

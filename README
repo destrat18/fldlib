@@ -9,14 +9,32 @@ generated INSTALL file.
 A typical way to install it in a local directory consists in
 typing the following commands
 
-  ./configure --prefix=TheInstallationDirectory
+  mkdir build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=TheInstallationDirectory -DFLDLIB_ENABLE_TESTS=ON ..
   make
   make install
 
 To check the library
 
-  cd tests
-  make
+  make test
+
+To build and check in parallel on 10 available cores,
+
+  mkdir build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=TheInstallationDirectory -DFLDLIB_ENABLE_TESTS=ON ..
+  make -j 10
+  make install
+  CTEST_PARALLEL_LEVEL=10 make test
+
+  or
+
+  ctest -j 10
+
+To build and run a particular test in the build directory
+
+  AUTOTEST=1 ./comp_float_diagnosis.sh  -affine -optim -atomic ../tests/filter.cpp -o filter.exe
+  ./filter.exe
+  diff filter_diag_aff_out tests/filter_diag_aff_out
 
 Example of abstract instrumentation:
   add
@@ -24,24 +42,12 @@ Example of abstract instrumentation:
   in your .bashrc or .profile.
 
   executable creation
-    $FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim \
-      -atomic filter.c -o file.exe
+    $FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim -atomic \
+      filter.cpp -o filter.exe
   separate compilation
-    $FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim \
-      -atomic filter.c -c -o file.o
+    $FLOATDIAGNOSISHOME/bin/comp_float_diagnosis.sh -affine -optim -atomic \
+      filter.cpp -c -o filter.o
 
-Some advanced tests requires perl and the package File::ReadBackwards.
-
-To generate an accuracy summary table, you need
-- to install python to scan the results in the current directory
-- to install ocaml with yojson and biniou to create a summary table
-
-Note: both of these commands will be invoked when building 'table.txt'
-
-  make table.txt
-
-then edit table.txt that contains a summary of the results.
-
-FLDLib has been successfully tested with:
-- g++ version 5.4.0 for sequential codes
+The DPRINT macros in the source code are used to print the conservative accuracy
+in the file filter_diag_aff_out.
 

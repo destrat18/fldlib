@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Implementation of a common implementation for all tree collections.
 //
 
-#ifndef COL_ImplCommonTreeTemplate
-#define COL_ImplCommonTreeTemplate
+#pragma once
 
 #include "Collection/Implementation/ImplCommonTree.h"
 
@@ -90,6 +87,4 @@ TImplTree<TypeNode, TypeCursor>::setParentCursor(TypeCursor& cursor, PPFlatCurso
 }
 
 } // end of namespace COL
-
-#endif // COL_ImplCommonTreeTemplate
 

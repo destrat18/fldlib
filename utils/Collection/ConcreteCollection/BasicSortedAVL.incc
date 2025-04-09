@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -79,7 +77,7 @@ void
 DefBasicGenericAVL::_fullAssign(const DefBasicGenericAVL& source, const ExtendedReplaceParameters& parameters) {
    if (this != &source) {
       if (!parameters.isFree() && !parameters.isDuplicate()) {
-         PNT::AutoPointer<ExtendedReplaceParameters> paramsCopy(parameters);
+         PNT::PPassPointer<ExtendedReplaceParameters> paramsCopy(parameters);
          paramsCopy->setFree().setDuplicate().clearCast();
          DefGenericAVL::_fullAssign(source, *paramsCopy);
          return;
@@ -92,7 +90,7 @@ DefBasicGenericAVL::_fullAssign(const DefBasicGenericAVL& source, const Extended
          DefGenericAVL::foreachDo(TemplateElementCastParameters<BasicGenericAVLElement, SimpleCast>(),
                releaseElementFunction, ExtendedLocateParameters());
       };
-      {  PNT::AutoPointer<ExtendedReplaceParameters> paramsCopy(parameters);
+      {  PNT::PPassPointer<ExtendedReplaceParameters> paramsCopy(parameters);
          if (parameters.isDuplicate())
             paramsCopy->clearCast();
          else
@@ -126,7 +124,7 @@ void
 DefBasicGenericAVL::_add(EnhancedObject* anObject, const ExtendedInsertionParameters& parameters,
       DefBasicGenericAVLCursor* cursor) {
    VirtualCollection::_add(anObject, parameters, cursor);
-   PNT::AutoPointer<ExtendedInsertionParameters> paramsCopy(parameters);
+   PNT::PPassPointer<ExtendedInsertionParameters> paramsCopy(parameters);
    AddGuardian<EnhancedObject> guard(*this, anObject, parameters);
    anObject = guard.handleDuplication();
    paramsCopy->releaseDuplicate().setFreeOnError();
@@ -153,7 +151,7 @@ DefBasicGenericAVL::_remove(const ExtendedSuppressParameters& parameters, DefBas
       };
    }
    else {
-      PNT::AutoPointer<ExtendedSuppressParameters> paramsCopy(parameters);
+      PNT::PPassPointer<ExtendedSuppressParameters> paramsCopy(parameters);
       paramsCopy->setFree();
       DefGenericAVL::_remove(*paramsCopy, cursor);
    };
@@ -176,7 +174,7 @@ DefBasicGenericAVL::_removeAll(const ExtendedSuppressParameters& parameters,
          VirtualSortedCollection::premoveAll(parameters, start, end);
    }
    else {
-      PNT::AutoPointer<ExtendedSuppressParameters> paramsCopy(parameters);
+      PNT::PPassPointer<ExtendedSuppressParameters> paramsCopy(parameters);
       paramsCopy->setFree();
       DefGenericAVL::_removeAll(*paramsCopy, start, end);
    }

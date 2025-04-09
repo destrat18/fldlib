@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,8 +29,7 @@
 //   It is a specialization of multiple collections with only multiple elements.
 //
 
-#ifndef COL_MultiMapH
-#define COL_MultiMapH
+#pragma once
 
 #include "Collection/ConcreteCollection/MultiSorted.h"
 
@@ -592,7 +589,7 @@ class TMultiMap : public VirtualMultiSortedCollection {
          end = ((end == nullptr) || !end->isValid()) ? nullptr : end;
          if (start && end && (start->sortedCursor() > end->sortedCursor()))
             return true;
-         if (start && end && start->sortedCursor().isEqual(end->sortedCursor())) {
+         if (start && end && start->sortedCursor() == end->sortedCursor()) {
             return ((const ReceiverMultipleElement&) start->sortedCursor().elementAt())
                .getElements().foreachDo(function, parameters,
                      start->multipleCursor().key(), end->multipleCursor().key());
@@ -627,7 +624,7 @@ class TMultiMap : public VirtualMultiSortedCollection {
          end = ((end == nullptr) || !end->isValid()) ? nullptr : end;
          if (start && end && (start->sortedCursor() < end->sortedCursor()))
             return true;
-         if (start && end && start->sortedCursor().isEqual(end->sortedCursor())) {
+         if (start && end && start->sortedCursor() == end->sortedCursor()) {
             return ((const ReceiverMultipleElement&) start->sortedCursor().elementAt())
                .getElements().foreachReverseDo(function, parameters,
                      start->multipleCursor().key(), end->multipleCursor().key());
@@ -836,6 +833,4 @@ TemplateInlineCollectionForAbstractCollect(TMultiMap, TMultiMapCursor, TypeTrait
 #undef DefTypeSorted
 
 } // end of namespace COL
-
-#endif // COL_MultiMapH
 

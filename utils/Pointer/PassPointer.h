@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,13 +29,13 @@
 //     are used for the arguments and for the result type of functions/methods.
 //
 
-#ifndef PNT_PassPointerH
-#define PNT_PassPointerH
+#pragma once
 
 #include "Pointer/Pointer.h"
 
 namespace PNT {
 
+// [TODO] Deprecated: use CPassPointer
 template<class Element>
 class PassPointer : public Pointer {
   protected:
@@ -48,7 +46,7 @@ class PassPointer : public Pointer {
    typedef typename Pointer::Duplicate Duplicate;
    typedef typename Pointer::Init Init;
 
-   PassPointer() {}
+   PassPointer() = default;
    PassPointer(Element* element, Init) : Pointer(Element::castToCopyHandler(element), Init()) {}
    PassPointer(const Element& element) : Pointer(element.createCopy(), Init()) {}
    PassPointer(const PassPointer<Element>& source, Duplicate)
@@ -96,9 +94,13 @@ class CPassPointer : public Pointer {
    typedef typename Pointer::Duplicate Duplicate;
    typedef typename Pointer::Init Init;
 
-   CPassPointer() {}
+   CPassPointer() = default;
    CPassPointer(Element* element, Init) : Pointer(Element::castToCopyHandler(element), Init()) {}
    CPassPointer(const Element& element) : Pointer(element.createCopy(), Init()) {}
+   CPassPointer(const CPassPointer<Element>& source, Duplicate duplicate) 
+      {  if (source.Pointer::isValid())
+            Pointer::setElement(source.Pointer::getElement().createCopy());
+      }
    CPassPointer(const CPassPointer<Element>& source) : Pointer()
       {  if (source.Pointer::isValid())
             Pointer::setElement(source.Pointer::getElement().createCopy());
@@ -133,25 +135,59 @@ class CPassPointer : public Pointer {
    Element& getElement() const { return *(operator->()); }
 };
 
+template<class Element>
+class PPassPointer : public CPassPointer<Element> {
+  private:
+   typedef CPassPointer<Element> inherited;
+
+  protected:
+   PPassPointer(const PPassPointer<Element>& source) = delete;
+   PPassPointer<Element>& operator=(const PPassPointer<Element>& source) = delete;
+
+  public:
+   PPassPointer() = default;
+   PPassPointer(Element* element, typename inherited::Init) : inherited(element, typename inherited::Init()) {}
+   PPassPointer(const Element& element) : inherited(element) {}
+   PPassPointer(const PPassPointer<Element>& source, typename inherited::Duplicate duplicate) 
+      :  inherited(source, duplicate) {}
+   PPassPointer(PPassPointer<Element>&& source) = default;
+   PPassPointer<Element>& operator=(PPassPointer<Element>&& source) = default;
+
+   // TemplateDefineMCopy(PPassPointer, Element)
+   virtual EnhancedObject* createMove() override
+      {  return PPassPointer<Element>::castToCopyHandler(new PPassPointer<Element>(std::move(*this))); }
+   PPassPointer<Element>* createSMove()
+      {  return (PPassPointer<Element>*) PPassPointer<Element>::castFromCopyHandler(createMove()); }
+};
+
 template<class Element, class PassDerived>
 class TPassPointer : public PassDerived {
   private:
    typedef TPassPointer<Element, PassDerived> thisType;
+
   public:
    typedef Element* PElement;
 
-   TPassPointer() {}
+   TPassPointer() = default;
    TPassPointer(Element* element, Pointer::Init) : PassDerived(element, Pointer::Init()) {}
    TPassPointer(const Element& element) : PassDerived(element) {}
-   TPassPointer(PassDerived&& source) : PassDerived(source) {}
+   TPassPointer(PassDerived&& source) : PassDerived(std::move(source)) {}
    TPassPointer(const PassDerived& source) : PassDerived(source) {}
    TPassPointer(const PassDerived& source, typename PassDerived::Duplicate duplicate)
       : PassDerived(source, duplicate) {}
+   TPassPointer(thisType&& source) = default;
    TPassPointer(const thisType& source) = default;
    TPassPointer& operator=(const thisType& source) = default;
+   TPassPointer& operator=(PassDerived&& source) { return (thisType&) PassDerived::operator=(std::move(source)); }
+   TPassPointer& operator=(const PassDerived& source) { return (thisType&) PassDerived::operator=(source); }
+   TPassPointer& operator=(thisType&& source) = default;
 
-   Template2DefineCopy(TPassPointer, Element, PassDerived)
-   DDefineAssign(thisType)
+   // DTemplate2DefineMCopy(TPassPointer, Element, PassDerived)
+   thisType* createSMove()
+      {  return (thisType*) PassDerived::castFromCopyHandler(((PassDerived&) *this).createMove()); }
+   thisType* createSCopy()
+      {  return (thisType*) PassDerived::castFromCopyHandler(((const PassDerived&) *this).createCopy()); }
+
    void assign(const PassDerived& source) { PassDerived::assign(source); }
    void assign(Element* newElement, Pointer::Init) { PassDerived::assign(newElement, Pointer::Init()); }
    void setElement(const Element& element) { PassDerived::setElement(element); }
@@ -166,4 +202,3 @@ class TPassPointer : public PassDerived {
 
 } // end of namespace PNT
 
-#endif // PNT_PassPointerH

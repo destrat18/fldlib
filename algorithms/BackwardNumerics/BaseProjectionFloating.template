@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,13 +27,9 @@
 //   Implementation of a class of floating points with unbound size.
 //
 
-#ifndef Numerics_BaseProjectionFloatingTemplate
-#define Numerics_BaseProjectionFloatingTemplate
+#pragma once
 
 #include "BackwardNumerics/BaseProjectionFloating.h"
-
-namespace Numerics {} // for precompiled headers
-
 #include "ForwardNumerics/BaseFloating.template"
 
 namespace Numerics {
@@ -1541,4 +1535,3 @@ TProjectionDouble<TypeDouble, TypeDouble_1>::sqrtAccept(ReadParameters& round) {
 
 } // end of namespace Numerics
 
-#endif // Numerics_BaseProjectionFloatingTemplate

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   for the COL::SortedAVL collection.
 //
 
-#ifndef COL_BinaryH
-#define COL_BinaryH
+#pragma once
 
 #include "Pointer/ImplArray.h"
 #include "Pointer/ImplList.h"
@@ -1021,4 +1018,3 @@ class CustomImplBinaryNode : public EnhancedObject, public ImplBalancedNode {
 
 }
 
-#endif

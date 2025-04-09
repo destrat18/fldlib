@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of integers with unbound size.
 //
 
-#ifndef Numerics_IntegerH
-#define Numerics_IntegerH
+#pragma once
 
 #include "StandardClasses/Persistence.h"
 #include "Pointer/Vector.h"
@@ -49,7 +46,7 @@ namespace DInteger {
 class ExtensibleCellIntegerTraits {
   private:
    typedef ExtensibleCellIntegerTraits thisType;
-   typedef COL::TVector<unsigned int, COL::DVector::TSystemElementTraits<unsigned int> > UnsignedIntVector;
+   typedef COL::TVector<uint32_t, COL::DVector::TSystemElementTraits<uint32_t> > UnsignedIntVector;
    UnsignedIntVector viIntArray;
 
    void bookPlace(int places=1) const
@@ -61,11 +58,11 @@ class ExtensibleCellIntegerTraits {
       }
    
   public:
-   ExtensibleCellIntegerTraits() : viIntArray() {}
+   ExtensibleCellIntegerTraits() {}
    ExtensibleCellIntegerTraits(ExtensibleCellIntegerTraits&&) = default;
    ExtensibleCellIntegerTraits(const ExtensibleCellIntegerTraits&) = default;
    ExtensibleCellIntegerTraits& operator=(ExtensibleCellIntegerTraits&& source)
-      {  viIntArray = source.viIntArray; return *this; }
+      {  viIntArray = std::move(source.viIntArray); return *this; }
    ExtensibleCellIntegerTraits& operator=(const ExtensibleCellIntegerTraits& source)
       {  viIntArray = source.viIntArray;
          normalize();
@@ -74,21 +71,21 @@ class ExtensibleCellIntegerTraits {
 
    void assignCells(const ExtensibleCellIntegerTraits& source) { operator=(source); }
    void assignCells(ExtensibleCellIntegerTraits&& source) { operator=(source); }
-   typedef unsigned int& ArrayProperty;
+   typedef uint32_t& ArrayProperty;
    ArrayProperty array(int index)
       {  if (index >= viIntArray.count())
             bookPlace(index-viIntArray.count()+1);
          return viIntArray.referenceAt(index);
       }
-   unsigned int array(int index) const
+   uint32_t array(int index) const
       {  return (index < viIntArray.count()) ? viIntArray[index] : 0U; }
-   unsigned int carray(int index) const { return array(index); }
+   uint32_t carray(int index) const { return array(index); }
    ArrayProperty operator[](int index)
       {  if (index >= viIntArray.count())
             bookPlace(index-viIntArray.count()+1);
          return viIntArray.referenceAt(index);
       }
-   unsigned int operator[](int index) const
+   uint32_t operator[](int index) const
       {  return (index < viIntArray.count()) ? viIntArray[index] : 0U; }
    typedef thisType MultResult;
 
@@ -114,14 +111,14 @@ class ExtensibleCellIntegerTraits {
    void assertSize(int newSize) { adjustSize(newSize); }
    void setSize(int exactSize) { if (exactSize < viIntArray.count()) viIntArray.removeAllBetween(exactSize, -1); }
    void setBitSize(int exactSize)
-      {  int size = (int) ((exactSize + 8*sizeof(unsigned)-1)/(8*sizeof(unsigned)));
+      {  int size = (int) ((exactSize + 8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t)));
          int count = viIntArray.count();
          if (size > count)
             bookPlace(size-count);
          else if (size < count)
             viIntArray.removeAllBetween(size, -1);
-         if ((exactSize % (8*sizeof(unsigned)) != 0) && viIntArray.elementAt(size-1))
-            viIntArray.referenceAt(size-1) &= ~(~0U << (exactSize % (8*sizeof(unsigned))));
+         if ((exactSize % (8*sizeof(uint32_t)) != 0) && viIntArray.elementAt(size-1))
+            viIntArray.referenceAt(size-1) &= ~(~0U << (exactSize % (8*sizeof(uint32_t))));
       }
    void setCellSize(int exactSize) { if (exactSize < viIntArray.count()) viIntArray.removeAllBetween(exactSize, -1); }
    void clear() { viIntArray.removeAll(); }
@@ -135,14 +132,14 @@ class BigIntegerImplementation : public TBigCellInt<ExtensibleCellIntegerTraits>
 
   public:
    BigIntegerImplementation() : inherited() {}
-   BigIntegerImplementation(unsigned int value) : inherited(value) {}
+   BigIntegerImplementation(uint32_t value) : inherited(value) {}
    BigIntegerImplementation(BigIntegerImplementation&& source) = default;
    BigIntegerImplementation(const BigIntegerImplementation& source) = default;
    BigIntegerImplementation& operator=(BigIntegerImplementation&& source)
       {  return (BigIntegerImplementation&) inherited::operator=(source); }
    BigIntegerImplementation& operator=(const BigIntegerImplementation& source)
       {  return (BigIntegerImplementation&) inherited::operator=(source); }
-   BigIntegerImplementation& operator=(unsigned int value)
+   BigIntegerImplementation& operator=(uint32_t value)
       {  return (BigIntegerImplementation&) inherited::operator=(value); }
 
    void adjustSize(int newSize) { inherited::adjustSize(newSize); }
@@ -231,13 +228,13 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
 
   public:
    BigInteger() : inheritedImplementation() {}
-   BigInteger(unsigned int value) : inheritedImplementation(value) {}
+   BigInteger(uint32_t value) : inheritedImplementation(value) {}
    BigInteger(BigInteger&) = default;
    BigInteger(const BigInteger& source) = default;
    DefineCopy(BigInteger)
    DDefineAssign(BigInteger)
    DCompare(BigInteger)
-   BigInteger& operator=(unsigned int value) { inheritedImplementation::operator=(value); return *this; }
+   BigInteger& operator=(uint32_t value) { inheritedImplementation::operator=(value); return *this; }
    BigInteger& operator=(BigInteger&& source) = default;
    BigInteger& operator=(const BigInteger& source) = default;
  
@@ -254,7 +251,7 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
             inheritedImplementation::operator[](inheritedImplementation::getSize()) = 1U;
       }
    void sub(const thisType& source)
-      {  AssumeCondition(inheritedImplementation::operator>=(source))
+      {  AssumeCondition(inheritedImplementation::operator<=>(source) >= 0)
          inheritedImplementation::sub(source);
          inheritedImplementation::implementation().normalize();
       }
@@ -273,12 +270,12 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          return *this;
       }
    thisType& neg(int shift)
-      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
+      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t))));
          inheritedImplementation::neg(shift);
          return *this;
       }
    thisType& clear(int shift)
-      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
+      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t))));
          inheritedImplementation::clear(shift);
          return *this;
       }
@@ -287,13 +284,13 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          return *this;
       }
    thisType& saturate(int shift)
-      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
+      {  inheritedImplementation::assertSize((int) ((shift+8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t))));
          inheritedImplementation::saturate(shift);
          return *this;
       }
 
    thisType& operator<<=(int shift)
-      {  inheritedImplementation::assertSize((int) ((log_base_2()+shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
+      {  inheritedImplementation::assertSize((int) ((log_base_2()+shift+8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t))));
          inheritedImplementation::operator<<=(shift);
          return *this;
       }
@@ -302,7 +299,7 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
    thisType& operator>>=(int shift) { inheritedImplementation::operator>>=(shift); return *this; }
 #pragma GCC diagnostic pop
    void leftShiftLocal(int index, int shift)
-      {  inheritedImplementation::assertSize((int) ((log_base_2()+shift+8*sizeof(unsigned int)-1)/(8*sizeof(unsigned int))));
+      {  inheritedImplementation::assertSize((int) ((log_base_2()+shift+8*sizeof(uint32_t)-1)/(8*sizeof(uint32_t))));
          inheritedImplementation::leftShiftLocal(shift, index);
       }
    void rightShiftLocal(int index, int shift)
@@ -319,8 +316,8 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
    thisType& operator-=(const thisType& source) { sub(source); return *this; }
    thisType& operator--() { dec(); return *this; }
    thisType& operator++() { inc(); return *this; }
-   PNT::PassPointer<BigInteger> mult(const thisType& source) const;
-   thisType& multAssign(unsigned int source)
+   PNT::PPassPointer<BigInteger> mult(const thisType& source) const;
+   thisType& multAssign(uint32_t source)
       {  Implementation::Carry carry = inheritedImplementation::multAssign(source);
          if (carry.hasCarry())
             inheritedImplementation::operator[](inheritedImplementation::getSize()) = carry.carry();
@@ -328,26 +325,26 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
       }
    thisType& multAssign(const thisType& source);
    thisType& operator*=(const thisType& source) { return multAssign(source); }
-   thisType& operator*=(unsigned int source) { return multAssign(source); }
+   thisType& operator*=(uint32_t source) { return multAssign(source); }
    const Implementation& implementation() const { return *this; }
    Implementation& implementation() { return *this; }
 
    class AtomicDivisionResult {
      private:
-      unsigned int uRemainder;
+      uint32_t uRemainder;
       friend class BigInteger;
 
      public:
       AtomicDivisionResult() : uRemainder(0) {}
       AtomicDivisionResult(const AtomicDivisionResult&) = default;
-      const unsigned int& remainder() const { return uRemainder; }
+      const uint32_t& remainder() const { return uRemainder; }
    };
 
    class DivisionResult : protected ExtendedParameters {
      private:
       typedef ExtendedParameters inherited;
-      PNT::PassPointer<BigInteger> ppbiQuotient;
-      PNT::PassPointer<BigInteger> ppbiRemainder;
+      PNT::PPassPointer<BigInteger> ppbiQuotient;
+      PNT::PPassPointer<BigInteger> ppbiRemainder;
       friend class BigInteger;
 
      protected:
@@ -357,8 +354,8 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
 
      public:
       DivisionResult() : inherited() {}
-      DivisionResult(const DivisionResult& source) = default;
-      DivisionResult& operator=(const DivisionResult& source) = default;
+      DivisionResult(DivisionResult&& source) = default;
+      DivisionResult& operator=(DivisionResult&& source) = default;
       DivisionResult& setPartial() { mergePartialField(1); return *this; }
       DivisionResult& setTotal() { clearPartialField(); return *this; }
 
@@ -376,7 +373,7 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
       {  DivisionResult result;
          div(source, result); return result;
       }
-   AtomicDivisionResult divAssign(unsigned int source)
+   AtomicDivisionResult divAssign(uint32_t source)
       {  Implementation::AtomicDivisionResult iresult = inheritedImplementation::divAssign(source);
          AtomicDivisionResult result;
          result.uRemainder = iresult.remainder();
@@ -389,8 +386,8 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          return *this;
       }
    thisType& operator/=(const thisType& source) { return divAssign(source); }
-   thisType& operator/=(unsigned int source) { divAssign(source); return *this; }
-   unsigned int operator%(unsigned int source) const
+   thisType& operator/=(uint32_t source) { divAssign(source); return *this; }
+   uint32_t operator%(uint32_t source) const
       { return thisType(*this).divAssign(source).remainder(); }
    thisType& operator%=(const thisType& source)
       {  DivisionResult result;
@@ -398,15 +395,15 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          inheritedImplementation::swap(result.remainder());
          return *this;
       }
-   unsigned int log_base_2() const { return inheritedImplementation::log_base_2(); }
-   PNT::PassPointer<BigInteger> pgcd(const thisType& source) const;
-   PNT::PassPointer<BigInteger> ppcm(const thisType& source) const
+   uint32_t log_base_2() const { return inheritedImplementation::log_base_2(); }
+   PNT::PPassPointer<BigInteger> pgcd(const thisType& source) const;
+   PNT::PPassPointer<BigInteger> ppcm(const thisType& source) const
       {  BigInteger mult(*this);
          mult *= source;
-         PNT::PassPointer<BigInteger> result = pgcd(source);
+         PNT::PPassPointer<BigInteger> result = pgcd(source);
          DivisionResult divisionResult;
          mult.div(*result, divisionResult.setPartial());
-         return divisionResult.ppbiQuotient;
+         return std::move(divisionResult.ppbiQuotient);
       }
    class BezoutResult;
    void retrieveBezout(const thisType& source, BezoutResult& result) const;
@@ -422,18 +419,18 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
          return result.quotient();
       }
 
-   unsigned int getValue() const { return inheritedImplementation::getValue(); }
+   uint32_t getValue() const { return inheritedImplementation::getValue(); }
    bool isAtomic() const { return inheritedImplementation::isAtomic(); }
    bool isZero() const { return inheritedImplementation::isZero(); }
-   bool hasZero(unsigned int nb) const { return inheritedImplementation::hasZero(nb); }
+   bool hasZero(uint32_t nb) const { return inheritedImplementation::hasZero(nb); }
    void swap(thisType& source) { inheritedImplementation::swap(source); }
 
-   int getBitSize() const { return (int) (inheritedImplementation::getSize()*8*sizeof(unsigned int)); }
-   void adjustBitSize(int newSize) { inheritedImplementation::adjustSize((int) ((newSize + 8*sizeof(unsigned int) - 1)/(8*sizeof(unsigned int)))); }
-   void assertBitSize(int newSize) { inheritedImplementation::assertSize((int) ((newSize + 8*sizeof(unsigned int) - 1)/(8*sizeof(unsigned int)))); }
+   int getBitSize() const { return (int) (inheritedImplementation::getSize()*8*sizeof(uint32_t)); }
+   void adjustBitSize(int newSize) { inheritedImplementation::adjustSize((int) ((newSize + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t)))); }
+   void assertBitSize(int newSize) { inheritedImplementation::assertSize((int) ((newSize + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t)))); }
    void setBitSize(int exactSize) { inheritedImplementation::setBitSize(exactSize); }
-   unsigned int getValueAt(int bitFirst, int bitLength);
-   void setValueAt(int bitFirst, int bitLength, unsigned int value);
+   uint32_t getValueAt(int bitFirst, int bitLength);
+   void setValueAt(int bitFirst, int bitLength, uint32_t value);
    
    template <class TypeInt> void retrieveBValueAt(int bitFirst, int bitLength, TypeInt& value) const;
    template <class TypeInt> void setBValueAt(int bitFirst, int bitLength, const TypeInt& value);
@@ -448,16 +445,16 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
 
    typedef Implementation::ArrayProperty ArrayProperty;
    ArrayProperty array(int index) { return inheritedImplementation::array(index); }
-   unsigned int array(int index) const { return inheritedImplementation::array(index); }
-   unsigned int carray(int index) const { return inheritedImplementation::carray(index); }
+   uint32_t array(int index) const { return inheritedImplementation::array(index); }
+   uint32_t carray(int index) const { return inheritedImplementation::carray(index); }
    ArrayProperty operator[](int index) { return inheritedImplementation::operator[](index); }
-   unsigned int operator[](int index) const { return inheritedImplementation::operator[](index); }
+   uint32_t operator[](int index) const { return inheritedImplementation::operator[](index); }
 
    typedef Implementation::MidArray MidArray;
    MidArray midArray(int index) { return inheritedImplementation::midArray(index); }
-   unsigned int midArray(int index) const { return inheritedImplementation::midArray(index); }
-   unsigned int cmidArray(int index) const { return midArray(index); }
-   void setMidArray(int index, unsigned int value) { inheritedImplementation::setMidArray(index, value); }
+   uint32_t midArray(int index) const { return inheritedImplementation::midArray(index); }
+   uint32_t cmidArray(int index) const { return midArray(index); }
+   void setMidArray(int index, uint32_t value) { inheritedImplementation::setMidArray(index, value); }
 
    typedef Implementation::BitArray BitArray;
    BitArray bitArray(int index) { return inheritedImplementation::bitArray(index); }
@@ -473,13 +470,13 @@ class BigInteger : public STG::IOObject, public DInteger::BigIntegerImplementati
    void setFalseBitArray(int index) { inheritedImplementation::setFalseBitArray(index); }
 };
 
-inline unsigned int
+inline uint32_t
 BigInteger::getValueAt(int bitFirst, int bitLength) {
    TBigCellInt<DInteger::TCellIntegerTraits<2> > value;
-   int arrayIndex = (int) (bitFirst/(8*sizeof(unsigned int)));
+   int arrayIndex = (int) (bitFirst/(8*sizeof(uint32_t)));
    value[0] = carray(arrayIndex);
    value[1] = carray(arrayIndex+1);
-   value >>= (int) ((bitFirst - arrayIndex*(8*sizeof(unsigned int))));
+   value >>= (int) ((bitFirst - arrayIndex*(8*sizeof(uint32_t))));
    TBigCellInt<DInteger::TCellIntegerTraits<2> > mask = 0U;
    (mask.neg() <<= bitLength).neg();
    value &= mask;
@@ -487,14 +484,14 @@ BigInteger::getValueAt(int bitFirst, int bitLength) {
 }
 
 inline void
-BigInteger::setValueAt(int bitFirst, int bitLength, unsigned int value) {
+BigInteger::setValueAt(int bitFirst, int bitLength, uint32_t value) {
    assertBitSize(bitFirst + bitLength);
    TBigCellInt<DInteger::TCellIntegerTraits<2> > valueCells;
-   int arrayIndex = (int) (bitFirst/(8*sizeof(unsigned int)));
+   int arrayIndex = (int) (bitFirst/(8*sizeof(uint32_t)));
    valueCells[0] = carray(arrayIndex);
    valueCells[1] = carray(arrayIndex+1);
    TBigCellInt<DInteger::TCellIntegerTraits<2> > mask = 0U;
-   int shift = (int) ((bitFirst - arrayIndex*(8*sizeof(unsigned int))));
+   int shift = (int) ((bitFirst - arrayIndex*(8*sizeof(uint32_t))));
    ((mask.neg() <<= bitLength).neg() <<= shift).neg();
    valueCells &= mask;
    (mask = value) <<= shift;
@@ -524,6 +521,4 @@ class BigInteger::BezoutResult {
 };
 
 } // end of namespace Numerics
-
-#endif // Numerics_IntegerH
 

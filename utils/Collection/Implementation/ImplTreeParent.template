@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,8 +29,7 @@
 //   to localize them quickly in the tree.
 //
 
-#ifndef COL_ImplCommonTreeParentTemplate
-#define COL_ImplCommonTreeParentTemplate
+#pragma once
 
 // #include "Collection/Collection.hpp"
 #include "Collection/Implementation/ImplTreeParent.h"
@@ -346,6 +343,4 @@ TGenericImplParentTreeCursor<TypeFlatCollection, TypeFlatNode>::assignTo(
 }
 
 } // end of namespace COL
-
-#endif // COL_ImplCommonTreeParentTemplate
 

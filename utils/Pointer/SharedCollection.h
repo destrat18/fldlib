@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -32,8 +30,7 @@
 //   SharedPointer with multiple pointed elements.
 //
 
-#ifndef PNT_SharedCollectionH
-#define PNT_SharedCollectionH
+#pragma once
 
 #include "Pointer/SharedPointer.h"
 #include "Pointer/ImplArray.h"
@@ -164,7 +161,7 @@ class UpdateCopyConnection : public COL::ImplBinaryTree::Node {
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override
       {  ComparisonResult result = inherited::_compare(asource);
          return (result == CREqual)
-            ? tcompare(peoSource, ((const UpdateCopyConnection&) asource).peoSource)
+            ? convertToCompare(peoSource <=> ((const UpdateCopyConnection&) asource).peoSource)
             : result;
       }
 
@@ -968,7 +965,8 @@ class TSharedCollection : public SharedCollection {
 
      public:
       Cursor(const TSharedCollection<TypeElement, Cast>& collection) : inherited(collection) {}
-      Cursor(const Cursor& source) : inherited(source) {}
+      Cursor(const Cursor& source) = default;
+      Cursor& operator=(const Cursor& source) = default;
 
       TypeElement& elementSAt() const
          {  return (TypeElement&) Cast::castFrom(inherited::elementSAt()); }
@@ -1002,4 +1000,3 @@ class TSharedCollection : public SharedCollection {
 
 } // end of namespace PNT
 
-#endif // PNT_SharedCollectionH

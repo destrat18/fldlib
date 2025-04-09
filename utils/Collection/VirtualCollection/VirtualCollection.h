@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,8 +29,7 @@
 //   to the class AbstractCollection.
 //
 
-#ifndef COL_VirtualCollectionH
-#define COL_VirtualCollectionH
+#pragma once
 
 #include "Collection/VirtualCollection/ExtendedParameters.h"
 
@@ -92,11 +91,11 @@ class Access {
    class InitialStoreNewValue : public COL::ImplListElement {
      private:
       typedef COL::ImplListElement inherited;
-      PNT::PassPointer<EnhancedObject> ppeoObject;
+      PNT::CPassPointer<EnhancedObject> ppeoObject;
 
      public:
-      InitialStoreNewValue(const PNT::PassPointer<EnhancedObject>& object)
-         :  ppeoObject(object) {}
+      InitialStoreNewValue(PNT::PPassPointer<EnhancedObject>&& object)
+         :  ppeoObject(std::move(object)) {}
       InitialStoreNewValue(const InitialStoreNewValue& source) = default;
       DefineCopy(InitialStoreNewValue)
       DDefineAssign(InitialStoreNewValue)
@@ -104,6 +103,11 @@ class Access {
       InitialStoreNewValue& operator=(const InitialStoreNewValue& source)
          {  inherited::operator=(source);
             ppeoObject.fullAssign(source.ppeoObject);
+            return *this;
+         }
+      InitialStoreNewValue& operator=(InitialStoreNewValue&& source)
+         {  inherited::operator=(std::move(source));
+            ppeoObject = std::move(source.ppeoObject);
             return *this;
          }
 
@@ -132,10 +136,10 @@ class Access {
 
       InitialNewValues operator=(const InitialNewValues& source)
          {  inherited::assign(source, true); return *this; }
-      InitialNewValues& operator<<(const PNT::PassPointer<EnhancedObject>& source)
-         {  inherited::add(new InitialStoreNewValue(source)); return *this; }
+      InitialNewValues& operator<<(PNT::PPassPointer<EnhancedObject>&& source)
+         {  inherited::add(new InitialStoreNewValue(std::move(source))); return *this; }
       InitialNewValues& operator<<(EnhancedObject* source)
-         {  inherited::add(new InitialStoreNewValue(PNT::PassPointer<EnhancedObject>(source, PNT::Pointer::Init())));
+         {  inherited::add(new InitialStoreNewValue(PNT::PPassPointer<EnhancedObject>(source, PNT::Pointer::Init())));
             return *this;
          }
    };
@@ -165,8 +169,8 @@ class Access {
       TInitialNewValues(const thisType& source) = default;
       DefineCopy(thisType)
 
-      thisType& operator<<(const PNT::PassPointer<TypeElement>& element)
-         {  return (thisType&) inherited::operator<<(PNT::PassPointer<EnhancedObject>
+      thisType& operator<<(PNT::PPassPointer<TypeElement>&& element)
+         {  return (thisType&) inherited::operator<<(PNT::PPassPointer<EnhancedObject>
                (TypeCast::castTo(element.extractElement()), PNT::Pointer::Init()));
          }
       thisType& operator<<(TypeElement* element)
@@ -469,7 +473,7 @@ class VirtualCollection
    template <class TypeCollection, class TypeElement> class treverse_iterator;
 };
 
-typedef PNT::AutoPointer<VirtualCollection> APVirtualCollection;
+typedef PNT::PPassPointer<VirtualCollection> APVirtualCollection;
 
 /*********************/
 /* Cursor definition */
@@ -545,8 +549,8 @@ class VirtualCollectionCursor : public AbstractCursor {
       {  return false; }
    virtual bool _position(const Position& /* pos */) { return false; }
    virtual EnhancedObject* _getSElement() const { AssumeUncalled return nullptr; }
-   virtual bool _isEqual(const AbstractCursor& cursor) const override
-      {  return AbstractCursor::_isEqual(cursor); }
+   using AbstractCursor::_compare;
+   using AbstractCursor::_isEqual;
    virtual void _gotoReference(const EnhancedObject& /* element */) { AssumeUncalled }
 
   public:
@@ -595,8 +599,7 @@ class TCopyCollection : public TypeCollection {
    typedef typename TypeCollection::ExtendedReplaceParameters ExtendedReplaceParameters;
 
   protected:
-   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
-      {  return TypeCollection::_compare(asource); }
+   using TypeCollection::_compare;
    TCopyCollection(const TCopyCollection<TypeCollection>& source,
          COL::VirtualCollection::AddMode mode, const VirtualCast* retrieveRegistrationFromCopy)
       :  TypeCollection(source, mode, retrieveRegistrationFromCopy) {}
@@ -626,9 +629,9 @@ class TCopyCollection : public TypeCollection {
       }
 };
 
-/****************************************/
-/* Définition du patron TCastCollection */
-/****************************************/
+/****************************************************/
+/* Definition of the template class TCastCollection */
+/****************************************************/
 
 template <class TypeBase, class TypeElement, class Cast>
 class TCastCollectionCursor;
@@ -896,17 +899,19 @@ class VirtualCollection::iterator : public VirtualCollection::PPCursor {
    
   public:
    iterator(const iterator& source) : inherited(source, PNT::Pointer::Duplicate()) {}
-   iterator(iterator&& source) : inherited(source) {}
-   iterator(PPCursor&& source) : inherited(source) {}
+   iterator(iterator&& source) : inherited(std::move(source)) {}
+   iterator(PPCursor&& source) : inherited(std::move(source)) {}
    
-   bool operator==(const iterator& source) const
-      {  return inherited::operator*().isEqual(source.inherited::operator*()); }
-   bool operator!=(const iterator& source) const
-      {  return !inherited::operator*().isEqual(source.inherited::operator*()); }
+   friend std::partial_ordering operator<=>(const iterator& first, const iterator& second)
+      { return EnhancedObject::convertCompare(first.inherited::operator*().compare(second.inherited::operator*())); }
+   friend bool operator==(const VirtualCollection::PPCursor& first, const iterator& second)
+      {  return ((const inherited&) first)->isEqual(*(const inherited&) second); }
+   friend bool operator!=(const iterator& first, const iterator& second)
+      {  return !((const inherited&) first)->isEqual(*(const inherited&) second); }
    iterator& operator=(const iterator& source)
       {  inherited::fullAssign(source); return *this; }
    iterator& operator=(iterator&& source)
-      {  return (iterator&) inherited::operator=(source); }
+      {  return (iterator&) inherited::operator=(std::move(source)); }
 
    iterator& operator++() { inherited::operator*().setToNext(); return *this; }
    iterator& operator+=(int add)
@@ -960,18 +965,20 @@ class VirtualCollection::reverse_iterator : public VirtualCollection::PPCursor {
    
   public:
    reverse_iterator(const reverse_iterator& source) : inherited(source, PNT::Pointer::Duplicate()) {}
-   reverse_iterator(reverse_iterator&& source) : inherited(source) {}
-   reverse_iterator(PPCursor&& source) : inherited(source) {}
+   reverse_iterator(reverse_iterator&& source) : inherited(std::move(source)) {}
+   reverse_iterator(PPCursor&& source) : inherited(std::move(source)) {}
    
-   bool operator==(const iterator& source) const
-      {  return inherited::operator*().isEqual(source.inherited::operator*()); }
-   bool operator!=(const iterator& source) const
-      {  return !inherited::operator*().isEqual(source.inherited::operator*()); }
+   friend std::partial_ordering operator<=>(const reverse_iterator& first, const reverse_iterator& second)
+      { return EnhancedObject::convertCompare(first.inherited::operator*().compare(second.inherited::operator*())); }
+   friend bool operator==(const VirtualCollection::PPCursor& first, const reverse_iterator& second)
+      {  return ((const inherited&) first)->isEqual(*(const inherited&) second); }
+   friend bool operator!=(const reverse_iterator& first, const reverse_iterator& second)
+      {  return !((const inherited&) first)->isEqual(*(const inherited&) second); }
 
    reverse_iterator& operator=(const reverse_iterator& source)
       {  inherited::fullAssign(source); return *this; }
    reverse_iterator& operator=(reverse_iterator&& source)
-      {  return (reverse_iterator&) inherited::operator=(source); }
+      {  return (reverse_iterator&) inherited::operator=(std::move(source)); }
 
    iterator base() const
       {  iterator result((const iterator&) (const inherited&) *this);
@@ -1037,8 +1044,6 @@ class VirtualCollection::titerator : public TypeCollection::Cursor {
    titerator(const thisType& source) = default;
    titerator(thisType&& source) : inherited(source) {}
 
-   bool operator==(const thisType& source) const { return inherited::isEqual(source); }
-   bool operator!=(const thisType& source) const { return !inherited::isEqual(source); }
    thisType& operator++() { inherited::setToNext(); return *this; }
    thisType& operator+=(int add)
       {  if (add > 0) {
@@ -1085,8 +1090,6 @@ class VirtualCollection::treverse_iterator : public TypeCollection::Cursor {
    treverse_iterator(const thisType& source) : inherited(source) {}
    treverse_iterator(thisType&& source) : inherited(source) {}
 
-   bool operator==(const thisType& source) const { return isEqual(source); }
-   bool operator!=(const thisType& source) const { return !isEqual(source); }
    thisType& operator++() { inherited::setToPrevious(); return *this; }
    thisType& operator+=(int add)
       {  if (add > 0) {
@@ -1519,6 +1522,4 @@ class TInterfaceCollectionCursor : public TVirtualCollectionCursor<TypeElement, 
 Template4InlineCollectionForAbstractCollect(TInterfaceCollection, TInterfaceCollectionCursor, TypeCollection, TypeElement, CastToImplementation, Cast)
 
 } // end of namespace COL
-
-#endif // COL_VirtualCollectionH
 

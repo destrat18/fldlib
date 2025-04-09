@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   the elements and the cursors for the tree based collection implementations.
 //
 
-#ifndef COL_ImplTreeH
-#define COL_ImplTreeH
+#pragma once
 
 #include "Collection/ConcreteCollection/List.h"
 #include "Collection/Implementation/ImplCommonTree.h"
@@ -436,6 +433,4 @@ GenericImplTreeCursor::setSon(const FlatPosition& pos, const GenericImplTree& tr
 }
 
 } // end of namespace COL
-
-#endif // COL_ImplTreeH
 

@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -27,8 +27,7 @@
 //   Definition of extended parameters inherited by all collection classes.
 //
 
-#ifndef COL_ExtendedParametersH
-#define COL_ExtendedParametersH
+#pragma once
 
 #include "Collection/VirtualCollection/AbstractCollection.h"
 
@@ -596,6 +595,4 @@ class ExtendedTreeReplaceParameters : public ExtendedReplaceParameters {
 };
 
 }} // end of namespace COL::DVirtualTree
-
-#endif //  COL_ExtendedParametersH
 

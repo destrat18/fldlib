@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,14 +27,232 @@
 //   Definition of the floating point flags
 //
 
-#ifndef Numerics_BaseFloatingParametersH
-#define Numerics_BaseFloatingParametersH
+#pragma once
 
 namespace Numerics { namespace DDouble {
 
 class Access : public DInteger::Access {
   public:
-#ifdef StandardClassesHPP
+#ifdef DefineNoEnhancedObject
+   class ReadParameters {
+     public:
+      enum RoundMode { RMNearest, RMLowest, RMHighest, RMZero };
+      enum Approximation { AExact, ADownApproximate, AUpApproximate };
+      enum ReadResult { RRTotal, RRPartial };
+      enum Context { CMinDown, CMaxDown, CMinUp, CMaxUp };
+
+     public:
+      unsigned getStaticMachine() const
+         {  return fAvoidInfty
+               | (fKeepNaNSign << 1)
+               | (fProduceDivNaNPositive << 2)
+               | (fRoundToEven << 3)
+               | (fPositiveZeroMAdd << 4)
+               | (fUpApproximateInfty << 5)
+               | (fUpApproximateInversionForNear << 6)
+               | (fChooseNaNAddBeforeMult << 7)
+               | (fConvertNaNNegative << 8)
+               | (fRefuseMinusZero << 9)
+               | (cContext << 10)
+               | (fInverseContext << 12);
+         }
+     protected:
+      bool fAvoidInfty : 1;
+      bool fKeepNaNSign : 1;
+      bool fProduceDivNaNPositive : 1;
+      bool fRoundToEven : 1;
+      bool fPositiveZeroMAdd : 1;
+      bool fUpApproximateInfty : 1;
+      bool fUpApproximateInversionForNear : 1;
+      bool fChooseNaNAddBeforeMult : 1;
+      bool fConvertNaNNegative : 1;
+      bool fRefuseMinusZero : 1;
+      Context cContext : 2;
+      bool fInverseContext : 1;
+
+     public:
+      unsigned getStaticMode() const
+         {  return rmRoundMode | (fKeepSignalingConversion << 2); }
+
+     protected:
+      RoundMode rmRoundMode : 2;
+      bool fKeepSignalingConversion : 1;
+
+     public:
+      unsigned getDynamicWrite() const
+         {  return aApproximation
+               | (rrReadResult << 2)
+               | (fEffectiveRoundToEven << 3)
+               | (fSNaNOperand << 4)
+               | (qrQNaNResult << 5)
+               | (feFlowException << 8)
+               | (fDivisionByZero << 10);
+         }
+      void setDynamicWrite(unsigned code)
+         {  aApproximation = (Approximation) (code & 0x3);
+            rrReadResult = (ReadResult) ((code >> 2) & 0x1);
+            fEffectiveRoundToEven = (bool) ((code >> 3) & 0x1);
+            fSNaNOperand = (bool) ((code >> 4) & 0x1);
+            qrQNaNResult = (QNaNResult) ((code >> 5) & 0x7);
+            feFlowException = (FlowException) ((code >> 8) & 0x3);
+            fDivisionByZero = (bool) ((code >> 10) & 0x1);
+         }
+
+     protected:
+      enum FlowException { FENoException, FEOverflow, FEUnderflow, FEEnd };
+      enum QNaNResult
+         {  QNNRUndefined, QNNRInftyMinusInfty, QNNRInftyOnInfty, QNNRZeroOnZero,
+            QNNRInftyMultZero
+         };
+      
+      Approximation aApproximation : 2;
+      ReadResult rrReadResult : 1;
+      bool fEffectiveRoundToEven : 1;
+      bool fSNaNOperand : 1;
+      QNaNResult qrQNaNResult : 3;
+      FlowException feFlowException : 2;
+      bool fDivisionByZero : 1;
+
+     public:
+      ReadParameters() { memset(this, 0, sizeof(ReadParameters)); }
+      ReadParameters(const ReadParameters& source) = default;
+      ReadParameters& operator=(const ReadParameters& source)
+         { setDynamicWrite(source.getDynamicWrite()); return *this; }
+
+      ReadParameters& setNative() { return *this; }
+
+      // Static parameters
+      ReadParameters& setRoundToEven()
+         {  rmRoundMode = RMNearest; fRoundToEven = true; return *this; }
+      ReadParameters& clearRoundToEven() {  fRoundToEven = false; return *this; }
+      ReadParameters& setPositiveZeroMAdd() { fPositiveZeroMAdd = true; return *this; }
+      ReadParameters& avoidInfty() { fAvoidInfty = true; return *this; }
+      ReadParameters& clearAvoidInfty() { fAvoidInfty = false; return *this; }
+      ReadParameters& setKeepNaNSign() { fKeepNaNSign = true; return *this; }
+      ReadParameters& setProduceDivNaNPositive() { fProduceDivNaNPositive = true; return *this; }
+      ReadParameters& setUpApproximateInfty() { fUpApproximateInfty = true; return *this; }
+      ReadParameters& setUpApproximateInversionForNear() { fUpApproximateInversionForNear = true; return *this; }
+      ReadParameters& setChooseNaNAddBeforeMult() { fChooseNaNAddBeforeMult = true; return *this; }
+      ReadParameters& setConvertNaNNegative() { fConvertNaNNegative = true; return *this; }
+      ReadParameters& setAcceptMinusZero() { fRefuseMinusZero = false; return *this; }
+      ReadParameters& setRefuseMinusZero() { fRefuseMinusZero = true; return *this; }
+
+      ReadParameters& setMinDown() { cContext = CMinDown; return *this; }
+      ReadParameters& setMinUp() { cContext = CMinUp; return *this; }
+      ReadParameters& setMaxDown() { cContext = CMaxDown; return *this; }
+      ReadParameters& setMaxUp() { cContext = CMaxUp; return *this; }
+      ReadParameters& setInverseContext() { fInverseContext = true; return *this; }
+      ReadParameters& clearInverseContext() { fInverseContext = false; return *this; }
+
+      bool isContextUp() const { return cContext & CMinUp; }
+      bool isContextMax() const { return cContext & CMaxDown; }
+      bool doesInverseContext() const { return fInverseContext; }
+
+      bool doesSupportInstantiation() const
+         {  return getStaticMachine() == 0 && getStaticMode() == 0 && getDynamicWrite() == 0; }
+      bool isRoundToEven() const { return fRoundToEven && isNearestRound(); }
+      bool isPositiveZeroMAdd() { return fPositiveZeroMAdd; }
+      bool isInftyAvoided() const { return fAvoidInfty; }
+      bool doesAvoidInfty(bool isNegative) const
+         {  AssumeCondition(fAvoidInfty)
+            return isNegative ? (rmRoundMode >= RMHighest) : (rmRoundMode & RMLowest);
+         }
+      bool keepNaNSign() const { return fKeepNaNSign; }
+      bool produceDivNaNPositive() const { return fProduceDivNaNPositive; }
+      bool upApproximateInfty() const { return fUpApproximateInfty; }
+      bool upApproximateInversionForNear() const { return fUpApproximateInversionForNear; }
+      bool chooseNaNAddBeforeMult() const { return fChooseNaNAddBeforeMult; }
+      bool isConvertNaNNegative() const { return fConvertNaNNegative; }
+      bool acceptMinusZero() const { return !fRefuseMinusZero; }
+
+      // dynamic read parameters
+      ReadParameters& setRoundMode(RoundMode mode) { rmRoundMode = mode; return *this; }
+      ReadParameters& setNearestRound()   { rmRoundMode = RMNearest; return *this; }
+      ReadParameters& setHighestRound()   { rmRoundMode = RMHighest; return *this; }
+      ReadParameters& setLowestRound()    { rmRoundMode = RMLowest; return *this; }
+      ReadParameters& setZeroRound()      { rmRoundMode = RMZero; return *this; }
+
+      bool isLowestRound() const { return rmRoundMode == RMLowest; }
+      bool isNearestRound() const { return rmRoundMode == RMNearest; }
+      bool isHighestRound() const { return rmRoundMode == RMHighest; }
+      bool isZeroRound() const { return rmRoundMode == RMZero; }
+
+      ReadParameters& setKeepSignalingConversion() { fKeepSignalingConversion = true; return *this; }
+      ReadParameters& clearKeepSignalingConversion() { fKeepSignalingConversion = false; return *this; }
+      bool keepSignalingConversion() const { return fKeepSignalingConversion; }
+
+      // dynamic write parameters
+      bool isApproximate() const { return aApproximation != AExact; }
+      bool isDownApproximate() const { return aApproximation == ADownApproximate; }
+      bool isUpApproximate() const { return aApproximation == AUpApproximate; }
+      void setDownApproximate() { aApproximation = ADownApproximate; }
+      void setUpApproximate() { aApproximation = AUpApproximate; }
+      void clearApproximate() { aApproximation = AExact; }
+
+      enum Direction { Down, Up };
+      void setApproximate(Direction direction)
+         {  aApproximation = (direction == Down) ? ADownApproximate : AUpApproximate; }
+      bool isApproximate(Direction direction) const
+         {  return aApproximation == ((direction == Down) ? ADownApproximate : AUpApproximate); }
+      bool hasSameApproximation(const ReadParameters& source) const
+         {  return aApproximation == source.aApproximation; }
+      bool hasIncrementFraction(bool isNegative) const
+         {  return isNegative ? isDownApproximate() : isUpApproximate(); }
+
+      void setEffectiveRoundToEven() { fEffectiveRoundToEven = true; }
+      void clearEffectiveRoundToEven() { fEffectiveRoundToEven = false; }
+      bool hasEffectiveRoundToEven() { return fEffectiveRoundToEven; }
+
+      void setPartialRead() { rrReadResult = RRPartial; }
+      void setTotalRead() { rrReadResult = RRTotal; }
+      bool isPartialRead() const { return rrReadResult == RRPartial; }
+      bool isTotalRead() const { return rrReadResult == RRTotal; }
+      bool hasPartialRead() const { return rrReadResult == RRPartial; }
+
+      void setSNaNOperand() { fSNaNOperand = true; }
+      bool hasSNaNOperand() const { return fSNaNOperand; }
+      
+      void setInftyMinusInfty() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyMinusInfty; }
+      void setInftyOnInfty() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyOnInfty; }
+      void setZeroOnZero() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRZeroOnZero; }
+      void setInftyMultZero() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyMultZero; }
+      bool hasQNaNResult() const { return qrQNaNResult; }
+      bool isInftyMinusInfty() const { return qrQNaNResult == QNNRInftyMinusInfty; }
+      bool isInftyOnInfty() const { return qrQNaNResult == QNNRInftyOnInfty; }
+      bool isZeroOnZero() const { return qrQNaNResult == QNNRZeroOnZero; }
+      bool isInftyMultZero() const { return qrQNaNResult == QNNRInftyMultZero; }
+
+      void clear() { setDynamicWrite(0); }
+      
+      bool isDivisionByZero() const { return fDivisionByZero; }
+      void setDivisionByZero() { fDivisionByZero = true; }
+      bool hasFlowException() const { return feFlowException != FENoException; }
+      void clearFlowException() { feFlowException = FENoException; }
+      void setOverflow() { feFlowException = FEOverflow; }
+      void setUnderflow() { feFlowException = FEUnderflow; }
+      bool isOverflow() const { return feFlowException & FEOverflow; }
+      bool isUnderflow() const { return feFlowException & FEUnderflow; }
+      void clearUnderflow() { feFlowException = FENoException; }
+   };
+
+   class WriteParameters {
+     private:
+      enum Type { TDecimal, TBinary };
+      
+     protected:
+      Type tType : 1;
+         
+     public:
+      WriteParameters() = default;
+      WriteParameters(const WriteParameters& params) = default;
+
+      WriteParameters& setDecimal() { tType = TDecimal; return *this; }
+      WriteParameters& setBinary() { tType = TBinary; return *this; }
+
+      bool isDecimal() const { return tType == TDecimal; }
+      bool isBinary() const { return tType == TBinary; }
+   };
+#else // !DefineNoEnhancedObject
    class ReadParameters : public STG::IOObject::FormatParameters {
      private:
       typedef STG::IOObject::FormatParameters inherited;
@@ -227,226 +443,7 @@ class Access : public DInteger::Access {
       bool isDecimal() const { return queryOwnField() == TDecimal; }
       bool isBinary() const { return queryOwnField() == TBinary; }
    };
-#else // !StandardClassesHPP
-   class ReadParameters {
-     public:
-      enum RoundMode { RMNearest, RMLowest, RMHighest, RMZero };
-      enum Approximation { AExact, ADownApproximate, AUpApproximate };
-      enum ReadResult { RRTotal, RRPartial };
-      enum Context { CMinDown, CMaxDown, CMinUp, CMaxUp };
-
-     public:
-      unsigned getStaticMachine() const
-         {  return fAvoidInfty
-               | (fKeepNaNSign << 1)
-               | (fProduceDivNaNPositive << 2)
-               | (fRoundToEven << 3)
-               | (fPositiveZeroMAdd << 4)
-               | (fUpApproximateInfty << 5)
-               | (fUpApproximateInversionForNear << 6)
-               | (fChooseNaNAddBeforeMult << 7)
-               | (fConvertNaNNegative << 8)
-               | (fRefuseMinusZero << 9)
-               | (cContext << 10)
-               | (fInverseContext << 12);
-         }
-     protected:
-      bool fAvoidInfty : 1;
-      bool fKeepNaNSign : 1;
-      bool fProduceDivNaNPositive : 1;
-      bool fRoundToEven : 1;
-      bool fPositiveZeroMAdd : 1;
-      bool fUpApproximateInfty : 1;
-      bool fUpApproximateInversionForNear : 1;
-      bool fChooseNaNAddBeforeMult : 1;
-      bool fConvertNaNNegative : 1;
-      bool fRefuseMinusZero : 1;
-      Context cContext : 2;
-      bool fInverseContext : 1;
-
-     public:
-      unsigned getStaticMode() const
-         {  return rmRoundMode | (fKeepSignalingConversion << 2); }
-
-     protected:
-      RoundMode rmRoundMode : 2;
-      bool fKeepSignalingConversion : 1;
-
-     public:
-      unsigned getDynamicWrite() const
-         {  return aApproximation
-               | (rrReadResult << 2)
-               | (fEffectiveRoundToEven << 3)
-               | (fSNaNOperand << 4)
-               | (qrQNaNResult << 5)
-               | (feFlowException << 8)
-               | (fDivisionByZero << 10);
-         }
-      void setDynamicWrite(unsigned code)
-         {  aApproximation = (Approximation) (code & 0x3);
-            rrReadResult = (ReadResult) ((code >> 2) & 0x1);
-            fEffectiveRoundToEven = (bool) ((code >> 3) & 0x1);
-            fSNaNOperand = (bool) ((code >> 4) & 0x1);
-            qrQNaNResult = (QNaNResult) ((code >> 5) & 0x7);
-            feFlowException = (FlowException) ((code >> 8) & 0x3);
-            fDivisionByZero = (bool) ((code >> 10) & 0x1);
-         }
-
-     protected:
-      enum FlowException { FENoException, FEOverflow, FEUnderflow, FEEnd };
-      enum QNaNResult
-         {  QNNRUndefined, QNNRInftyMinusInfty, QNNRInftyOnInfty, QNNRZeroOnZero,
-            QNNRInftyMultZero
-         };
-      
-      Approximation aApproximation : 2;
-      ReadResult rrReadResult : 1;
-      bool fEffectiveRoundToEven : 1;
-      bool fSNaNOperand : 1;
-      QNaNResult qrQNaNResult : 3;
-      FlowException feFlowException : 2;
-      bool fDivisionByZero : 1;
-
-     public:
-      ReadParameters() { memset(this, 0, sizeof(ReadParameters)); }
-      ReadParameters(const ReadParameters& source) = default;
-      ReadParameters& operator=(const ReadParameters& source)
-         { setDynamicWrite(source.getDynamicWrite()); return *this; }
-
-      ReadParameters& setNative() { return (ReadParameters&) inherited::setNative(); }
-
-      // Static parameters
-      ReadParameters& setRoundToEven()
-         {  rmRoundMode = RMNearest; fRoundToEven = true; return *this; }
-      ReadParameters& clearRoundToEven() {  fRoundToEven = false; return *this; }
-      ReadParameters& setPositiveZeroMAdd() { fPositiveZeroMAdd = true; return *this; }
-      ReadParameters& avoidInfty() { fAvoidInfty = true; return *this; }
-      ReadParameters& clearAvoidInfty() { fAvoidInfty = false; return *this; }
-      ReadParameters& setKeepNaNSign() { fKeepNaNSign = true; return *this; }
-      ReadParameters& setProduceDivNaNPositive() { fProduceDivNaNPositive = true; return *this; }
-      ReadParameters& setUpApproximateInfty() { fUpApproximateInfty = true; return *this; }
-      ReadParameters& setUpApproximateInversionForNear() { fUpApproximateInversionForNear = true; return *this; }
-      ReadParameters& setChooseNaNAddBeforeMult() { fChooseNaNAddBeforeMult = true; return *this; }
-      ReadParameters& setConvertNaNNegative() { fConvertNaNNegative = true; return *this; }
-      ReadParameters& setAcceptMinusZero() { fRefuseMinusZero = false; return *this; }
-      ReadParameters& setRefuseMinusZero() { fRefuseMinusZero = true; return *this; }
-
-      ReadParameters& setMinDown() { cContext = CMinDown; return *this; }
-      ReadParameters& setMinUp() { cContext = CMinUp; return *this; }
-      ReadParameters& setMaxDown() { cContext = CMaxDown; return *this; }
-      ReadParameters& setMaxUp() { cContext = CMaxUp; return *this; }
-      ReadParameters& setInverseContext() { fInverseContext = true; return *this; }
-      ReadParameters& clearInverseContext() { fInverseContext = false; return *this; }
-
-      bool isContextUp() const { return cContext & CMinUp; }
-      bool isContextMax() const { return cContext & CMaxDown; }
-      bool doesInverseContext() const { return fInverseContext; }
-
-      bool doesSupportInstantiation() const
-         {  return getStaticMachine() == 0 && getStaticMode() == 0 && getDynamicWrite() == 0; }
-      bool isRoundToEven() const { return fRoundToEven && isNearestRound(); }
-      bool isPositiveZeroMAdd() { return fPositiveZeroMAdd; }
-      bool isInftyAvoided() const { return fAvoidInfty; }
-      bool doesAvoidInfty(bool isNegative) const
-         {  AssumeCondition(fAvoidInfty)
-            return isNegative ? (rmRoundMode >= RMHighest) : (rmRoundMode & RMLowest);
-         }
-      bool keepNaNSign() const { return fKeepNaNSign; }
-      bool produceDivNaNPositive() const { return fProduceDivNaNPositive; }
-      bool upApproximateInfty() const { return fUpApproximateInfty; }
-      bool upApproximateInversionForNear() const { return fUpApproximateInversionForNear; }
-      bool chooseNaNAddBeforeMult() const { return fChooseNaNAddBeforeMult; }
-      bool isConvertNaNNegative() const { return fConvertNaNNegative; }
-      bool acceptMinusZero() const { return !fRefuseMinusZero; }
-
-      // dynamic read parameters
-      ReadParameters& setRoundMode(RoundMode mode) { rmRoundMode = mode; return *this; }
-      ReadParameters& setNearestRound()   { rmRoundMode = RMNearest; return *this; }
-      ReadParameters& setHighestRound()   { rmRoundMode = RMHighest; return *this; }
-      ReadParameters& setLowestRound()    { rmRoundMode = RMLowest; return *this; }
-      ReadParameters& setZeroRound()      { rmRoundMode = RMZero; return *this; }
-
-      bool isLowestRound() const { return rmRoundMode == RMLowest; }
-      bool isNearestRound() const { return rmRoundMode == RMNearest; }
-      bool isHighestRound() const { return rmRoundMode == RMHighest; }
-      bool isZeroRound() const { return rmRoundMode == RMZero; }
-
-      ReadParameters& setKeepSignalingConversion() { fKeepSignalingConversion = true; return *this; }
-      ReadParameters& clearKeepSignalingConversion() { fKeepSignalingConversion = false; return *this; }
-      bool keepSignalingConversion() const { return fKeepSignalingConversion; }
-
-      // dynamic write parameters
-      bool isApproximate() const { return aApproximation != AExact; }
-      bool isDownApproximate() const { return aApproximation == ADownApproximate; }
-      bool isUpApproximate() const { return aApproximation == AUpApproximate; }
-      void setDownApproximate() { aApproximation = ADownApproximate; }
-      void setUpApproximate() { aApproximation = AUpApproximate; }
-      void clearApproximate() { aApproximation = AExact; }
-
-      enum Direction { Down, Up };
-      void setApproximate(Direction direction)
-         {  aApproximation = (direction == Down) ? ADownApproximate : AUpApproximate; }
-      bool isApproximate(Direction direction) const
-         {  return aApproximation == ((direction == Down) ? ADownApproximate : AUpApproximate); }
-      bool hasSameApproximation(const ReadParameters& source) const
-         {  return aApproximation == source.aApproximation; }
-      bool hasIncrementFraction(bool isNegative) const
-         {  return isNegative ? isDownApproximate() : isUpApproximate(); }
-
-      void setEffectiveRoundToEven() { fEffectiveRoundToEven = true; }
-      void clearEffectiveRoundToEven() { fEffectiveRoundToEven = false; }
-      bool hasEffectiveRoundToEven() { return fEffectiveRoundToEven; }
-
-      void setPartialRead() { rrReadResult = RRPartial; }
-      void setTotalRead() { rrReadResult = RRTotal; }
-      bool isPartialRead() const { return rrReadResult == RRPartial; }
-      bool isTotalRead() const { return rrReadResult == RRTotal; }
-      bool hasPartialRead() const { return rrReadResult == RRPartial; }
-
-      void setSNaNOperand() { fSNaNOperand = true; }
-      bool hasSNaNOperand() const { return fSNaNOperand; }
-      
-      void setInftyMinusInfty() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyMinusInfty; }
-      void setInftyOnInfty() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyOnInfty; }
-      void setZeroOnZero() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRZeroOnZero; }
-      void setInftyMultZero() { AssumeCondition(qrQNaNResult == QNNRUndefined) qrQNaNResult = QNNRInftyMultZero; }
-      bool hasQNaNResult() const { return qrQNaNResult; }
-      bool isInftyMinusInfty() const { return qrQNaNResult == QNNRInftyMinusInfty; }
-      bool isInftyOnInfty() const { return qrQNaNResult == QNNRInftyOnInfty; }
-      bool isZeroOnZero() const { return qrQNaNResult == QNNRZeroOnZero; }
-      bool isInftyMultZero() const { return qrQNaNResult == QNNRInftyMultZero; }
-
-      void clear() { setDynamicWrite(0); }
-      
-      bool isDivisionByZero() const { return fDivisionByZero; }
-      void setDivisionByZero() { fDivisionByZero = true; }
-      bool hasFlowException() const { return feFlowException != FENoException; }
-      void clearFlowException() { feFlowException = FENoException; }
-      void setOverflow() { feFlowException = FEOverflow; }
-      void setUnderflow() { feFlowException = FEUnderflow; }
-      bool isOverflow() const { return feFlowException & FEOverflow; }
-      bool isUnderflow() const { return feFlowException & FEUnderflow; }
-      void clearUnderflow() { feFlowException = FENoException; }
-   };
-
-   class WriteParameters {
-     private:
-      enum Type { TDecimal, TBinary };
-      
-     protected:
-      Type tType : 1;
-         
-     public:
-      WriteParameters() = default;
-      WriteParameters(const WriteParameters& params) = default;
-
-      WriteParameters& setDecimal() { tType = TDecimal; return *this; }
-      WriteParameters& setBinary() { tType = TBinary; return *this; }
-
-      bool isDecimal() const { return tType == TDecimal; }
-      bool isBinary() const { return tType == TBinary; }
-   };
-#endif // StandardClassesHPP
+#endif // DefineNoEnhancedObject
 
    class Carry {
      private:
@@ -518,6 +515,4 @@ class DoubleErrors {
 };
 
 } // end of namespace Numerics::DDouble
-
-#endif // Numerics_BaseFloatingParametersH
 

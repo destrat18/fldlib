@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of collections with a finite number of elements.
 //
 
-#ifndef COL_SpecialH
-#define COL_SpecialH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 
@@ -701,7 +698,7 @@ class DoubleCollectionCursor : public VirtualCollectionCursor {
             ? result : ((source.mMode == mMode)
             ? CREqual : ((mMode == MInvalid || source.mMode == MInvalid)
             ? CRNonComparable
-            : fcompare(mMode, source.mMode)));
+            : convertToCompare(mMode <=> source.mMode)));
       }
    virtual bool _isPositionned(const ExtendedLocateParameters& pos,
          const VirtualCollectionCursor* cursor=nullptr) const override;
@@ -1077,4 +1074,3 @@ Template2InlineCollectionForAbstractCollect(TDoubleCollection, TDoubleCollection
 
 } // end of namespace COL
 
-#endif // COL_SpecialH

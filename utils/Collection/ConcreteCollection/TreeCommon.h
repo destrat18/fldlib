@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a template class TGenericTree as a common definition for trees.
 //
 
-#ifndef COL_TreeCommonH
-#define COL_TreeCommonH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualTree.h"
 #include "Collection/ConcreteCollection/List.h"
@@ -332,12 +329,12 @@ class TGenericTreeCursor : public VirtualTreeCursor, private TypeImplCursor {
       {  return TypeImplCursor::getLevel() - (source
             ? ((const thisType&) *source).TypeImplCursor::getLevel() : 0);
       }
-   virtual PNT::PassPointer<VirtualCursorPath> newPath(const VirtualTreeCursor* source,
+   virtual PNT::PPassPointer<VirtualCursorPath> newPath(const VirtualTreeCursor* source,
          PathDirection direction) const override
-      {  return PNT::PassPointer<VirtualCursorPath>((direction == PDForward)
+      {  return PNT::PPassPointer<VirtualCursorPath>((direction == PDForward)
                ? new CursorPath(getSupport(), this, (const ThisTreeCursor*) source)
                : new CursorPath(getSupport(), (const ThisTreeCursor*) source, this),
-            PNT::PassPointer<VirtualCursorPath>::Init());
+            PNT::PPassPointer<VirtualCursorPath>::Init());
       }
 
   public:
@@ -554,7 +551,7 @@ class TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::TreeBoundInvalidateN
          PPFlatCursor cursor = tree.getSElement(&ticParent).getSons().newCursor();
          if (ppfcStart.isValid())
             cursor->assign(*ppfcStart);
-         while (cursor->isValid() && (!ppfcEnd.isValid() || !cursor->isEqual(*ppfcEnd)))
+         while (cursor->isValid() && (!ppfcEnd.isValid() || *cursor != *ppfcEnd))
             result += TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::queryNumberOfElements(
                HandlerSonsAndSubTreeCast::castFrom(&cursor->elementAt()));
          return result;
@@ -746,4 +743,3 @@ class GenericTree::KeyMultipleSortedAccess {
 
 } // end of namespace COL
 
-#endif // COL_TreeCommonH

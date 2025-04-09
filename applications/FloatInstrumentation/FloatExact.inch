@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,7 +27,7 @@
 //   Definition of a class of floating point comparison
 //
 
-#include "FloatInstrumentation/BackTrace.h"
+#include "NumericalAnalysis/BackTrace.h"
 
 namespace NumericalDomains { namespace DDoubleExact {
 

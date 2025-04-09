@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -98,9 +96,7 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
    void compress() { ImplArray::compress(); }
 
   protected:
-   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
-      {  return DefTypeVirtualInheritedCollection::_compare(asource); }
-
+   using DefTypeVirtualInheritedCollection::_compare;
    virtual void _fullAssign(const VirtualCollection& source, const ExtendedReplaceParameters& parameters) override
       {  VirtualCollection::pfullAssign(source, parameters); }
    void _fullAssign(const DefTypeCollection& source, const ExtendedReplaceParameters& parameters);
@@ -198,11 +194,11 @@ class DefTypeCollection : public DefTypeVirtualInheritedCollection, private Impl
       :  DefTypeVirtualInheritedCollection(source, dupMode),
          ImplArray(source, dupMode==AMDuplicate, retrieveRegistrationFromCopy) {}
    DefTypeCollection(DefTypeCollection&& source) { swap(source); }
+   StaticInheritConversions(DefTypeCollection, DefTypeVirtualInheritedCollection)
 
    DefineCopy(DefTypeCollection)
    DDefineAssign(DefTypeCollection)
    DCompare(DefTypeCollection)
-   StaticInheritConversions(DefTypeCollection, DefTypeVirtualInheritedCollection)
    DefineCollectionForAbstractCollect(DefTypeCollection, DefTypeCursor)
    DefTypeCollection& operator=(const DefTypeCollection& source)
       {  DefTypeCollection::_fullAssign(source, ExtendedReplaceParameters()); return *this; }
@@ -245,7 +241,7 @@ class DefTypeCursor : public DefTypeVirtualInheritedCursor {
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override
       { ComparisonResult result = DefTypeVirtualInheritedCursor::_compare(asource);
         if (result == CREqual)
-           result = fcompare(uIndex, ((const DefTypeCursor&) castFromCopyHandler(asource)).uIndex);
+           result = convertToCompare(uIndex <=> ((const DefTypeCursor&) castFromCopyHandler(asource)).uIndex);
         return result;
       }
    virtual bool _isPositionned(const ExtendedLocateParameters& pos,

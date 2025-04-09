@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,29 +27,30 @@
 //   Definition of a class of affine relations.
 //
 
-#include "FloatInstrumentation/BackTrace.h"
+#include "NumericalAnalysis/BackTrace.h"
 
 namespace NumericalDomains { namespace DAffine {
 
 class BaseExecutionPathParams : public EnhancedObject {
   protected:
    Numerics::DDouble::Access::ReadParameters rpMinParams, rpMaxParams, rpNearestParams;
+
+  public:
    class ExtendedSymbolsManager : public SymbolsManager {
      private:
       typedef SymbolsManager inherited;
-      STG::IOObject::OSBase* oMapSymbolsFile;
-      bool fSupportMapSymbols;
-      PNT::AutoPointer<VirtualSymbolDefinitionTracker> apsdtDefinitionTracker;
+      STG::IOObject::OSBase* oMapSymbolsFile = nullptr;
+      bool fSupportMapSymbols = false;
+      PNT::CPassPointer<VirtualSymbolDefinitionTracker> apsdtDefinitionTracker;
+      bool fDisableConstraintPropagation = false;
 
      public:
-      ExtendedSymbolsManager() : oMapSymbolsFile(nullptr), fSupportMapSymbols(false) {}
+      ExtendedSymbolsManager() = default;
       ExtendedSymbolsManager(const ExtendedSymbolsManager& source)
-         :  SymbolsManager(source), oMapSymbolsFile(nullptr), fSupportMapSymbols(false),
-            apsdtDefinitionTracker(source.apsdtDefinitionTracker) {}
+         :  SymbolsManager(source), apsdtDefinitionTracker(source.apsdtDefinitionTracker) {}
       ExtendedSymbolsManager(ExtendedSymbolsManager&& source)
-         :  SymbolsManager(source), oMapSymbolsFile(nullptr), fSupportMapSymbols(false),
-            apsdtDefinitionTracker(std::move(source.apsdtDefinitionTracker)) {}
-      virtual ~ExtendedSymbolsManager() override { if (oMapSymbolsFile) delete oMapSymbolsFile; }
+         :  SymbolsManager(source), apsdtDefinitionTracker(std::move(source.apsdtDefinitionTracker)) {}
+      virtual ~ExtendedSymbolsManager() { if (oMapSymbolsFile) delete oMapSymbolsFile; }
 
       void absorbDefinitionTracker(VirtualSymbolDefinitionTracker* definitionTracker)
          {  apsdtDefinitionTracker.absorbElement(definitionTracker); }
@@ -60,6 +59,9 @@ class BaseExecutionPathParams : public EnhancedObject {
 
       void setSupportMapSymbols(const char* filename);
       void setSupportMapSymbols() { fSupportMapSymbols = true; }
+      void setDisableConstraintPropagation() { fDisableConstraintPropagation = true; }
+      void setEnableConstraintPropagation() { fDisableConstraintPropagation = false; }
+      virtual bool doesDisableConstraintPropagation() const override { return fDisableConstraintPropagation; }
       void clearSupportMapSymbols() { fSupportMapSymbols = false; }
       bool hasMapSymbols() const { return fSupportMapSymbols; }
       void flushMapSymbolsFile() { if (oMapSymbolsFile) oMapSymbolsFile->flush(); }
@@ -67,13 +69,14 @@ class BaseExecutionPathParams : public EnhancedObject {
       virtual Symbol* createNoiseSymbol() override;
    };
 
+  protected:
    ExtendedSymbolsManager smSymbolsManager;
    SymbolsManager::MergeTable mtInitialTable;
-   bool fHasSimplificationTriggerPercent;
+   bool fHasSimplificationTriggerPercent = false;
    BuiltReal brSimplificationTriggerPercent;
 
   public:
-   BaseExecutionPathParams() : fHasSimplificationTriggerPercent(false) {}
+   BaseExecutionPathParams() = default;
    void initializeParams()
       {  rpNearestParams.setNearestRound();
          rpNearestParams.setRoundToEven();
@@ -82,7 +85,7 @@ class BaseExecutionPathParams : public EnhancedObject {
       }
 
    SymbolsManager::MergeTable& initialMergeTable() { return mtInitialTable; }
-   SymbolsManager& symbolsManager() { return smSymbolsManager; }
+   ExtendedSymbolsManager& symbolsManager() { return smSymbolsManager; }
    bool hasMapSymbols() const { return smSymbolsManager.hasMapSymbols(); }
    void setSupportMapSymbols(const char* filename) { smSymbolsManager.setSupportMapSymbols(filename); }
    void setSupportMapSymbols() { smSymbolsManager.setSupportMapSymbols(); }
@@ -101,80 +104,34 @@ class BaseExecutionPathParams : public EnhancedObject {
       {  smSymbolsManager.absorbDefinitionTracker(definitionTracker); }
 };
 
-class PathExplorer {
+class PathExplorer : public BasePathExplorer {
   private:
    Numerics::BigInteger biStackTrace;
-   int uCurrentStackPosition;
-   unsigned uLastResult;
-   unsigned uLastResultCases;
-   unsigned uLastLogCases;
-   unsigned uPreviousLastZeroBit;
-   unsigned uPreviousLastIncBit;
-   unsigned uLastZeroBit;
-   unsigned uLastIncBit;
-   int uNumberOfUnstableBranches;
-   int uCurrentUnstableBranch;
-   bool fCurrentUnstableHasOtherBranches;
-   int uLastUnstableBranch;
-   BaseExecutionPath::Mode mMode;
+   int uCurrentStackPosition = 0;
+   unsigned uLastResult = 0;
+   unsigned uLastResultCases = 0;
+   unsigned uLastLogCases = 0;
+   unsigned uPreviousLastZeroBit = 0;
+   unsigned uPreviousLastIncBit = 0;
+   unsigned uLastZeroBit = 0;
+   unsigned uLastIncBit = 0;
+   int uNumberOfUnstableBranches = 0;
+   int uCurrentUnstableBranch = 0;
+   bool fCurrentUnstableHasOtherBranches = false;
+   int uLastUnstableBranch = 0;
+   BaseExecutionPath::Mode mMode = BaseExecutionPath::MRealAndImplementation;
 
-   unsigned uNumberOfFloatBranches;
-   unsigned uNumberOfRealBranches;
-
-   // support unstable branches in loop
-  public:
-   class AbstractImplementation : public EnhancedObject {
-      public:
-       AbstractImplementation() = default;
-       AbstractImplementation(const AbstractImplementation&) = default;
-       DefineCopy(AbstractImplementation)
-   };
-   template <class TypeImplementation>
-   class ImplementationContent : public AbstractImplementation {
-     private:
-      TypeImplementation tiContent;
-
-     public:
-      ImplementationContent(const TypeImplementation& content) : tiContent(content) {}
-      ImplementationContent(TypeImplementation&& content) : tiContent(content) {}
-      ImplementationContent(const ImplementationContent&) = default;
-      ImplementationContent(ImplementationContent&&) = default;
-      TemplateDefineCopy(ImplementationContent, TypeImplementation)
-
-      const TypeImplementation& content() const { return tiContent; }
-      TypeImplementation& content() { return tiContent; }
-   };
-   typedef COL::TCopyCollection<COL::TArray<AbstractImplementation> > AbstractImplementationArray;
-
-   class AbstractEquation : public EnhancedObject {
-      public:
-       AbstractEquation() = default;
-       AbstractEquation(const AbstractEquation&) = default;
-       DefineCopy(AbstractEquation)
-   };
-   template <class TypeEquation>
-   class EquationContent : public AbstractEquation {
-     private:
-      TypeEquation teContent;
-
-     public:
-      EquationContent(const TypeEquation& content) : teContent(content) {}
-      EquationContent(TypeEquation&& content) : teContent(content) {}
-      EquationContent(const EquationContent&) = default;
-      EquationContent(EquationContent&&) = default;
-      TemplateDefineCopy(EquationContent, TypeEquation)
-
-      const TypeEquation& content() const { return teContent; }
-      TypeEquation& content() { return teContent; }
-   };
-   typedef COL::TCopyCollection<COL::TArray<AbstractEquation> > AbstractEquationArray;
+   unsigned uNumberOfFloatBranches = 0;
+   unsigned uNumberOfRealBranches = 0;
 
   private:
    Numerics::BigInteger biRealContainer;
-   int uCurrentContainerCounter;
-   int uRealContainerCounter;
+   int uCurrentContainerCounter = 0;
+   int uRealContainerCounter = 0;
    AbstractImplementationArray aaiImplementationSynchronisationVector;
    AbstractEquationArray aaeEquationSynchronisationVector;
+   COL::TVector<int> vuCodeArray; // additional integers to encode persistence
+   // the coding depends on the domain
 
   public:
    Numerics::BigInteger& realContainer() { return biRealContainer; }
@@ -183,32 +140,15 @@ class PathExplorer {
 
    AbstractImplementationArray& implementationSynchronisationVector() { return aaiImplementationSynchronisationVector; }
    const AbstractImplementationArray& implementationSynchronisationVector() const { return aaiImplementationSynchronisationVector; }
-   template <class TypeImplementation>
-   const TypeImplementation& implementationFirstSynchronisation() const
-      {  const auto& result = implementationSynchronisationVector().getFirst();
-         AssumeCondition(dynamic_cast<const ImplementationContent<TypeImplementation>*>(&result))
-         return ((const ImplementationContent<TypeImplementation>&) result).content();
-      }
-
    AbstractEquationArray& equationSynchronisationVector() { return aaeEquationSynchronisationVector; }
    const AbstractEquationArray& equationSynchronisationVector() const { return aaeEquationSynchronisationVector; }
-   template <class TypeEquation>
-   const TypeEquation& equationFirstSynchronisation() const
-      {  const auto& result = equationSynchronisationVector().getFirst();
-         AssumeCondition(dynamic_cast<const EquationContent<TypeEquation>*>(&result))
-         return ((const EquationContent<TypeEquation>&) result).content();
-      }
+   COL::TVector<int>& codeArray() { return vuCodeArray; }
+   const COL::TVector<int>& codeArray() const { return vuCodeArray; }
    // end of support unstable branches in loop
 
   public:
    PathExplorer(BaseExecutionPath::Mode mode = BaseExecutionPath::MRealAndImplementation)
-      :  uCurrentStackPosition(0), uLastResult(0), uLastResultCases(0),
-         uLastLogCases(0), uPreviousLastZeroBit(0), uPreviousLastIncBit(0),
-         uLastZeroBit(0), uLastIncBit(0), uNumberOfUnstableBranches(0),
-         uCurrentUnstableBranch(0), fCurrentUnstableHasOtherBranches(false),
-         uLastUnstableBranch(0), mMode(mode),
-         uNumberOfFloatBranches(0), uNumberOfRealBranches(0),
-         uCurrentContainerCounter(0), uRealContainerCounter(0) {}
+      :  mMode(mode) {}
    PathExplorer(const PathExplorer& source) = default;
    PathExplorer(PathExplorer&& source) = default;
    PathExplorer& operator=(const PathExplorer& source) = default;
@@ -237,12 +177,41 @@ class PathExplorer {
             uCurrentUnstableBranch = uLastUnstableBranch;
          while (uCurrentContainerCounter > 0) {
             if (biRealContainer.cbitArray(0)) {
-               aaeEquationSynchronisationVector.freeFirst();
+               if (vuCodeArray.count() == 0)
+                  aaeEquationSynchronisationVector.freeFirst();
+               else {
+                  int numberOfCodes = vuCodeArray.first();
+                  vuCodeArray.removeAt(0);
+                  int numberOfEquations = vuCodeArray.first();
+                  vuCodeArray.removeAt(0);
+                  numberOfCodes -= 1;
+                  while (--numberOfEquations >= 0)
+                     aaeEquationSynchronisationVector.freeFirst();
+                  while (--numberOfCodes >= 0)
+                     vuCodeArray.removeAt(0);
+               }
             }
             else {
-               aaiImplementationSynchronisationVector.freeFirst();
-               aaiImplementationSynchronisationVector.freeFirst();
-               aaeEquationSynchronisationVector.freeFirst();
+               if (vuCodeArray.count() == 0) {
+                  aaiImplementationSynchronisationVector.freeFirst();
+                  aaiImplementationSynchronisationVector.freeFirst();
+                  aaeEquationSynchronisationVector.freeFirst();
+               }
+               else {
+                  int numberOfCodes = vuCodeArray.first();
+                  vuCodeArray.removeAt(0);
+                  int numberOfImplementations = vuCodeArray.first();
+                  vuCodeArray.removeAt(0);
+                  int numberOfEquations = vuCodeArray.first();
+                  vuCodeArray.removeAt(0);
+                  numberOfCodes -= 2;
+                  while (--numberOfImplementations >= 0)
+                     aaiImplementationSynchronisationVector.freeFirst();
+                  while (--numberOfEquations >= 0)
+                     aaeEquationSynchronisationVector.freeFirst();
+                  while (--numberOfCodes >= 0)
+                     vuCodeArray.removeAt(0);
+               }
             };
             biRealContainer >>= 1;
             --uCurrentContainerCounter;
@@ -272,17 +241,17 @@ class PathExplorer {
             }
             else { // conversion
                AssumeCondition(uCurrentStackPosition >= (int) uLastLogCases)
-               int index = (int) ((uCurrentStackPosition-uLastLogCases)/(8*sizeof(unsigned)));
-               int shiftIndex = (int) ((uCurrentStackPosition-uLastLogCases) % (8*sizeof(unsigned)));
-               if ((int) (8*sizeof(unsigned) - shiftIndex) > (int) uLastLogCases) {
+               int index = (int) ((uCurrentStackPosition-uLastLogCases)/(8*sizeof(uint32_t)));
+               int shiftIndex = (int) ((uCurrentStackPosition-uLastLogCases) % (8*sizeof(uint32_t)));
+               if ((int) (8*sizeof(uint32_t) - shiftIndex) > (int) uLastLogCases) {
                   biStackTrace[index] &= ~(~(~0U << uLastLogCases) << shiftIndex);
                   biStackTrace[index] |= uLastResult << shiftIndex;
                }
-               else { // uLastLogCases >= (8*sizeof(unsigned) - shiftIndex)
+               else { // uLastLogCases >= (8*sizeof(uint32_t) - shiftIndex)
                   biStackTrace[index] &= ~(~0U << shiftIndex);
-                  biStackTrace[index+1] &= ~0U << (uLastLogCases - (8*sizeof(unsigned) - shiftIndex));
+                  biStackTrace[index+1] &= ~0U << (uLastLogCases - (8*sizeof(uint32_t) - shiftIndex));
                   biStackTrace[index] |= uLastResult << shiftIndex;
-                  biStackTrace[index+1] |= uLastResult >> (uLastLogCases - (8*sizeof(unsigned) - shiftIndex));
+                  biStackTrace[index+1] |= uLastResult >> (uLastLogCases - (8*sizeof(uint32_t) - shiftIndex));
                };
             }
          };
@@ -340,11 +309,11 @@ class ExecutionPath : public BaseExecutionPath {
    static BuiltReal brThresholdDomain;
    static BuiltReal brMaximalAccuracy;
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
-   static PNT::AutoPointer<TConstraintsSet<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+   static PNT::CPassPointer<TConstraintsSet<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #elif defined(FLOAT_GENERIC_BASE_LONG)
-   static PNT::AutoPointer<TGConstraintsSet<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+   static PNT::CPassPointer<TGConstraintsSet<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
-   static PNT::AutoPointer<TGConstraintsSet<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
+   static PNT::CPassPointer<TGConstraintsSet<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> > >
 #endif
       apcsConstraints;
 
@@ -358,7 +327,6 @@ class ExecutionPath : public BaseExecutionPath {
 
    static BaseExecutionPathParams* pParams;
    static bool fClosedParams;
-   static std::ostream& getErrorStream();
 
    class ExpressionBuilder : public VirtualExpressionBuilder {
      private:
@@ -411,6 +379,9 @@ class ExecutionPath : public BaseExecutionPath {
 
       virtual VirtualExpressionBuilder* getExpressionBuilder() override { return &ebExpressionBuilder; }
    };
+
+  public:
+   static std::ostream& getErrorStream();
 
   public:
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
@@ -482,7 +453,7 @@ class ExecutionPath : public BaseExecutionPath {
    static const char* queryMessage(const STG::EReadError& error) { return error.getMessage(); }
 
    static BaseExecutionPathParams& setParams();
-   static SymbolsManager& symbolsManager()
+   static BaseExecutionPathParams::ExtendedSymbolsManager& symbolsManager()
       {  return pParams ? pParams->symbolsManager() : setParams().symbolsManager(); }
    static Numerics::DDouble::Access::ReadParameters& nearestParams()
       {  return pParams ? pParams->nearestParams() : setParams().nearestParams(); }
@@ -601,14 +572,16 @@ class ExecutionPath : public BaseExecutionPath {
       {  szFile = file; uLine = line; }
    static void notifyPossibleMerge()
       {  szFile = nullptr; uLine = 0; }
-   static Mode getMode() { return currentPathExplorer->mode(); }
-   
    static bool doesFollow() { return fDoesFollow; }
 
+  public:
+   static Mode getMode() { return currentPathExplorer->mode(); }
+   
   public:
    static std::pair<const char*, int> querySplitInfo() { return std::make_pair(szFile, uLine); }
    static bool doesFollowFlow() { return fDoesFollow && (fSupportUnstableInLoop || iTraceFile != nullptr); }
    static STG::IOObject::ISBase* inputTraceFile() { return iTraceFile; }
+   static STG::IOObject::OSBase* outputTraceFile() { return oTraceFile; }
    static const char* synchronisationFile() { return szSynchronisationFile; }
    static int synchronisationLine() { return uSynchronisationLine; }
    static void setFollowFlow(bool doesFollow=true, STG::IOObject::ISBase* inputTraceFile=nullptr,
@@ -621,6 +594,9 @@ class ExecutionPath : public BaseExecutionPath {
    static void clearFollowFlow() { fDoesFollow = false; }
    static void setCurrentPathExplorer(PathExplorer* pathExplorer)
       {  currentPathExplorer = pathExplorer; }
+   static STG::IOObject::OSBase* getOutputFile() { return oTraceFile; }
+   static void clearOutputFile() { oTraceFile = nullptr; }
+   static void setOutputFile(STG::IOObject::OSBase* traceFile) { oTraceFile = traceFile; }
    static Mode queryMode(PathExplorer* pathExplorer) { return pathExplorer->mode(); }
 
   protected:
@@ -646,16 +622,14 @@ class ExecutionPath : public BaseExecutionPath {
       }
 
    template <class TypeAffine, class ImplReadParameters, class ImplWriteParameters,
-         class EquationReadParameters, class EquationWriteParameters,
-         class HighLevelUpdateVector>
-   static void readSynchronizedValue(int& floatBranchesToRead, int floatSelection,
-         int numberOfFloatBranches, int& realBranchesToRead, int realSelection,
+         class EquationReadParameters, class EquationWriteParameters>
+   static void readSynchronizedValue(int& floatBranchesToRead, uint32_t floatSelection,
+         int numberOfFloatBranches, int& realBranchesToRead, uint32_t realSelection,
          int numberOfRealBranches, BaseExecutionPath::Mode mode, TypeAffine& value,
          ImplReadParameters& implReadParams, ImplWriteParameters& implWriteParams,
          EquationReadParameters& equationReadParams, EquationWriteParameters& equationWriteParams,
-         HighLevelUpdateVector& highLevelUpdates, bool& hasImplementation, bool& doesMergeValue)
-      {
-         if (!fSupportUnstableInLoop) {
+         DAffine::THighLevelUpdateVector<Equation>& highLevelUpdates, bool& hasImplementation, bool& doesMergeValue)
+      {  if (!fSupportUnstableInLoop) {
             iTraceFile->assume("ut_");
             int read = iTraceFile->get();
             if (read == 'f')
@@ -679,52 +653,25 @@ class ExecutionPath : public BaseExecutionPath {
             };
             doesMergeValue = false;
             if (mode == BaseExecutionPath::MOnlyReal && hasImplementation) {
-               if (floatSelection == (numberOfFloatBranches - (floatBranchesToRead+1))) {
-                  value.getSMinImplementation().read(*iTraceFile, implReadParams);
-                  implReadParams.clear();
-                  iTraceFile->assume(", ");
-                  value.getSMaxImplementation().read(*iTraceFile, implReadParams);
-                  implReadParams.clear();
-                  value.mergeComputeErrorIfNeeded();
-                  iTraceFile->assume(", ");
-                  value.getSError().read(*iTraceFile, equationReadParams);
-                  equationReadParams.clear();
-
-                  oTraceFile->writesome("ut_f ");
-                  value.getMinImplementation().write(*oTraceFile, implWriteParams);
-                  oTraceFile->writesome(", ");
-                  value.getMaxImplementation().write(*oTraceFile, implWriteParams);
-                  oTraceFile->writesome(", ");
-                  value.getError().write(*oTraceFile, equationWriteParams);
-                  oTraceFile->put('\n');
-
+               if ((int) floatSelection == (numberOfFloatBranches - (floatBranchesToRead+1))) {
                   BuiltReal highLevelError;
-                  value.getSError().plusAssign(value.getRealDomain(), TypeAffine::Equation::PCSourceRValue,
-                        symbolsManager(), highLevelError, true /* isMinus */,
-                        false /* hasExternalCoefficient */);
+                  value.readImplementationSynchronizationFromFile(*iTraceFile, implReadParams,
+                        equationReadParams, *oTraceFile, implWriteParams, equationWriteParams,
+                        symbolsManager(), highLevelError);
+                  oTraceFile->put('\n');
                   if (!highLevelError.isZero())
-                     highLevelUpdates.insertAtEnd(value.getSError(), highLevelError);
-                  value.computeRelativeError();
+                     value.addHighLevelUpdateError(highLevelUpdates, highLevelError);
                   doesMergeValue = true;
                };
             }
             else if (mode == BaseExecutionPath::MOnlyImplementation && !hasImplementation) {
-               if (realSelection == (numberOfRealBranches - (realBranchesToRead+1))) {
-                  value.mergeComputeRealIfNeeded();
-                  value.getSRealDomain().read(*iTraceFile, equationReadParams);
-                  equationReadParams.clear();
-
-                  oTraceFile->writesome("ut_r ");
-                  value.getRealDomain().write(*oTraceFile, equationWriteParams);
-                  oTraceFile->put('\n');
-
+               if ((int) realSelection == (numberOfRealBranches - (realBranchesToRead+1))) {
                   BuiltReal highLevelError;
-                  value.getSError().plusAssign(value.getRealDomain(), TypeAffine::Equation::PCSourceRValue,
-                        symbolsManager(), highLevelError, true /* isMinus */,
-                        false /* hasExternalCoefficient */);
+                  value.readRealSynchronizationFromFile(*iTraceFile, equationReadParams,
+                        *oTraceFile, equationWriteParams, symbolsManager(), highLevelError);
+                  oTraceFile->put('\n');
                   if (!highLevelError.isZero())
-                     highLevelUpdates.insertAtEnd(value.getSError(), highLevelError);
-                  value.computeRelativeError();
+                     value.addHighLevelUpdateError(highLevelUpdates, highLevelError);
                   doesMergeValue = true;
                };
             };
@@ -733,9 +680,9 @@ class ExecutionPath : public BaseExecutionPath {
                readSpacesUntilEndOfLine();
             else {
                if (hasImplementation)
-                  oTraceFile->writesome("ut_f");
+                  value.writeImplementationHeader(*oTraceFile);
                else
-                  oTraceFile->writesome("ut_r");
+                  value.writeRealHeader(*oTraceFile);
                copyInputToOutputUntilEndOfLine();
             };
          }
@@ -757,38 +704,19 @@ class ExecutionPath : public BaseExecutionPath {
             if (mode == BaseExecutionPath::MOnlyReal && hasImplementation) {
                AssumeCondition(currentPathExplorer->currentContainerCounter() > 0
                      && currentPathExplorer->implementationSynchronisationVector().count() > 0)
-               if (floatSelection == (numberOfFloatBranches - (floatBranchesToRead+1))) {
+               if ((int) floatSelection == (numberOfFloatBranches - (floatBranchesToRead+1))) {
                   currentPathExplorer->realContainer().setBitArray(
                         currentPathExplorer->realContainerCounter(), false);
                   currentPathExplorer->realContainer() >>= 1;
                   --currentPathExplorer->currentContainerCounter();
-                  value.getSMinImplementation() = currentPathExplorer
-                     ->implementationFirstSynchronisation<typename TypeAffine::BuiltDouble>();
-                  currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                  value.getSMaxImplementation() = currentPathExplorer
-                     ->implementationFirstSynchronisation<typename TypeAffine::BuiltDouble>();
-                  currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                  value.mergeComputeErrorIfNeeded();
-
-                  value.getSError() = currentPathExplorer
-                     ->equationFirstSynchronisation<typename TypeAffine::Equation>();
-                  currentPathExplorer->equationSynchronisationVector().freeFirst();
-                  currentPathExplorer->implementationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>(
-                                 value.getMinImplementation()));
-                  currentPathExplorer->implementationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>(
-                                 value.getMaxImplementation()));
-                  currentPathExplorer->equationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>(
-                                 value.getError()));
                   BuiltReal highLevelError;
-                  value.getSError().plusAssign(value.getRealDomain(), TypeAffine::Equation::PCSourceRValue,
-                        symbolsManager(), highLevelError, true /* isMinus */,
-                        false /* hasExternalCoefficient */);
+                  value.readImplementationSynchronizationFromMemory(
+                        currentPathExplorer->implementationSynchronisationVector(),
+                        currentPathExplorer->equationSynchronisationVector(),
+                        currentPathExplorer->codeArray(),
+                        symbolsManager(), highLevelError);
                   if (!highLevelError.isZero())
-                     highLevelUpdates.insertAtEnd(value.getSError(), highLevelError);
-                  value.computeRelativeError();
+                     value.addHighLevelUpdateError(highLevelUpdates, highLevelError);
                   doesMergeValue = true;
                };
             }
@@ -796,26 +724,17 @@ class ExecutionPath : public BaseExecutionPath {
                AssumeCondition(currentPathExplorer->currentContainerCounter() > 0
                      && currentPathExplorer->equationSynchronisationVector().count() > 0)
                hasImplementation = false;
-               if (realSelection == (numberOfRealBranches - (realBranchesToRead+1))) {
+               if ((int) realSelection == (numberOfRealBranches - (realBranchesToRead+1))) {
                   currentPathExplorer->realContainer().setBitArray(
                         currentPathExplorer->realContainerCounter(), true);
                   currentPathExplorer->realContainer() >>= 1;
                   --currentPathExplorer->currentContainerCounter();
-                  value.mergeComputeRealIfNeeded();
-                  value.getSRealDomain() = currentPathExplorer
-                     ->equationFirstSynchronisation<typename TypeAffine::Equation>();
-                  currentPathExplorer->equationSynchronisationVector().freeFirst();
-                  currentPathExplorer->equationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>(
-                                 value.getRealDomain()));
-
                   BuiltReal highLevelError;
-                  value.getSError().plusAssign(value.getRealDomain(), TypeAffine::Equation::PCSourceRValue,
-                        symbolsManager(), highLevelError, true /* isMinus */,
-                        false /* hasExternalCoefficient */);
+                  value.readRealSynchronizationFromMemory(
+                        currentPathExplorer->equationSynchronisationVector(),
+                        currentPathExplorer->codeArray(), symbolsManager(), highLevelError);
                   if (!highLevelError.isZero())
-                     highLevelUpdates.insertAtEnd(value.getSError(), highLevelError);
-                  value.computeRelativeError();
+                     value.addHighLevelUpdateError(highLevelUpdates, highLevelError);
                   doesMergeValue = true;
                };
             };
@@ -825,32 +744,18 @@ class ExecutionPath : public BaseExecutionPath {
                         currentPathExplorer->realContainerCounter(), false);
                   currentPathExplorer->realContainer() >>= 1;
                   --currentPathExplorer->currentContainerCounter();
-                  currentPathExplorer->implementationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>(
-                           currentPathExplorer->implementationFirstSynchronisation
-                                 <typename TypeAffine::BuiltDouble>()));
-                  currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                  currentPathExplorer->implementationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>(
-                           currentPathExplorer->implementationFirstSynchronisation
-                                 <typename TypeAffine::BuiltDouble>()));
-                  currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                  currentPathExplorer->equationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>(
-                           currentPathExplorer->equationFirstSynchronisation
-                                 <typename TypeAffine::Equation>()));
-                  currentPathExplorer->equationSynchronisationVector().freeFirst();
+                  value.moveImplementationInMemory(
+                        currentPathExplorer->implementationSynchronisationVector(),
+                        currentPathExplorer->equationSynchronisationVector(),
+                        currentPathExplorer->codeArray());
                }
                else {
                   currentPathExplorer->realContainer().setBitArray(
                         currentPathExplorer->realContainerCounter(), true);
                   currentPathExplorer->realContainer() >>= 1;
                   --currentPathExplorer->currentContainerCounter();
-                  currentPathExplorer->equationSynchronisationVector()
-                        .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>(
-                           currentPathExplorer->equationFirstSynchronisation
-                                 <typename TypeAffine::Equation>()));
-                  currentPathExplorer->equationSynchronisationVector().freeFirst();
+                  value.moveRealInMemory(currentPathExplorer->equationSynchronisationVector(),
+                        currentPathExplorer->codeArray());
                };
             };
          }
@@ -859,24 +764,11 @@ class ExecutionPath : public BaseExecutionPath {
    static void writeSynchronizedValue(BaseExecutionPath::Mode mode, const TypeAffine& value,
          const ImplWriteParameters& implWriteParams, const EquationWriteParameters& equationWriteParams)
       {  if (!fSupportUnstableInLoop) {
-            oTraceFile->writesome("ut_");
             if (mode == BaseExecutionPath::MOnlyImplementation)
-               oTraceFile->put('f');
+               value.writeImplementationSynchronizationToFile(*oTraceFile, implWriteParams, equationWriteParams);
             else {
                AssumeCondition(mode == BaseExecutionPath::MOnlyReal)
-               oTraceFile->put('r');
-            };
-            oTraceFile->put(' ');
-            if (mode == BaseExecutionPath::MOnlyImplementation) {
-               value.getMinImplementation().write(*oTraceFile, implWriteParams);
-               oTraceFile->writesome(", ");
-               value.getMaxImplementation().write(*oTraceFile, implWriteParams);
-               oTraceFile->writesome(", ");
-               value.getError().write(*oTraceFile, equationWriteParams);
-            }
-            else {
-               AssumeCondition(mode == BaseExecutionPath::MOnlyReal)
-               value.getRealDomain().write(*oTraceFile, equationWriteParams);
+               value.writeRealSynchronizationToFile(*oTraceFile, equationWriteParams);
             };
             oTraceFile->put('\n');
          }
@@ -885,23 +777,18 @@ class ExecutionPath : public BaseExecutionPath {
                currentPathExplorer->realContainer().setBitArray(
                      currentPathExplorer->realContainerCounter(), false);
                ++currentPathExplorer->realContainerCounter();
-               currentPathExplorer->implementationSynchronisationVector()
-                     .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>
-                           (value.getMinImplementation()));
-               currentPathExplorer->implementationSynchronisationVector()
-                     .insertNewAtEnd(new PathExplorer::ImplementationContent<typename TypeAffine::BuiltDouble>
-                           (value.getMaxImplementation()));
-               currentPathExplorer->equationSynchronisationVector()
-                     .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>
-                           (value.getError()));
+               value.writeImplementationSynchronizationToMemory(
+                     currentPathExplorer->implementationSynchronisationVector(),
+                     currentPathExplorer->equationSynchronisationVector(),
+                     currentPathExplorer->codeArray());
             }
             else {
                currentPathExplorer->realContainer().setBitArray(
                      currentPathExplorer->realContainerCounter(), true);
                ++currentPathExplorer->realContainerCounter();
-               currentPathExplorer->equationSynchronisationVector()
-                     .insertNewAtEnd(new PathExplorer::EquationContent<typename TypeAffine::Equation>
-                           (value.getRealDomain()));
+               value.writeRealSynchronizationToMemory(
+                     currentPathExplorer->equationSynchronisationVector(),
+                     currentPathExplorer->codeArray());
             };
          };
       }
@@ -1039,10 +926,10 @@ class ExecutionPath : public BaseExecutionPath {
    static void followNewBranch(int cases, BooleanChoice& realChoice, BooleanChoice& errorChoice,
          bool doesChooseDefaultErrorChoice, BooleanChoice defaultErrorChoice);
    // static int followNewBranch(int cases, BooleanChoice& realChoice, BooleanChoice& errorChoice);
-   static unsigned followNewConversionBranch(unsigned conversion, bool& realChoice,
-         bool& implementationChoice, unsigned realNumber, unsigned implementationNumber,
-         unsigned commonNumber, unsigned firstRealCommon, unsigned firstImplementationCommon,
-         unsigned& alternativeResult);
+   static uint32_t followNewConversionBranch(uint64_t conversion, bool& realChoice,
+         bool& implementationChoice, uint64_t realNumber, uint64_t implementationNumber,
+         uint64_t commonNumber, uint64_t firstCommon, uint64_t firstReal, uint64_t firstImplementation,
+         uint64_t& alternativeResult);
 
    static void notifySplitWithSynchronization()
       {  szSynchronisationFile = szFile;
@@ -1051,8 +938,8 @@ class ExecutionPath : public BaseExecutionPath {
    static bool isSynchronizedWith(const char* file, int line)
       {  return szSynchronisationFile == file && uSynchronisationLine == line; }
    static bool hasSynchronization() { return szSynchronisationFile != nullptr; }
-   static bool synchronizeCurrentFlow(unsigned& floatSelection,
-         unsigned& realSelection, int numberOfFloatBranches, int numberOfRealBranches)
+   static bool synchronizeCurrentFlow(uint32_t& floatSelection,
+         uint32_t& realSelection, int numberOfFloatBranches, int numberOfRealBranches)
       {  
          if (!fSupportUnstableInLoop) {
             if (!fDoesFollow) // nothing to synchronize
@@ -1086,12 +973,12 @@ class ExecutionPath : public BaseExecutionPath {
          uLine = 0;
          fDoesFollow = currentPathExplorer->currentUnstableBranch() < currentPathExplorer->numberOfUnstableBranches();
          bool hasSelection = false;
-         unsigned oldSelection = 0, selection = 0, numberOfSelections = 0;
+         uint32_t oldSelection = 0, selection = 0, numberOfSelections = 0;
          if (currentPathExplorer->mode() == MOnlyImplementation && numberOfRealBranches > 1) {
             hasSelection = true;
             oldSelection = realSelection;
             ++realSelection;
-            if (realSelection == (unsigned) numberOfRealBranches)
+            if (realSelection == (uint32_t) numberOfRealBranches)
                realSelection = 0;
             selection = realSelection;
             numberOfSelections = numberOfRealBranches-1;
@@ -1100,7 +987,7 @@ class ExecutionPath : public BaseExecutionPath {
             hasSelection = true;
             oldSelection = floatSelection;
             ++floatSelection;
-            if (floatSelection == (unsigned) numberOfFloatBranches)
+            if (floatSelection == (uint32_t) numberOfFloatBranches)
                floatSelection = 0;
             selection = floatSelection;
             numberOfSelections = numberOfFloatBranches-1;
@@ -1110,21 +997,21 @@ class ExecutionPath : public BaseExecutionPath {
             currentPathExplorer->mode() = MRealAndImplementation;
          if (hasSelection) {
             if (!fDoesFollow) {
-               int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(unsigned)));
-               int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(unsigned)));
+               int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(uint32_t)));
+               int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(uint32_t)));
                currentPathExplorer->lastResult() = selection;
                currentPathExplorer->lastLogCases() = Numerics::DInteger::Access::log_base_2(numberOfSelections);
                currentPathExplorer->lastResultCases() = numberOfSelections;
 
-               if ((8*sizeof(unsigned) - shiftIndex) < currentPathExplorer->lastLogCases()) {
+               if ((8*sizeof(uint32_t) - shiftIndex) < currentPathExplorer->lastLogCases()) {
                   currentPathExplorer->stackTrace()[index] &= ~(~(~0U << currentPathExplorer->lastLogCases()) << shiftIndex);
                   currentPathExplorer->stackTrace()[index] |= oldSelection << shiftIndex;
                }
                else {
                   currentPathExplorer->stackTrace()[index] &= ~(~0U << shiftIndex);
-                  currentPathExplorer->stackTrace()[index+1] &= ~0U << (currentPathExplorer->lastLogCases() - (8*sizeof(unsigned) - shiftIndex));
+                  currentPathExplorer->stackTrace()[index+1] &= ~0U << (currentPathExplorer->lastLogCases() - (8*sizeof(uint32_t) - shiftIndex));
                   currentPathExplorer->stackTrace()[index] |= oldSelection << shiftIndex;
-                  currentPathExplorer->stackTrace()[index+1] |= oldSelection >> (currentPathExplorer->lastLogCases() - (8*sizeof(unsigned) - shiftIndex));
+                  currentPathExplorer->stackTrace()[index+1] |= oldSelection >> (currentPathExplorer->lastLogCases() - (8*sizeof(uint32_t) - shiftIndex));
                };
                if (oldSelection < numberOfSelections) {
                   currentPathExplorer->lastZeroBit() = currentPathExplorer->currentStackPosition()+currentPathExplorer->lastLogCases();
@@ -1211,24 +1098,24 @@ class ExecutionPath : public BaseExecutionPath {
             numberOfRealBranches = currentPathExplorer->numberOfRealBranches();
          };
       }
-   static void selectBranch(unsigned& floatSelection, unsigned& realSelection,
+   static void selectBranch(uint32_t& floatSelection, uint32_t& realSelection,
          int numberOfFloatBranches, int numberOfRealBranches)
       {  if (currentPathExplorer->mode() == MOnlyImplementation && numberOfRealBranches > 1) {
             int number = Numerics::DInteger::Access::log_base_2(numberOfRealBranches-1);
-            int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(unsigned)));
-            int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(unsigned)));
+            int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(uint32_t)));
+            int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(uint32_t)));
             realSelection = (currentPathExplorer->stackTrace()[index] >> shiftIndex);
-            if ((int) (8*sizeof(unsigned) - shiftIndex) < number)
-               realSelection |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(unsigned) - shiftIndex);
+            if ((int) (8*sizeof(uint32_t) - shiftIndex) < number)
+               realSelection |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(uint32_t) - shiftIndex);
             realSelection &= ~(~0U << number);
          }
          else if (currentPathExplorer->mode() == MOnlyReal && numberOfFloatBranches > 1) {
             int number = Numerics::DInteger::Access::log_base_2(numberOfFloatBranches-1);
-            int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(unsigned)));
-            int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(unsigned)));
+            int index = (int) (currentPathExplorer->currentStackPosition()/(8*sizeof(uint32_t)));
+            int shiftIndex = (int) (currentPathExplorer->currentStackPosition() % (8*sizeof(uint32_t)));
             floatSelection = (currentPathExplorer->stackTrace()[index] >> shiftIndex);
-            if ((int) (8*sizeof(unsigned) - shiftIndex) < number)
-               floatSelection |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(unsigned) - shiftIndex);
+            if ((int) (8*sizeof(uint32_t) - shiftIndex) < number)
+               floatSelection |= (currentPathExplorer->stackTrace()[index+1] & ~(~0U << shiftIndex)) << (8*sizeof(uint32_t) - shiftIndex);
             floatSelection &= ~(~0U << number);
          };
       }
@@ -1275,12 +1162,44 @@ class ExecutionPath : public BaseExecutionPath {
             if (maxBitIndex > 0) {
                for (int bitIndex = 0; bitIndex < maxBitIndex; ++maxBitIndex) {
                   if (currentPathExplorer->realContainer().cbitArray(bitIndex)) {
-                     currentPathExplorer->equationSynchronisationVector().freeFirst();
+                     if (currentPathExplorer->codeArray().count() == 0)
+                        currentPathExplorer->equationSynchronisationVector().freeFirst();
+                     else {
+                        auto& codeArray = currentPathExplorer->codeArray();
+                        int numberOfCodes = codeArray.first();
+                        codeArray.removeAt(0);
+                        int numberOfEquations = codeArray.first();
+                        codeArray.removeAt(0);
+                        numberOfCodes -= 1;
+                        while (--numberOfEquations >= 0)
+                           currentPathExplorer->equationSynchronisationVector().freeFirst();
+                        while (--numberOfCodes >= 0)
+                           codeArray.removeAt(0);
+                     }
                   }
                   else {
-                     currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                     currentPathExplorer->implementationSynchronisationVector().freeFirst();
-                     currentPathExplorer->equationSynchronisationVector().freeFirst();
+                     if (currentPathExplorer->codeArray().count() == 0) {
+                        currentPathExplorer->implementationSynchronisationVector().freeFirst();
+                        currentPathExplorer->implementationSynchronisationVector().freeFirst();
+                        currentPathExplorer->equationSynchronisationVector().freeFirst();
+                     }
+                     else {
+                        auto& codeArray = currentPathExplorer->codeArray();
+                        int numberOfCodes = codeArray.first();
+                        codeArray.removeAt(0);
+                        int numberOfImplementations = codeArray.first();
+                        codeArray.removeAt(0);
+                        int numberOfEquations = codeArray.first();
+                        codeArray.removeAt(0);
+                        numberOfCodes -= 2;
+                        while (--numberOfImplementations >= 0)
+                           currentPathExplorer->implementationSynchronisationVector().freeFirst();
+                        while (--numberOfEquations >= 0)
+                           currentPathExplorer->equationSynchronisationVector().freeFirst();
+                        while (--numberOfCodes >= 0)
+                           codeArray.removeAt(0);
+
+                     }
                   };
                };
                currentPathExplorer->realContainer() >>= maxBitIndex;

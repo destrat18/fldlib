@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -330,10 +328,10 @@ TBaseFloatInterval<TypeExecutionPath>::getThenBranch(bool executionResult) const
 }
 
 template <class TypeExecutionPath>
-unsigned
-TBaseFloatInterval<TypeExecutionPath>::getConversionBranch(unsigned diff, unsigned executionResult) const {
+uint32_t
+TBaseFloatInterval<TypeExecutionPath>::getConversionBranch(uint64_t diff, uint64_t executionResult) const {
    bool isLastBranch = false;
-   unsigned result = inherited::followNewConversionBranch(diff, isLastBranch);
+   uint32_t result = inherited::followNewConversionBranch(diff, isLastBranch);
    if (isLastBranch) {
       if (inherited::fSupportFirstFollowFloat) {
          if (result == 0)

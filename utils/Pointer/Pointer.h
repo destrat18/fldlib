@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of the class Pointer that inherits from EnhancedObject.
 //
 
-#ifndef PNT_PointerH
-#define PNT_PointerH
+#pragma once
 
 #include "StandardClasses/StandardClasses.hpp"
 
@@ -42,7 +39,7 @@ class Pointer : public EnhancedObject {
    class Duplicate {};
 
   private:
-   EnhancedObject* peoElement;
+   EnhancedObject* peoElement = nullptr;
 
   protected:
    enum TypePointer { TPStandard, TPAuto, TPPass };
@@ -51,12 +48,13 @@ class Pointer : public EnhancedObject {
    virtual ComparisonResult _compare(const EnhancedObject& source) const override
       {  ComparisonResult result = EnhancedObject::_compare(source);
          return (result == CREqual) ?
-            peoElement->compare(*((const Pointer&) source).peoElement) : result;
+            convertToCompare(peoElement <=> ((const Pointer&) source).peoElement) : result;
       }
 
-   Pointer() : peoElement(nullptr) {}
+   Pointer() = default;
    Pointer(EnhancedObject* element, Init) : peoElement(element) { AssumeAllocation(element) }
    Pointer(const Pointer& source) = default;
+   Pointer& operator=(const Pointer& source) = default;
 
    EnhancedObject* key() const { return peoElement; }
    EnhancedObject* operator->() const { AssumeCondition(peoElement) return peoElement; }
@@ -108,4 +106,3 @@ class TPointer : public Pointer {
 
 } // end of namespace PNT
 
-#endif

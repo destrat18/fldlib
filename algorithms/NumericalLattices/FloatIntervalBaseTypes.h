@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,17 +27,16 @@
 //   Definition of a class of floating point intervals
 //
 
-#ifndef NumericalDomains_FloatIntervalBaseTypesH
-#define NumericalDomains_FloatIntervalBaseTypesH
+#pragma once
 
 #include "Numerics/Floating.h"
-#include <math.h>
+#include <cmath>
 
 namespace NumericalDomains { namespace DDoubleInterval {
 
 template <int UMaxBitsNumber>
 class TFloatConversion : public Numerics::DDouble::BuiltAccess
-      ::TFloatConversion<(UMaxBitsNumber+(8*sizeof(unsigned))+5-1)/(8*sizeof(unsigned)), 2> {
+      ::TFloatConversion<(UMaxBitsNumber+(8*sizeof(uint32_t))+5-1)/(8*sizeof(uint32_t)), 2> {
   public:
    TFloatConversion() {}
    TFloatConversion(const TFloatConversion<UMaxBitsNumber>& source) = default;
@@ -80,8 +77,8 @@ class TBuiltFloat
    typedef typename inherited::ReadParameters ReadParameters;
 
   public:
-   TBuiltFloat() {}
-   TBuiltFloat(unsigned int value) : inherited(value) {}
+   TBuiltFloat() = default;
+   TBuiltFloat(uint32_t value) : inherited(value) {}
    TBuiltFloat(const typename inherited::IntConversion& value, ReadParameters& params)
       :  inherited(value, params) {}
    TBuiltFloat(const TFloatConversion<UMaxBitsNumber>& value, ReadParameters& params)
@@ -111,15 +108,15 @@ isBigEndian() {
 template <class TypeBuiltDouble, typename TypeImplementation, class TypeFloatDigitsHelper>
 void
 fillContent(TypeBuiltDouble& builtDouble, const TypeImplementation& source, const TypeFloatDigitsHelper&) {
-   static const int sourceSizeInSizeofUnsigned = (sizeof(source) + sizeof(unsigned) - 1)/sizeof(unsigned);
-   unsigned doubleContent[sourceSizeInSizeofUnsigned];
+   static const int sourceSizeInSizeofUnsigned = (sizeof(source) + sizeof(uint32_t) - 1)/sizeof(uint32_t);
+   uint32_t doubleContent[sourceSizeInSizeofUnsigned];
    doubleContent[sourceSizeInSizeofUnsigned-1] = 0;
    memcpy(&doubleContent[0], &source, sizeof(source));
 
-   {  unsigned* mask = (unsigned*) doubleContent;
+   {  uint32_t* mask = (uint32_t*) doubleContent;
       if (isBigEndian())
          mask += sourceSizeInSizeofUnsigned-1;
-      int lastCellIndex = (int) ((builtDouble.bitSizeMantissa() - 2)/(8*sizeof(unsigned)));
+      int lastCellIndex = (int) ((builtDouble.bitSizeMantissa() - 2)/(8*sizeof(uint32_t)));
       int mantissaIndex = lastCellIndex+1-sourceSizeInSizeofUnsigned;
       if (mantissaIndex < 0)
          mantissaIndex = 0;
@@ -130,12 +127,12 @@ fillContent(TypeBuiltDouble& builtDouble, const TypeImplementation& source, cons
          else
             ++mask;
       };
-      int shift = (int) ((builtDouble.bitSizeMantissa()-1) % (sizeof(unsigned)*8));
+      int shift = (int) ((builtDouble.bitSizeMantissa()-1) % (sizeof(uint32_t)*8));
       builtDouble.getSMantissa()[lastCellIndex] = (shift == 0) ? *mask
          : ((*mask) & ~((~0U) << shift));
       builtDouble.getSMantissa() <<= 1;
    }
-   {  unsigned charContent[sourceSizeInSizeofUnsigned*sizeof(unsigned)] = {};
+   {  uint32_t charContent[sourceSizeInSizeofUnsigned*sizeof(uint32_t)] = {};
       memcpy(charContent, doubleContent, sizeof(doubleContent));
       unsigned char* mask = (unsigned char*) charContent;
       unsigned char* signedMask = mask;
@@ -148,7 +145,7 @@ fillContent(TypeBuiltDouble& builtDouble, const TypeImplementation& source, cons
       };
       builtDouble.setNegative((*signedMask) & 0x80);
 
-      unsigned result = 0;
+      uint32_t result = 0;
       int shift = FloatDigits::UBitSizeExponent-7;
       result |= (*mask & 0x7f) << shift;
       while ((shift -= 8) >= 0) {
@@ -171,8 +168,8 @@ fillContent(TypeBuiltDouble& builtDouble, const TypeImplementation& source, cons
 template <class TypeBuiltDouble, typename TypeImplementation, class TypeFloatDigitsHelper>
 void
 setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool isUpper, const TypeFloatDigitsHelper&) {
-   unsigned doubleContent[(sizeof(result) + sizeof(unsigned) - 1)/sizeof(unsigned)];
-   memset(doubleContent, 0, sizeof(unsigned)*((sizeof(result) + sizeof(unsigned) - 1)/sizeof(unsigned)));
+   uint32_t doubleContent[(sizeof(result) + sizeof(uint32_t) - 1)/sizeof(uint32_t)];
+   memset(doubleContent, 0, sizeof(uint32_t)*((sizeof(result) + sizeof(uint32_t) - 1)/sizeof(uint32_t)));
    {  unsigned char* mask = (unsigned char*) doubleContent;
       typedef typename TypeFloatDigitsHelper::template TFloatDigits<TypeImplementation> FloatDigits;
       if (!isBigEndian()) {
@@ -184,10 +181,10 @@ setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool 
          *mask |= 0x80;
       int shift = FloatDigits::UBitSizeExponent-7;
 
-      unsigned exponent = builtDouble.getBasicExponent()[0];
+      uint32_t exponent = builtDouble.getBasicExponent()[0];
 #if defined(__GNUC__) && !defined(__clang__)
       int shiftAssert = FloatDigits::UBitSizeExponent;
-      AssumeCondition((shiftAssert >= (int) sizeof(unsigned int)*8)
+      AssumeCondition((shiftAssert >= (int) sizeof(uint32_t)*8)
             || (((~0U << shiftAssert) & exponent) == 0))
 #else
 #if defined(__clang__)
@@ -195,9 +192,9 @@ setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool 
 #pragma GCC diagnostic ignored "-Wshift-count-overflow"
 #endif
 
-      AssumeCondition((FloatDigits::UBitSizeExponent >= sizeof(unsigned int)*8)
+      AssumeCondition((FloatDigits::UBitSizeExponent >= sizeof(uint32_t)*8)
             || (((~0U << FloatDigits::UBitSizeExponent) & exponent) == 0))
-      // AssumeCondition((FloatDigits::UBitSizeExponent == sizeof(unsigned int)*8)
+      // AssumeCondition((FloatDigits::UBitSizeExponent == sizeof(uint32_t)*8)
       //       || (((~1U << (FloatDigits::UBitSizeExponent-1)) & exponent) == 0))
 #if defined(__clang__)
 #pragma GCC diagnostic pop
@@ -231,11 +228,11 @@ setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool 
       //   this form is not correct but the use of setContent is outsize the interval library
       if (doesAdd && mantissa.inc().hasCarry())
          mantissa.dec();
-      unsigned int* mask = (unsigned int*) doubleContent;
+      uint32_t* mask = (uint32_t*) doubleContent;
       if (isBigEndian())
-         mask += ((sizeof(result)-1)/sizeof(unsigned int));
-      int lastCellIndex = (int) ((builtDouble.bitSizeMantissa() - 2)/(8*sizeof(unsigned int)));
-      int mantissaIndex = (int) (lastCellIndex-((sizeof(result)-1)/sizeof(unsigned int)));
+         mask += ((sizeof(result)-1)/sizeof(uint32_t));
+      int lastCellIndex = (int) ((builtDouble.bitSizeMantissa() - 2)/(8*sizeof(uint32_t)));
+      int mantissaIndex = (int) (lastCellIndex-((sizeof(result)-1)/sizeof(uint32_t)));
       if (mantissaIndex < 0)
          mantissaIndex = 0;
       for (; mantissaIndex < lastCellIndex; ++mantissaIndex) {
@@ -245,7 +242,7 @@ setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool 
          else
             ++mask;
       };
-      int shift = (int) ((builtDouble.bitSizeMantissa()-1) % (sizeof(unsigned int)*8));
+      int shift = (int) ((builtDouble.bitSizeMantissa()-1) % (sizeof(uint32_t)*8));
       if (shift == 0)
          *mask = mantissa[lastCellIndex];
       else
@@ -257,6 +254,4 @@ setContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, bool 
 } // end of namespace DDoubleInterval
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatIntervalBaseTypesH
 

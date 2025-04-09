@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,10 +29,6 @@
 //
 
 #include "Collection/ConcreteCollection/BasicList.h"
-// #include "Collection/Collection.hpp"
-
-namespace COL {}
-
 #include "Pointer/ImplList.template"
 
 namespace COL {
@@ -69,7 +63,7 @@ void
 BasicList::_fullAssign(const BasicList& source, const ExtendedReplaceParameters& parameters) {
    if (this != &source) {
       if (!parameters.isFree() && !parameters.isDuplicate()) {
-         PNT::AutoPointer<ExtendedReplaceParameters> paramsCopy(parameters);
+         PNT::PPassPointer<ExtendedReplaceParameters> paramsCopy(parameters);
          paramsCopy->setFree().setDuplicate();
          GenericList::_fullAssign(source, *paramsCopy);
          return;
@@ -178,7 +172,7 @@ BasicList::_remove(const ExtendedSuppressParameters& parameters, BasicListCursor
       GenericList::_remove(parameters, cursor);
    }
    else {
-      PNT::AutoPointer<ExtendedSuppressParameters> paramsCopy(parameters);
+      PNT::PPassPointer<ExtendedSuppressParameters> paramsCopy(parameters);
       paramsCopy->setFree();
       GenericList::_remove(*paramsCopy, cursor);
    };
@@ -197,7 +191,7 @@ BasicList::_removeAll(const ExtendedSuppressParameters& parameters,
       GenericList::_removeAll(parameters, start, end);
    }
    else {
-      PNT::AutoPointer<ExtendedSuppressParameters> paramsCopy(parameters);
+      PNT::PPassPointer<ExtendedSuppressParameters> paramsCopy(parameters);
       paramsCopy->setFree();
       GenericList::_removeAll(*paramsCopy, start, end);
    }

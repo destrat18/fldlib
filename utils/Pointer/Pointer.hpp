@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,10 +27,8 @@
 //   Definition of many pointer classes able to manage memory.
 //
 
-#ifndef PNT_PointerHPP
-#define PNT_PointerHPP
+#pragma once
 
-#include "Pointer/AutoPointer.h"
+#include "Pointer/PassPointer.h"
 #include "Pointer/MngPointer.h"
 
-#endif // PNT_PointerHPP

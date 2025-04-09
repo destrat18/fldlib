@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,12 +28,12 @@
 //   derivations are open.
 //
 
-#ifndef StandardClassesHPP
-#define StandardClassesHPP
+#pragma once
 
 #include <iosfwd>
 #include <typeinfo>
 #include <functional>
+#include <cstdint>
 
 #include "StandardMessage.h"
 #include "StandardClasses.macro"
@@ -173,10 +171,35 @@ class EnhancedObject {
   public:
    virtual EnhancedObject* createCopy() const
       {  return new EnhancedObject(*this); }
+   virtual EnhancedObject* createMove()
+      {  return new EnhancedObject(std::move(*this)); }
    EnhancedObject* createSCopy() const { return createCopy(); }
-   DCompare(EnhancedObject)
+   EnhancedObject* createSMove() { return createMove(); }
+
+   ComparisonResult compare(const EnhancedObject& source) const { return _compare(source); }
+   bool isComparable(const EnhancedObject& typeObject) const { return _compare(typeObject) != CRNonComparable; }
    DAssign(EnhancedObject)
 
+   static std::strong_ordering convertCompare(ComparisonResult comparisonResult)
+      {  return (comparisonResult == CRLess
+            ? std::strong_ordering::less : (comparisonResult == CRGreater
+            ? std::strong_ordering::greater : std::strong_ordering::equal));
+      }
+   static std::partial_ordering convertComparePartial(ComparisonResult comparisonResult)
+      {  return (comparisonResult == CRLess
+            ? std::partial_ordering::less : (comparisonResult == CRGreater
+            ? std::partial_ordering::greater : (comparisonResult == CREqual
+            ? std::partial_ordering::equivalent : std::partial_ordering::unordered)));
+      }
+   static ComparisonResult convertToCompare(std::strong_ordering comparisonResult)
+      {  return (comparisonResult < 0 ? CRLess : (comparisonResult > 0 ? CRGreater : CREqual)); }
+   static ComparisonResult convertToCompare(std::partial_ordering comparisonResult)
+      {  return (comparisonResult < 0 ? CRLess : (comparisonResult > 0 ? CRGreater
+            : (comparisonResult == std::partial_ordering::equivalent ? CREqual : CRNonComparable)));
+      }
+   
+   friend std::partial_ordering operator<=>(const EnhancedObject& first, const EnhancedObject& second)
+      {  return convertComparePartial(first.compare(second)); }
    EnhancedObject& operator=(const EnhancedObject&) { return *this; }
 
    // Implementation of basic casts to avoid systematic dynamic_cast for the createSCopy() method
@@ -356,16 +379,16 @@ class TemplateElementKeyCastParameters {
 
 class ExtendedParameters {
   protected:
-   typedef unsigned int ParametersContent;
+   typedef uint32_t ParametersContent;
 
   private:
-   unsigned int uParams;
+   uint32_t uParams;
 
   protected:
-   unsigned int& params() { return uParams; }
-   const unsigned int& queryParams() const { return uParams; }
+   uint32_t& params() { return uParams; }
+   const uint32_t& queryParams() const { return uParams; }
    static const int END_OF_MASK = 0;
-   static const unsigned int MASK = 0;
+   static const uint32_t MASK = 0;
 
   public:
    ExtendedParameters() : uParams(0) {}
@@ -375,16 +398,16 @@ class ExtendedParameters {
 
 class EExtendedParameters {
   protected:
-   typedef unsigned long int ParametersContent;
+   typedef uint64_t ParametersContent;
 
   private:
-   unsigned long int uParams;
+   uint64_t uParams;
 
   protected:
-   unsigned long int& params() { return uParams; }
-   const unsigned long int& queryParams() const { return uParams; }
-   static const long int END_OF_MASK = 0;
-   static const long unsigned int MASK = 0;
+   uint64_t& params() { return uParams; }
+   const uint64_t& queryParams() const { return uParams; }
+   static const int END_OF_MASK = 0;
+   static const uint64_t MASK = 0;
 
   public:
    EExtendedParameters() : uParams(0) {}
@@ -402,8 +425,8 @@ class VirtualCast : public ExtendedParameters {
    virtual EnhancedObject* _castTo(EnhancedObject* /* collectionObject */) const { AssumeUncalled return nullptr; }
 
   public:
-   VirtualCast() : ExtendedParameters() {}
-   VirtualCast(const VirtualCast& source) : ExtendedParameters(source) {}
+   VirtualCast() = default;
+   VirtualCast(const VirtualCast& source) = default;
    virtual ~VirtualCast() {}
 
    EnhancedObject* castFrom(EnhancedObject* copyObject) const { return _castFrom(copyObject); }
@@ -434,8 +457,7 @@ class TVirtualCast : public VirtualCast {
       }
 
   public:
-   TVirtualCast() {}
-   TVirtualCast(const TVirtualCast<TypeElement, TypeCast>& source) : VirtualCast(source) {}
+   TVirtualCast() = default;
+   TVirtualCast(const TVirtualCast<TypeElement, TypeCast>& source) = default;
 };
 
-#endif

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -27,14 +25,13 @@
 // File      : FloatAffineExecutionPath.h
 // Description :
 //   Definition of a class of affine relations.
+//   Requires the definition of FLOAT_REAL_BITS_NUMBER.
 //
 
-#ifndef NumericalAnalysis_FloatAffineExecutionPathH
-#define NumericalAnalysis_FloatAffineExecutionPathH
+#pragma once
 
 #include <cfloat>
 
-#include "config.h"
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
 #include "NumericalDomains/FloatAffineBase.h"
 #else
@@ -86,13 +83,17 @@ namespace DFloatDigitsHelper {
    };
 }
 
-class FloatDigitsHelper {
+struct FloatDigitsHelper {
   public:
    template <typename TypeImplementation>
    class TFloatDigits : public DFloatDigitsHelper::TFloatDigits<TypeImplementation> {};
 };
 
-#if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
+#if defined(FLOAT_AFFINE_ACCELERATION)
+
+#include "NumericalAnalysis/FloatAffineAcceleration.inch"
+
+#elif !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
 typedef TBuiltReal<FLOAT_REAL_BITS_NUMBER> BuiltReal;
 #elif defined(FLOAT_GENERIC_BASE_LONG)
 typedef TGBuiltReal<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER> BuiltReal;
@@ -107,6 +108,7 @@ class BaseExecutionPath {
 
    class QuickDouble;
    class end {};
+   class nothing {};
 };
 
 class ExecutionPathContract : public BaseExecutionPath {
@@ -154,8 +156,8 @@ class ExecutionPathContract : public BaseExecutionPath {
    template <class TypeAffine, class ImplReadParameters, class ImplWriteParameters,
          class EquationReadParameters, class EquationWriteParameters,
          class HighLevelUpdateVector>
-   static void readSynchronizedValue(int& floatBranchesToRead, int floatSelection,
-         int numberOfFloatBranches, int& realBranchesToRead, int realSelection,
+   static void readSynchronizedValue(int& floatBranchesToRead, uint32_t floatSelection,
+         int numberOfFloatBranches, int& realBranchesToRead, uint32_t realSelection,
          int numberOfRealBranches, BaseExecutionPath::Mode mode, TypeAffine& value,
          ImplReadParameters& implReadParams, ImplWriteParameters& implWriteParams,
          EquationReadParameters& equationReadParams, EquationWriteParameters& equationWriteParams,
@@ -214,18 +216,19 @@ class ExecutionPathContract : public BaseExecutionPath {
 
    void followNewBranch(int /* cases */, BooleanChoice& /* realChoice */, BooleanChoice& /* errorChoice */,
          bool /* doesChooseDefaultErrorChoice */, BooleanChoice /* defaultErrorChoice */) const {}
-   unsigned followNewConversionBranch(unsigned /* conversion */, bool& /* realChoice */,
-         bool& /* implementationChoice */, unsigned /* realNumber */, unsigned /* implementationNumber */,
-         unsigned /* commonNumber */, unsigned /* firstRealCommon */, unsigned /* firstImplementationCommon */) const
+   uint32_t followNewConversionBranch(uint64_t /* conversion */, bool& /* realChoice */,
+         bool& /* implementationChoice */, uint64_t /* realNumber */, uint64_t /* implementationNumber */,
+         uint64_t /* commonNumber */, uint64_t /* firstCommon */, uint64_t /* firstReal */,
+         uint64_t /* firstImplementation */) const
       {  return 0; }
 
    void notifySplitWithSynchronization() const {}
    bool isSynchronizedWith(const char* /* file */, int /* line */) const { return false; }
    bool hasSynchronization() const { return false; }
-   bool synchronizeCurrentFlow(unsigned& /* floatSelection */, unsigned& /* realSelection */,
+   bool synchronizeCurrentFlow(uint32_t& /* floatSelection */, uint32_t& /* realSelection */,
          int /* numberOfFloatBranches */, int /* numberOfRealBranches */) const { return true; }
    void readUntilBranchNumbers(int& /* numberOfFloatBranches */, int& /* numberOfRealBranches */) const {}
-   void selectBranch(unsigned& /* floatSelection */, unsigned& /* realSelection */,
+   void selectBranch(uint32_t& /* floatSelection */, int& /* realSelection */,
          int /* numberOfFloatBranches */, int /* numberOfRealBranches */) const {}
    void writeBranchNumbers(int /* numberOfFloatBranches */, int /* numberOfRealBranches */) const {}
    void clearSynchronizationBranches() const {}
@@ -233,6 +236,9 @@ class ExecutionPathContract : public BaseExecutionPath {
 
 template <class TypeExecutionPath>
 class TBaseFloatAffine : public TypeExecutionPath, public FloatDigitsHelper {
+  public:
+   typedef DAffine::BuiltReal BuiltReal;
+
   private:
    typedef TypeExecutionPath inherited;
 
@@ -335,9 +341,9 @@ class TBaseFloatAffine : public TypeExecutionPath, public FloatDigitsHelper {
    void writeBranchCompare(const TypeFloatAffine& source, bool isUnstable) const;
    template <class TypeFloatAffine>
    void notifyForCompare(const TypeFloatAffine& source) const
-      {  BaseExecutionPath::Mode mode;
-         bool doesAssume;
-         bool hasOutput;
+      {  BaseExecutionPath::Mode mode = BaseExecutionPath::MRealAndImplementation;
+         bool doesAssume = false;
+         bool hasOutput = false;
          if (inherited::fSupportVerbose || inherited::fSupportThreshold) {
             mode = inherited::getMode();
             doesAssume = inherited::doesFollowFlow()
@@ -443,23 +449,23 @@ class TBaseFloatAffine : public TypeExecutionPath, public FloatDigitsHelper {
       }
    void retrieveBranch(int cases, BaseExecutionPath::BooleanChoice& realChoice,
          BaseExecutionPath::BooleanChoice& errorChoice, bool executionResult) const;
-   static unsigned getConversionValue(unsigned realNumber, unsigned implementationNumber,
-         unsigned firstReal, unsigned lastReal, unsigned firstImplementation, unsigned lastImplementation,
-         unsigned commonNumber, unsigned firstCommon, unsigned lastCommon, unsigned executionResult,
-         unsigned result, bool realChoice, bool implementationChoice);
-   unsigned getConversionBranch(unsigned conversionNumber,
-         unsigned firstReal, unsigned lastReal, unsigned firstImplementation, unsigned lastImplementation,
-         bool& realChoice, bool& implementationChoice, unsigned executionResult, unsigned& alternativeResult) const;
+   static uint64_t getConversionValue(uint64_t realNumber, uint64_t implementationNumber,
+         uint64_t firstReal, uint64_t lastReal, uint64_t firstImplementation, uint64_t lastImplementation,
+         uint64_t commonNumber, uint64_t firstCommon, uint64_t lastCommon, uint64_t executionResult,
+         uint64_t result, bool realChoice, bool implementationChoice);
+   uint32_t getConversionBranch(uint64_t conversionNumber,
+         uint64_t firstReal, uint64_t lastReal, uint64_t firstImplementation, uint64_t lastImplementation,
+         bool& realChoice, bool& implementationChoice, uint64_t executionResult, uint64_t& alternativeResult) const;
 
   public:
-   unsigned getConversionNumber(unsigned firstReal, unsigned lastReal,
-         unsigned firstImplementation, unsigned lastImplementation) const
-      {  unsigned firstCommon = (firstReal < firstImplementation) ? firstImplementation : firstReal;
-         unsigned lastCommon = (lastReal < lastImplementation) ? lastReal : lastImplementation;
-         unsigned commonNumber = (firstCommon <= lastCommon) ? (lastCommon-firstCommon+1) : 0;
-         unsigned realNumber = (firstReal <= lastReal) ? (lastReal-firstReal+1) : 0;
-         unsigned implementationNumber = (firstImplementation <= lastImplementation) ? (lastImplementation - firstImplementation+1) : 0;
-         unsigned result;
+   uint64_t getConversionNumber(uint64_t firstReal, uint64_t lastReal,
+         uint64_t firstImplementation, uint64_t lastImplementation) const
+      {  uint64_t firstCommon = (firstReal < firstImplementation) ? firstImplementation : firstReal;
+         uint64_t lastCommon = (lastReal < lastImplementation) ? lastReal : lastImplementation;
+         uint64_t commonNumber = (firstCommon <= lastCommon) ? (lastCommon-firstCommon+1) : 0;
+         uint64_t realNumber = (firstReal <= lastReal) ? (lastReal-firstReal+1) : 0;
+         uint64_t implementationNumber = (firstImplementation <= lastImplementation) ? (lastImplementation - firstImplementation+1) : 0;
+         uint64_t result;
          if (realNumber == 0 || implementationNumber == 0)
             result = (implementationNumber != 0) ? implementationNumber : realNumber;
          else if (realNumber == 1 || implementationNumber == 1)
@@ -559,14 +565,19 @@ class TFloatZonotope
    static PQueryDebugValue pqueryLightDebugValue;
 
    friend class TMergeBranches<TypeExecutionPath>;
+#if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
+   typedef TEquation<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > RealEquation;
+#elif defined(FLOAT_GENERIC_BASE_LONG)
+   typedef TGEquation<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > RealEquation;
+#else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
+   typedef TGEquation<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > RealEquation;
+#endif
 
   public:
    TFloatZonotope() = default;
    TFloatZonotope(TypeImplementation min, TypeImplementation max) : inherited(min, max) {}
-   TFloatZonotope(int value) : inherited(value) {}
-   TFloatZonotope(long int value) : inherited(value) {}
-   TFloatZonotope(unsigned value) : inherited(value) {}
-   TFloatZonotope(unsigned long value) : inherited(value) {}
+   template <typename TypeValue> TFloatZonotope(TypeValue value) requires std::integral<TypeValue>
+      :  inherited(value) {}
    TFloatZonotope(const thisType& source) = default;
    TFloatZonotope(thisType&& source) = default; // [TODO] keep symbolic for constraints
    TFloatZonotope& operator=(const thisType& source) = default;
@@ -582,10 +593,12 @@ class TFloatZonotope
       {  return (thisType&) inherited::operator=(source); }
    template <int USizeMantissaArgument, int USizeExponentArgument, typename TypeImplementationArgument>
    thisType& operator=(TFloatZonotope<TypeExecutionPath, USizeMantissaArgument, USizeExponentArgument, TypeImplementationArgument>&& source)
-      {  return (thisType&) inherited::operator=(source); }
+      {  return (thisType&) inherited::operator=(std::move(source)); }
 
    bool optimizeValue()
-      {  bool result = inherited::restrictImplementationFromRealAndError();
+      {  if (inherited::getMode() != inherited::MRealAndImplementation)
+            return true;
+         bool result = inherited::restrictImplementationFromRealAndError();
          if (result) {
             inherited::restrictRealFromErrorAndImplementation();
             inherited::restrictRelativeErrorFromRealAndError();
@@ -598,39 +611,28 @@ template <class TypeExecutionPath>
 class TMergeBranches : public TBaseFloatAffine<TypeExecutionPath> {
   private:
    typedef TBaseFloatAffine<TypeExecutionPath> inherited;
+   typedef TMergeBranches<TypeExecutionPath> thisType;
 
    bool fActive;
    SymbolsManager::MergeTable mtMergeTable;
-   bool fIsTableSynchronized;
-   int uNumberOfFloatBranches;
-   int uNumberOfRealBranches;
-   unsigned uFloatSelection;
-   unsigned uRealSelection;
+   bool fIsTableSynchronized = false;
+   int uNumberOfFloatBranches = 0;
+   int uNumberOfRealBranches = 0;
+   uint32_t uFloatSelection = 0;
+   uint32_t uRealSelection = 0;
 
-   struct HighLevelUpdate {
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
-      typedef TEquation<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
+   typedef TEquation<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
 #elif defined(FLOAT_GENERIC_BASE_LONG)
-      typedef TGEquation<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
+   typedef TGEquation<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
 #else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
-      typedef TGEquation<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
+   typedef TGEquation<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
 #endif
-      Equation* equation;
-      BuiltReal highLevelError;
+   THighLevelUpdateVector<Equation> ahluHighLevelUpdates;
 
-      HighLevelUpdate() : equation(nullptr) {}
-      HighLevelUpdate(Equation& equationSource, const BuiltReal& highLevelErrorSource)
-         :  equation(&equationSource), highLevelError(highLevelErrorSource) {}
-   };
-   class HighLevelUpdateVector : public COL::TVector<HighLevelUpdate> {
-     private:
-      typedef COL::TVector<HighLevelUpdate> inherited;
-
-     public:
-      void insertAtEnd(typename HighLevelUpdate::Equation& equation, const BuiltReal& highLevelError)
-         {  inherited::insertAtEnd(HighLevelUpdate(equation, highLevelError)); }
-   };
-   HighLevelUpdateVector ahluHighLevelUpdates;
+  protected:
+   template <class ExactAndImplementationValue>
+   void pushForMerge(ExactAndImplementationValue& value);
 
   public:
    TMergeBranches(const char* file, int line);
@@ -646,7 +648,8 @@ class TMergeBranches : public TBaseFloatAffine<TypeExecutionPath> {
       {  return TPacker<TypeIterator>(iter, end); }
 
    template <int USizeMantissa, int USizeExponent, typename TypeImplementation>
-   TMergeBranches<TypeExecutionPath>& operator<<(TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>& value);
+   TMergeBranches<TypeExecutionPath>& operator<<(TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>& value)
+      {  pushForMerge(value); return *this; }
    template <int USizeMantissa, int USizeExponent, typename TypeImplementation>
    TMergeBranches<TypeExecutionPath>& operator<<(const TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>& value)
       {  return operator<<(const_cast<TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>&>(value)); }
@@ -657,6 +660,7 @@ class TMergeBranches : public TBaseFloatAffine<TypeExecutionPath> {
          return *this;
       }
    bool operator<<(BaseExecutionPath::end);
+   thisType& operator<<(BaseExecutionPath::nothing) { return *this; }
 };
 
 class BaseExecutionPath::QuickDouble
@@ -716,6 +720,4 @@ class BaseExecutionPath::QuickDouble
 };
 
 }} // end of namespace NumericalDomains::DAffine
-
-#endif // NumericalAnalysis_FloatAffineExecutionPathH
 

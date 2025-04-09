@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -76,10 +76,10 @@ class DefGenericAVL : public VirtualSortedCollection, private DefImplBinaryTree 
    friend class ReplaceNotification;
 
   protected:
+   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
+      {  return inherited::_compare(asource); }
    virtual bool acceptElement(const EnhancedObject& source) const override { return true; }
 
-   virtual ComparisonResult _compare(const EnhancedObject& source) const override
-      {  return VirtualSortedCollection::_compare(source); }
    virtual void _fullAssign(const VirtualCollection& source, const ExtendedReplaceParameters& parameters) override
       {  VirtualCollection::pfullAssign(source, parameters); }
    void _fullAssign(const thisType& source, const ExtendedReplaceParameters& parameters);
@@ -127,7 +127,7 @@ class DefGenericAVL : public VirtualSortedCollection, private DefImplBinaryTree 
          :  key(keySource), parameters(parametersSource), cursor((thisCursorType*) cursorSource),
             start(const_cast<thisCursorType*>((const thisCursorType*) startSource)),
             end(const_cast<thisCursorType*>((const thisCursorType*) endSource)) {}
-      static ComparisonResult compare(KeyType fst, KeyType snd) {  return fst.compare(snd); }
+      static ComparisonResult compare(KeyType fst, KeyType snd) { return fst.compare(snd); }
    };
    virtual LocationResult _locateKey(const EnhancedObject& source, const ExtendedLocateParameters& parameters,
          VirtualSortedCollectionCursor* cursor=nullptr, const VirtualSortedCollectionCursor* start=nullptr,
@@ -602,9 +602,9 @@ class DefSortedAVL : public DefGenericAVL {
    DeclareCollectionIteratorForConcreteCollect
 };
 
-/****************************************/
-/* Définition du patron SortedAVLCursor */
-/****************************************/
+/****************************************************/
+/* Definition of the template class SortedAVLCursor */
+/****************************************************/
 
 template<class TypeElement, class Key=VirtualSortedCollection::SimpleKey, class Cast=DefSimpleAVLCast>
 class DefSortedAVLCursor : public DefGenericAVLCursor {

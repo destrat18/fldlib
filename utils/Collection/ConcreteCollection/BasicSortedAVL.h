@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   without any hierarchy requires on elements.
 //
 
-#ifndef COL_BasicSortedAVLH
-#define COL_BasicSortedAVLH
+#pragma once
 
 #include "Collection/ConcreteCollection/SortedAVL.h"
 
@@ -48,4 +45,3 @@ namespace COL {
 
 } // end of namespace COL
 
-#endif

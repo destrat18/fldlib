@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -159,12 +157,12 @@ DefTypeCollection::tlocate(
       int index = localization/2, indexLocalization = localization/2;
       Key keyCompare(thisArray);
       while ((--index >= 0) && (keyCompare.compare(key, keyCompare.key((const ElementType&)
-         Cast::castFrom(*ImplArray::elementAt(index)))) == CREqual));
+         Cast::castFrom((const typename Cast::Base&) *ImplArray::elementAt(index)))) == CREqual));
       int cursorPosition = indexLocalization-index-1;
       int count = indexLocalization-index;
       index = indexLocalization;
       while ((++index < ImplArray::count()) && (keyCompare.compare(key, keyCompare.key((const ElementType&)
-         Cast::castFrom(*ImplArray::elementAt(index)))) == CREqual));
+         Cast::castFrom((const typename Cast::Base&) *ImplArray::elementAt(index)))) == CREqual));
       count += index-indexLocalization-1;
       result.setCount(count);
       result.setCursorPosition(cursorPosition);

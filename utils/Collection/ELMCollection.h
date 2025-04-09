@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -27,8 +27,7 @@
 //   Definition of polymorph collection classes with a common ancestor.
 //
 
-#ifndef COL_ELMCollectionH
-#define COL_ELMCollectionH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 
@@ -83,7 +82,7 @@ class TWrapCollection : public EnhancedObject {
 
   private:
    typedef TWrapCollection<Element, Collection, CollectionStorage, Cast> thisType;
-   CollectionStorage pcCollection; // préféré à l'héritage
+   CollectionStorage pcCollection; // preferred to inheritance
 
    // template <class OtherElement>
    // friend class TWrapCollection<OtherElement, Collection, CollectionStorage, Cast>;
@@ -146,4 +145,3 @@ class TWrapCollection : public EnhancedObject {
 
 } // end of namespace COL
 
-#endif // COL_ELMCollectionH

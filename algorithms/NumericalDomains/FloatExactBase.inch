@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -34,7 +32,7 @@
 #define DefineFillContent fillContent
 #define DefineSetContent setContent
 #define DefineSizeofBaseTypeInBits                                   \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineBaseFloatExactContract TBaseFloatExactContract
 #define DefineCompareFloatExact TCompareFloatExact
 
@@ -122,7 +120,9 @@ class DefineCompareFloatExact : public TypeBaseFloatExact {
    typedef TypeBaseFloatExact inherited;
 
   protected:
-   TypeImplementation dValue;
+#ifdef FLOAT_CONCRETE
+   TypeImplementation dValue = 0;
+#endif
    TypeBuiltDouble bfImplementation;
    BuiltReal brReal;
 
@@ -139,12 +139,10 @@ class DefineCompareFloatExact : public TypeBaseFloatExact {
    static void retrieveImplementation(const BuiltReal& source, TypeBuiltDouble& result);
 
   public:
-   DefineCompareFloatExact() : dValue(0) {}
+   DefineCompareFloatExact() = default;
    DefineCompareFloatExact(const thisType& source) = default;
-   DefineCompareFloatExact(int value);
-   DefineCompareFloatExact(unsigned value);
-   DefineCompareFloatExact(long value);
-   DefineCompareFloatExact(unsigned long value);
+   template <typename TypeValue> DefineCompareFloatExact(TypeValue value)
+      requires std::integral<TypeValue>;
    DefineCompareFloatExact& operator=(const thisType& source) = default;
 
    template <class TypeBuiltArgument, typename TypeImplementationArgument>
@@ -156,7 +154,9 @@ class DefineCompareFloatExact : public TypeBaseFloatExact {
    void setFromReal(const BuiltReal& realValue)
       {  brReal = realValue;
          retrieveImplementation(brReal, bfImplementation);
+#ifdef FLOAT_CONCRETE
          DefineSetContent(dValue, bfImplementation /*, false isUpper */, typename TypeBaseFloatExact::FloatDigitsHelper());
+#endif
       }
    const TypeBuiltDouble& implementation() const { return bfImplementation; }
    const BuiltReal& real() const { return brReal; }
@@ -176,7 +176,10 @@ class DefineCompareFloatExact : public TypeBaseFloatExact {
    thisType& operator/=(const thisType& source);
 
    void oppositeAssign()
-      {  dValue = -dValue;
+      {  
+#ifdef FLOAT_CONCRETE
+         dValue = -dValue;
+#endif
          auto mode = inherited::getMode();
          if (mode != inherited::SVNoImplementation)
             bfImplementation.opposite();
@@ -186,15 +189,23 @@ class DefineCompareFloatExact : public TypeBaseFloatExact {
       }
 
    typedef TypeImplementation ImplementationType;
+#ifdef FLOAT_CONCRETE
    TypeImplementation asImplementation() const { return dValue; }
+#else
+   TypeImplementation asImplementation() const
+      {  TypeImplementation result = 0;
+         DefineSetContent(result, bfImplementation /*, false isUpper */, typename TypeBaseFloatExact::FloatDigitsHelper());
+         return result;
+      }
+#endif
    typedef Numerics::DDouble::Access::ReadParameters ReadParametersBase;
    // roundMode=RMZero for C conversions, roundMode=RMNearest for Ada conversions, roundMode=RMLowest for floor
-   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
-   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
-   long int asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
-      {  return asInt(roundMode); }
-   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
-      {  return asUnsigned(roundMode); }
+   int64_t asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
+   uint64_t asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
+   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
+      {  return asLongInt(roundMode); }
+   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
+      {  return asUnsignedLong(roundMode); }
 
    void sqrtAssign();
    void sinAssign();
@@ -222,7 +233,9 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
    brReal.readDecimal(in, params);
    params.clear();
    retrieveImplementation(brReal, bfImplementation);
+#ifdef FLOAT_CONCRETE
    DDoubleExact::DefineSetContent(dValue, bfImplementation /*, false isUpper */, typename TypeBaseFloatExact::FloatDigitsHelper());
+#endif
 
    auto mode = inherited::getMode();
    if (mode == inherited::SVNoReal)
@@ -238,7 +251,9 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
       ::initFrom(TypeImplementation value) {
    AssumeCondition(brReal.bitSizeMantissa() >= bfImplementation.bitSizeMantissa()
          && brReal.bitSizeExponent() >= bfImplementation.bitSizeExponent());
+#ifdef FLOAT_CONCRETE
    dValue = value;
+#endif
    DDoubleExact::DefineFillContent(bfImplementation, value, typename TypeBaseFloatExact::FloatDigitsHelper());
    auto mode = inherited::getMode();
    if (mode != inherited::SVNoReal) {
@@ -254,7 +269,10 @@ template <class TypeBuiltArgument, typename TypeImplementationArgument>
 inline
 DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>
       ::DefineCompareFloatExact(const DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltArgument, TypeImplementationArgument>& source)
-   :  dValue(source.dValue) {
+#ifdef FLOAT_CONCRETE
+   :  dValue(source.dValue)
+#endif
+{
    auto mode = inherited::getMode();
    if (mode != inherited::SVNoImplementation) {
 #ifdef DefineGeneric
@@ -279,105 +297,52 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
 }
 
 template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
+template <typename TypeValue>
 inline
 DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>
-      ::DefineCompareFloatExact(int value)
-   :  dValue((TypeImplementation) value) {
+      ::DefineCompareFloatExact(TypeValue value) requires std::integral<TypeValue>
+#ifdef FLOAT_CONCRETE
+   :  dValue((TypeImplementation) value)
+#endif
+{
+   static_assert(sizeof(TypeValue) <= sizeof(int64_t));
    auto& params = inherited::nearestParams();
    auto mode = inherited::getMode();
    if (mode != inherited::SVNoImplementation) {
       typename TypeBuiltDouble::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign(value);
+      if (std::is_unsigned<TypeValue>::value) {
+         conversion.setUnsigned();
+         conversion.assign((uint64_t) value);
+      }
+      else {
+         conversion.setSigned();
+         conversion.assign((int64_t) value);
+      }
       bfImplementation.setInteger(conversion, params);
       params.clear();
    };
    if (mode != inherited::SVNoReal) {
       typename BuiltReal::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign(value);
+      if (std::is_unsigned<TypeValue>::value) {
+         conversion.setUnsigned();
+         conversion.assign((uint64_t) value);
+      }
+      else {
+         conversion.setSigned();
+         conversion.assign((int64_t) value);
+      }
       brReal.setInteger(conversion, params);
       params.clear();
    };
-   inherited::notifyForCompare(*this);
-}
-
-template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
-inline
-DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>
-      ::DefineCompareFloatExact(long int value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   auto& params = inherited::nearestParams();
-   auto mode = inherited::getMode();
-   if (mode != inherited::SVNoImplementation) {
-      typename TypeBuiltDouble::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign((int) value);
-      bfImplementation.setInteger(conversion, params);
-      params.clear();
-   }
-   if (mode != inherited::SVNoReal) {
-      typename BuiltReal::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign((int) value);
-      brReal.setInteger(conversion, params);
-      params.clear();
-   };
-   inherited::notifyForCompare(*this);
-}
-
-template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
-inline
-DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>
-      ::DefineCompareFloatExact(unsigned value)
-   :  dValue((TypeImplementation) value) {
-   auto& params = inherited::nearestParams();
-   auto mode = inherited::getMode();
-   if (mode != inherited::SVNoImplementation) {
-      typename TypeBuiltDouble::IntConversion conversion;
-      conversion.setUnsigned();
-      conversion.assign(value);
-      bfImplementation.setInteger(conversion, params);
-      params.clear();
-   }
-   if (mode != inherited::SVNoReal) {
-      typename BuiltReal::IntConversion conversion;
-      conversion.setUnsigned();
-      conversion.assign(value);
-      brReal.setInteger(conversion, params);
-      params.clear();
-   }
-   inherited::notifyForCompare(*this);
-}
-
-template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
-inline
-DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>
-      ::DefineCompareFloatExact(unsigned long value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   auto& params = inherited::nearestParams();
-   auto mode = inherited::getMode();
-   if (mode != inherited::SVNoImplementation) {
-      typename TypeBuiltDouble::IntConversion conversion;
-      conversion.setUnsigned();
-      conversion.assign((unsigned) value);
-      bfImplementation.setInteger(conversion, params);
-      params.clear();
-   }
-   if (mode != inherited::SVNoReal) {
-      typename BuiltReal::IntConversion conversion;
-      conversion.setUnsigned();
-      conversion.assign((unsigned) value);
-      brReal.setInteger(conversion, params);
-      params.clear();
-   }
    inherited::notifyForCompare(*this);
 }
 
 template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
 inline DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>&
 DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>::operator+=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue += source.dValue;
+#endif
    auto& params = inherited::nearestParams();
    auto mode = inherited::getMode();
    if (mode != inherited::SVNoImplementation) {
@@ -395,7 +360,9 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
 template <int URealBitsNumber, class TypeBaseFloatExact, class TypeBuiltDouble, typename TypeImplementation>
 inline DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>&
 DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, TypeImplementation>::operator-=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue -= source.dValue;
+#endif
    auto& params = inherited::nearestParams();
    auto mode = inherited::getMode();
    if (mode != inherited::SVNoImplementation) {
@@ -447,7 +414,9 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
    if (hasNegativeSqrt)
       inherited::notifyForNegativeSqrt(*this);
 
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::sqrt((double) dValue);
+#endif
    inherited::notifyForCompare(*this);
 }
 
@@ -464,9 +433,11 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
          brReal.opposite();
    };
 
+#ifdef FLOAT_CONCRETE
    if (dValue < 0)
       dValue = -dValue;
    // dValue = ::fabs((double) dValue);
+#endif
    inherited::notifyForCompare(*this);
 }
 
@@ -484,8 +455,10 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
          brReal = source.brReal;
    };
 
+#ifdef FLOAT_CONCRETE
    if (dValue > source.dValue)
       dValue = source.dValue;
+#endif
    inherited::notifyForCompare(*this);
 }
 
@@ -503,8 +476,10 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
          brReal = source.brReal;
    };
 
+#ifdef FLOAT_CONCRETE
    if (dValue < source.dValue)
       dValue = source.dValue;
+#endif
    inherited::notifyForCompare(*this);
 }
 
@@ -534,6 +509,7 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
       };
    };
 
+#ifdef FLOAT_CONCRETE
    if (dValue <= fstOther.dValue) {
       if (sndOther.dValue > dValue) {
          if (fstOther.dValue <= sndOther.dValue)
@@ -542,6 +518,7 @@ DefineCompareFloatExact<URealBitsNumber, TypeBaseFloatExact, TypeBuiltDouble, Ty
             dValue = sndOther.dValue;
       };
    };
+#endif
    inherited::notifyForCompare(*this);
 }
 

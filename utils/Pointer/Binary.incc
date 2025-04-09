@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2013-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,10 +27,10 @@
 //   Implementation of a partial template for balanced binary trees.
 //
 
-/* DefineTypeNode                   : type de noeud                                 */
-/* DefineTypeBinaryTree             : type d'arbre binaire                          */
-/* DefineUninheritsEnhancedObject   : les noeuds n'héritent pas de EnhancedObject   */
-/* DefineTypeBinaryParent           : noeuds avec parent                            */
+/* DefineTypeNode                   : type of the node                              */
+/* DefineTypeBinaryTree             : type of the binary tree                       */
+/* DefineUninheritsEnhancedObject   : the nodes do not inherit from EnhancedObject  */
+/* DefineTypeBinaryParent           : nodes with parent stored inside               */
 
 /**********************************************/
 /* Implementation of template TImplBinaryTree */
@@ -414,14 +412,14 @@ DefineTypeBinaryTree::removeAt(Cursor& cursor, SuppressionNotification* notifica
    Node* removedNode = cursor.getReference();
    CursorMove result = CMUndefined;
 
-   if (removedNode->left() && removedNode->right()) { // Suppression indirecte
+   if (removedNode->left() && removedNode->right()) { // direct removal
       if (removedNode->isLeftBalanced()) {
          cursor.setToLeft();
          while (cursor.setToRight());
          Node* mountNode = cursor.getReference();
          Node::swap(removedNode, mountNode, CustomImplBinaryTree::root());
       }
-      else { // On pioche à droite
+      else {
          cursor.setToRight();
          while (cursor.setToLeft());
          Node* mountNode = cursor.getReference();

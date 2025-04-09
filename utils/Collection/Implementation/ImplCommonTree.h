@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a common implementation for all tree collections.
 //
 
-#ifndef COL_ImplCommonTreeH
-#define COL_ImplCommonTreeH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualTree.h"
 
@@ -96,8 +93,8 @@ class TImplBasicTree {
   private:
    typedef TImplBasicTree<TypeNode> thisType;
 
-   TypeNode* ptnRoot;
-   int uCount;
+   TypeNode* ptnRoot = nullptr;
+   int uCount = 0;
 
   protected:
    typedef typename TypeNode::HandlerSonsAndSubTreeCast HandlerSonsAndSubTreeCast;
@@ -105,8 +102,8 @@ class TImplBasicTree {
    int& count() { return uCount; }
 
   public:
-   TImplBasicTree() : ptnRoot(nullptr), uCount(0) {}
-   TImplBasicTree(const thisType& ibtSource) : ptnRoot(nullptr), uCount(0) {}
+   TImplBasicTree() = default;
+   TImplBasicTree(const thisType& ibtSource) {}
    thisType& operator=(const thisType& source)
       {  ptnRoot = nullptr; uCount = 0; return *this; }
    bool isValid() const
@@ -363,4 +360,3 @@ TImplTree<TypeNode, TypeCursor>::queryCollectionCursor(const TypeCursor* cursor,
 
 } // end of namespace COL
 
-#endif  // COL_ImplCommonTreeH

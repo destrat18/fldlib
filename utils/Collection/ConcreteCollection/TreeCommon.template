@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,13 +27,9 @@
 //   Implementation of a template class TGenericTree as a common definition for trees.
 //
 
-#ifndef COL_TreeCommonTemplate
-#define COL_TreeCommonTemplate
+#pragma once
 
 #include "Collection/ConcreteCollection/TreeCommon.h"
-
-namespace COL {}
-
 #include "Pointer/ImplList.template"
 #include "Collection/Implementation/ImplCommonTree.template"
 #include "Collection/VirtualCollection/VirtualTree.template"
@@ -513,4 +507,3 @@ TGenericTree<TypeNode, TypeImplCursor, TypeImplTree>::_querySonsCount(const Virt
 
 } // end of namespace COL
 
-#endif // COL_TreeCommonTemplate

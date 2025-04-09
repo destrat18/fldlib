@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -34,7 +32,7 @@
 
 #define DefineTaylorDouble TTaylorDouble
 #define DefineBaseTypeConstReference                       \
-   unsigned int
+   uint32_t
 
 #else
 
@@ -57,7 +55,7 @@ class DefineTaylorDouble : public TypeDouble {
       typedef TypeDouble_n inherited;
 
      public:
-      EnhancedDouble() {}
+      EnhancedDouble() = default;
       EnhancedDouble(const inherited& source) : inherited(source) {}
       EnhancedDouble(inherited&& source) : inherited(source) {}
       EnhancedDouble(const EnhancedDouble& source) = default;

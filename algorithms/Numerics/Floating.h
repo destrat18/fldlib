@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,12 +27,9 @@
 //   Definition of a class of floating points with unbound size.
 //
 
-#ifndef Numerics_FloatingH
-#define Numerics_FloatingH
+#pragma once
 
 #include "Numerics/Integer.h"
 #include "ForwardNumerics/BaseFloating.h"
 #include "BackwardNumerics/BaseProjectionFloating.h"
-
-#endif // Numerics_FloatingH
 

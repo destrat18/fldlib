@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -34,16 +32,19 @@
 #define DefineTypeMantissaAndReadTemplateHeader(TypeMantissa, TypeReadParameters) \
    template <class TypeMantissa, class TypeReadParameters>
 #define DefineBaseType                                     \
-   unsigned int
+   uint32_t
 #define DefineBaseTypeConstReference                       \
-   unsigned int
+   uint32_t
 #define DefineBuiltAccess BuiltAccess
 #define DefineMantissaAndExponentTemplateHeader(SizeMantissa, SizeExponent) \
    template <int SizeMantissa, int SizeExponent>
 #define DefineMantissaAndExponentSTemplateHeader(SizeMantissa, SizeExponent) \
-   template <int SizeMantissa, int SizeExponent>
+   template <int SizeMantissa, int SizeExponent, typename UnsignedType=uint64_t, typename SignedType=int64_t> \
+   requires std::integral<UnsignedType> and std::integral<SignedType>
 #define DefineMantissaAndExponentTemplateParameters(SizeMantissa, SizeExponent) \
    <SizeMantissa, SizeExponent>
+#define DefineMantissaAndExponentSTemplateParameters(SizeMantissa, SizeExponent) \
+   <SizeMantissa, SizeExponent, UnsignedType, SignedType>
 #define DefineBigCellInt                                   \
    TBigCellInt
 #define DefineBigInt                                       \
@@ -55,7 +56,7 @@
 #define DefineBigCellTemplateParameters(TypeIntegerTraits) \
    <TypeIntegerTraits>
 #define DefineSizeofBaseTypeInBits                         \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineBuiltDoubleTraits BuiltDoubleTraits
 #define DefineBuiltDouble TBuiltDouble
 #define DefineReadDouble TReadDouble
@@ -72,7 +73,8 @@
 #define DefineMantissaAndExponentTemplateHeader(SizeMantissa, SizeExponent) \
    template <class BaseStoreTraits, int SizeMantissa, int SizeExponent>
 #define DefineMantissaAndExponentSTemplateHeader(SizeMantissa, SizeExponent) \
-   template <class TBaseStoreTraits, int SizeMantissa, int SizeExponent>
+   template <class TBaseStoreTraits, int SizeMantissa, int SizeExponent, typename UnsignedType=uint64_t, typename SignedType=int64_t> \
+   requires std::integral<UnsignedType> and std::integral<SignedType>
 #define DefineMantissaAndExponentTemplateParameters(SizeMantissa, SizeExponent) \
    <BaseStoreTraits, SizeMantissa, SizeExponent>
 #define DefineBigCellInt                                   \
@@ -117,13 +119,13 @@ class DefineBuiltAccess {
       typedef TFloatConversion DefineMantissaAndExponentTemplateParameters(USizeMantissa, USizeExponent) thisType;
 
       Mantissa bciMantissa;
-      int uBitsMantissa;
+      int uBitsMantissa = 0;
       Exponent bciExponent;
-      int uBitsExponent;
-      bool fNegative;
+      int uBitsExponent = 0;
+      bool fNegative = false;
 
      public:
-      TFloatConversion() : bciMantissa(), uBitsMantissa(0), bciExponent(), uBitsExponent(0), fNegative(false) {}
+      TFloatConversion() = default;
       TFloatConversion(const thisType& source) = default;
 
       bool isPositive() const { return !fNegative; }
@@ -187,8 +189,8 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
             DefineIntegerTraits DefineBigCellTemplateParameters(UBitSizeMantissa)) inherited;
 
      public:
-      Mantissa() {}
-      Mantissa(const Mantissa& source) : inherited(source) {}
+      Mantissa() = default;
+      Mantissa(const Mantissa& source) = default;
       Mantissa(const ExtendedMantissa& source)
          {  int cellSizeMantissa = inherited::lastCellIndex();
             for (int index = 0; index < cellSizeMantissa; ++index)
@@ -200,8 +202,7 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
       Mantissa& operator=(const typename DefineIntegerTraits
             DefineBigCellTemplateParameters(UBitSizeMantissa)::QuotientResult& source)
          {  return (Mantissa&) inherited::operator=((const inherited&) source); }
-      Mantissa& operator=(const Mantissa& source)
-         {  return (Mantissa&) inherited::operator=(source); }
+      Mantissa& operator=(const Mantissa& source) = default;
       Mantissa& operator=(const ExtendedMantissa& source)
          {  int cellSizeMantissa = inherited::lastCellIndex();
             for (int index = 0; index <= cellSizeMantissa; ++index)
@@ -229,7 +230,7 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
       class Max { public : Max() {} };
       class Basic { public : Basic() {} };
       
-      Exponent() {}
+      Exponent() = default;
       Exponent(Basic, int /* exponentSize */, DefineBaseTypeConstReference basicValue) : inherited(basicValue) {}
       Exponent(Min)  {}
       Exponent(Max)  { inherited::neg(); }
@@ -288,29 +289,31 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
    
    class IntConversion {
      private:
-      DefineBaseType uResult;
-      bool fUnsigned;
+      UnsignedType uResult = 0;
+      bool fUnsigned = false;
 
      public:
-      IntConversion() : uResult(0U), fUnsigned(false) {}
+      IntConversion() = default;
       IntConversion(const IntConversion& source) = default;
 
       IntConversion& setSigned() { fUnsigned = false; return *this; }
       IntConversion& setUnsigned() { fUnsigned = true; return *this; }
-      IntConversion& assign(int value) { AssumeCondition(!fUnsigned) uResult = value; return *this; }
-      IntConversion& assign(unsigned int value) { AssumeCondition(fUnsigned) uResult = value; return *this; }
+      IntConversion& assign(SignedType value) { AssumeCondition(!fUnsigned) uResult = value; return *this; }
+      IntConversion& assign(UnsignedType value) { AssumeCondition(fUnsigned) uResult = value; return *this; }
+      typedef UnsignedType UnsignedIntConversionType;
+      typedef SignedType SignedIntConversionType;
 
-      int getSize() const { return DefineSizeofBaseTypeInBits; }
+      int getSize() const { return sizeof(UnsignedType)*8; }
       int getMaxDigits() const
-         {  return (int) (fUnsigned ? DefineSizeofBaseTypeInBits : (DefineSizeofBaseTypeInBits-1)); }
+         {  return (int) (fUnsigned ? sizeof(UnsignedType)*8 : (sizeof(UnsignedType)*8-1)); }
       bool isUnsigned() const { return fUnsigned; }
       bool isSigned() const   { return !fUnsigned; }
-      int asInt() const { AssumeCondition(!fUnsigned) return (int) uResult; }
-      unsigned int asUnsignedInt() const { AssumeCondition(fUnsigned) return (unsigned int) uResult; }
-      DefineBaseType& sresult() { return uResult; }
+      SignedType asInt() const { AssumeCondition(!fUnsigned) return (SignedType) uResult; }
+      UnsignedType asUnsignedInt() const { AssumeCondition(fUnsigned) return uResult; }
+      UnsignedType& sresult() { return uResult; }
       void opposite() { AssumeCondition(!fUnsigned) uResult = (~uResult + 1); }
-      bool isPositive() const { return fUnsigned || ((int) uResult >= 0); }
-      bool isNegative() const { return !fUnsigned && ((int) uResult < 0); }
+      bool isPositive() const { return fUnsigned || ((SignedType) uResult >= 0); }
+      bool isNegative() const { return !fUnsigned && ((SignedType) uResult < 0); }
       bool isDifferentZero() const { return uResult != 0; }
       int log_base_2() const
 #ifndef DefineGeneric
@@ -320,13 +323,13 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
 #endif
       bool hasZero(int digits) const
 #ifndef DefineGeneric
-         {  return !(uResult & ~(~0U << digits)); }
+         {  return !(uResult & ~(~(UnsignedType) 0 << digits)); }
 #else
          {  return BaseStoreTraits::hasZeroValue(uResult, digits); }
 #endif
       bool cbitArray(int localIndex) const
 #ifndef DefineGeneric
-         {  return uResult & (1U << localIndex); }
+         {  return uResult & ((UnsignedType) 1 << localIndex); }
 #else
          {  return BaseStoreTraits::getBit(uResult, localIndex); }
 #endif
@@ -347,19 +350,19 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
       IntConversion& inc() { ++uResult; return *this; }
 
       IntConversion& operator=(const IntConversion& source) = default;
-      IntConversion& operator=(int value)
+      IntConversion& operator=(SignedType value)
          {  if (fUnsigned) {
                AssumeCondition(value >= 0)
-               uResult = (unsigned int) value;
+               uResult = (UnsignedType) value;
             }
             else
-               uResult = (unsigned int) value;
+               uResult = (UnsignedType) value;
             return *this;
          }
 
       class BitArray {
         private:
-         unsigned int* puResult;
+         UnsignedType* puResult;
          int uIndex;
 
         public:
@@ -370,25 +373,25 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
          BitArray& operator=(bool value)
             {  if (value)
 #ifndef DefineGeneric
-                  *puResult |= (1U << (uIndex%DefineSizeofBaseTypeInBits));
+                  *puResult |= ((UnsignedType) 1 << uIndex);
 #else
-                  BaseStoreTraits::setTrueBit(*puResult, uIndex%DefineSizeofBaseTypeInBits);
+                  BaseStoreTraits::setTrueBit(*puResult, uIndex);
 #endif
                else
 #ifndef DefineGeneric
-                  *puResult &= ~(1U << (uIndex%DefineSizeofBaseTypeInBits));
+                  *puResult &= ~((UnsignedType) 1 << uIndex);
 #else
-                  BaseStoreTraits::setFalseBit(*puResult, uIndex%DefineSizeofBaseTypeInBits);
+                  BaseStoreTraits::setFalseBit(*puResult, uIndex);
 #endif
                return *this;
             }
          operator bool() const
 #ifndef DefineGeneric
-            {  return (*puResult & (1U << (uIndex%(sizeof(unsigned int)*8))))
+            {  return (*puResult & ((UnsignedType) 1 << uIndex))
                   ? true : false;
             }
 #else
-            {  return BaseStoreTraits::getBit(*puResult, uIndex%BaseStoreTraits::sizeBaseInBits()); }
+            {  return BaseStoreTraits::getBit(*puResult, uIndex); }
 #endif
       };
       friend class BitArray;
@@ -397,51 +400,59 @@ class DefineBuiltDoubleTraits : public DDouble::DefineBuiltAccess {
       void setBitArray(int index, bool value)
          {  if (value)
 #ifndef DefineGeneric
-               uResult |= (1U << (index%DefineSizeofBaseTypeInBits));
+               uResult |= ((UnsignedType) 1 << index);
 #else
-               BaseStoreTraits::setTrueBit(uResult, index%DefineSizeofBaseTypeInBits);
+               BaseStoreTraits::setTrueBit(uResult, index);
 #endif
             else
 #ifndef DefineGeneric
-               uResult &= ~(1U << (index%DefineSizeofBaseTypeInBits));
+               uResult &= ~((UnsignedType) 1 << index);
 #else
-               BaseStoreTraits::setFalseBit(uResult, index%DefineSizeofBaseTypeInBits);
+               BaseStoreTraits::setFalseBit(uResult, index);
 #endif
          }
       void setTrueBitArray(int index)
 #ifndef DefineGeneric
-         {  uResult |= (1U << (index%DefineSizeofBaseTypeInBits)); }
+         {  uResult |= ((UnsignedType) 1 << (index)); }
 #else
-         {  BaseStoreTraits::setTrueBit(uResult, index%DefineSizeofBaseTypeInBits); }
+         {  BaseStoreTraits::setTrueBit(uResult, index); }
 #endif
       void setFalseBitArray(int index)
 #ifndef DefineGeneric
-         {  uResult &= ~(1U << (index%DefineSizeofBaseTypeInBits)); }
+         {  uResult &= ~((UnsignedType) 1 << (index)); }
 #else
-         {  BaseStoreTraits::setFalseBit(uResult, index%DefineSizeofBaseTypeInBits); }
+         {  BaseStoreTraits::setFalseBit(uResult, index); }
 #endif
 
       void setMin()
 #ifndef DefineGeneric
-         {  uResult = fUnsigned ? 0U : (1U << (DefineSizeofBaseTypeInBits-1)); }
+         {  uResult = fUnsigned ? (UnsignedType) 0
+                                : ((UnsignedType) 1 << (sizeof(UnsignedType)*8-1)); }
 #else
-         {  uResult = (DefineBaseType) 0x0;
+         {  uResult = (UnsignedType) 0x0;
             if (!fUnsigned)
-               BaseStoreTraits::setTrueBit(uResult, DefineSizeofBaseTypeInBits-1);
+               BaseStoreTraits::setTrueBit(uResult, sizeof(UnsignedType)*8-1);
          }
 #endif
       void setMax()
 #ifndef DefineGeneric
-         {  uResult = fUnsigned ? ~0U : ~(1U << (DefineSizeofBaseTypeInBits-1)); }
+         {  uResult = fUnsigned ? ~(UnsignedType) 0
+                                : ~((UnsignedType) 1 << (sizeof(UnsignedType)*8-1)); }
 #else
-         {  uResult = (DefineBaseType) 0x0;
+         {  uResult = (UnsignedType) 0x0;
             uResult = ~uResult;
             if (!fUnsigned)
-               BaseStoreTraits::setFalseBit(uResult, DefineSizeofBaseTypeInBits-1);
+               BaseStoreTraits::setFalseBit(uResult, sizeof(UnsignedType)*8-1);
          }
 #endif
-      DefineBaseType& operator[](int index) { AssumeCondition(index == 0) return uResult; }
-      const DefineBaseType& operator[](int index) const { AssumeCondition(index == 0) return uResult; }
+      DefineBaseType& operator[](int index)
+         {  AssumeCondition(index <= (int) ((sizeof(UnsignedType)*8-1)/DefineSizeofBaseTypeInBits))
+            return *(reinterpret_cast<DefineBaseType*>(&uResult)+index);
+         }
+      const DefineBaseType& operator[](int index) const
+         {  AssumeCondition(index <= (int) ((sizeof(UnsignedType)*8-1)/DefineSizeofBaseTypeInBits))
+            return *(reinterpret_cast<DefineBaseType*>(&uResult)+index);
+         }
    };
 
    // to be redefined for floating point with more
@@ -514,7 +525,7 @@ class DefineBuiltDouble : protected DDouble::Access, protected TypeTraits {
   private:
    typename TypeTraits::Mantissa biMantissa;
    typename TypeTraits::Exponent biExponent;
-   bool fNegative;
+   bool fNegative = false;
 
    void addExtension(const thisType& source,
          typename TypeTraits::ExtendedMantissa::EnhancedMultResult& result,
@@ -539,15 +550,13 @@ class DefineBuiltDouble : protected DDouble::Access, protected TypeTraits {
    thisType& divAssignDD(const thisType& source, ReadParameters& params);
 
   public:
-   DefineBuiltDouble() : biMantissa(), biExponent(), fNegative(false) {}
+   DefineBuiltDouble() = default;
    DefineBuiltDouble(DefineBaseTypeConstReference value, const thisType* sourceForSizes=nullptr);
    typedef typename TypeTraits::IntConversion IntConversion;
    typedef typename TypeTraits::FloatConversion FloatConversion;
    DefineBuiltDouble(const IntConversion& value, ReadParameters& params)
-      :  biMantissa(), biExponent(), fNegative(false)
       {  setInteger(value, params); }
    DefineBuiltDouble(const FloatConversion& value, ReadParameters& params)
-      :  biMantissa(), biExponent(), fNegative(false)
       {  setFloat(value, params); }
    DefineBuiltDouble(const thisType& source) = default;
    thisType& operator=(const thisType& source) = default;
@@ -596,21 +605,14 @@ class DefineBuiltDouble : protected DDouble::Access, protected TypeTraits {
          };
          return result;
       }
+   std::partial_ordering operator<=>(const thisType& source) const
+      {  auto comparisonResult = compare(source);
+         return (comparisonResult == CRLess
+            ? std::partial_ordering::less : (comparisonResult == CRGreater
+            ? std::partial_ordering::greater : (comparisonResult == CREqual
+            ? std::partial_ordering::equivalent : std::partial_ordering::unordered)));
+      }
    bool operator==(const thisType& source) const { return compare(source) == CREqual; }
-   bool operator!=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRLess) || (result == CRGreater);
-      }
-   bool operator<(const thisType& source) const { return compare(source) == CRLess; }
-   bool operator>(const thisType& source) const { return compare(source) == CRGreater; }
-   bool operator<=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRLess) || (result == CREqual);
-      }
-   bool operator>=(const thisType& source) const
-      {  ComparisonResult result = compare(source);
-         return (result == CRGreater) || (result == CREqual);
-      }
    bool isEqualValue(const thisType& source) const { return compareValue(source) == CREqual; }
    bool isDifferentValue(const thisType& source) const
       {  ComparisonResult result = compareValue(source);
@@ -832,6 +834,7 @@ class DefineBuiltDouble : protected DDouble::Access, protected TypeTraits {
       }
    thisType& nthRootAssign(int n); // u_{p+1} = 1/n*[(n-1)*u_p + this/(u_p)^(n-1)]
    thisType& nthExponentAssign(int n);
+   thisType& nthExponentAssign(int n, ReadParameters& params); // pre: n >= 0; post: params.isApproximate() has no sense
 };
 
 template <class TypeDouble, class TypeDouble_n>
@@ -881,7 +884,7 @@ class DefineReadDouble : public TypeDouble {
             typename inherited::Exponent exponent(inherited::getBasicExponent());
             if (bits < (int) DefineSizeofBaseTypeInBits) {
 #ifndef DefineGeneric
-               DefineBaseType left = mantissa[0] & ~(~0U << bits);
+               DefineBaseType left = mantissa[0] & ~(~(DefineBaseType) 0 << bits);
                if (left != 0)
 #else
                DefineBaseType left = BaseStoreTraits::getLowPart(mantissa[0], bits);
@@ -890,7 +893,7 @@ class DefineReadDouble : public TypeDouble {
                {  bool doesAdd = false;
                   if (params.isNearestRound()) {
 #ifndef DefineGeneric
-                     DefineBaseType limit = 1U << (bits-1);
+                     DefineBaseType limit = (DefineBaseType) 1 << (bits-1);
 #else
                      DefineBaseType limit = 0x1;
                      BaseStoreTraits::leftShift(limit, bits-1);
@@ -997,6 +1000,7 @@ class DefineReadDouble : public TypeDouble {
 #undef DefineMantissaAndExponentTemplateHeader
 #undef DefineMantissaAndExponentSTemplateHeader
 #undef DefineMantissaAndExponentTemplateParameters
+#undef DefineMantissaAndExponentSTemplateParameters
 #undef DefineBigCellInt
 #undef DefineBigInt
 #undef DefineCellIntegerTraits

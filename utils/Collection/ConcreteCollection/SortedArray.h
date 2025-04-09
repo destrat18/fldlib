@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of concrete collections based on sorted arrays.
 //
 
-#ifndef COL_SortedArrayH
-#define COL_SortedArrayH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualSortedCollection.h"
 #include "Pointer/ImplArray.h"
@@ -705,4 +702,3 @@ TSortedArray<Element, Key, Cast>::rend() const
 
 } // end of namespace COL
 
-#endif

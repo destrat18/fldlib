@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -30,8 +30,7 @@
 //   The interface of AbstractCollection is rather minimal.
 //
 
-#ifndef COL_AbstractCollectionH
-#define COL_AbstractCollectionH
+#pragma once
 
 #include "Pointer/ExtPointer.hpp"
 #include "Collection/VirtualCollection/AbstractCollection.macro"
@@ -52,8 +51,8 @@ class AbstractCollection : public PureAbstractCollection, private PNT::SharedEle
   protected:
    class CursorNotification;
 
-   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
-      {  return PureAbstractCollection::_compare(asource); }
+   virtual ComparisonResult _compare(const EnhancedObject& source) const override
+      {  return PureAbstractCollection::_compare(source); }
 
    AbstractCollection() {}
    AbstractCollection(const AbstractCollection& source) = default;
@@ -131,6 +130,7 @@ class PureAbstractCursor : public EnhancedObject {
 typedef PNT::TSharedPointer<AbstractCollection, AbstractCollection::CastCursorHandler> SPAbstractCollection;
 class AbstractCursor : public PureAbstractCursor, private SPAbstractCollection {
   protected:
+   friend class AbstractCollection;
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override
       {  ComparisonResult result = PureAbstractCursor::_compare(asource);
          AssumeCondition(&getSSupport() == &castFromCopyHandler(asource).getSSupport())
@@ -156,12 +156,14 @@ class AbstractCursor : public PureAbstractCursor, private SPAbstractCollection {
          SPAbstractCollection::operator=(source);
          return *this;
       }
+   bool operator==(const AbstractCursor& cursor) const { return isEqual(cursor); }
+   bool operator!=(const AbstractCursor& cursor) const { return !isEqual(cursor); }
 
    DefineCopy(AbstractCursor)
    DDefineAssign(AbstractCursor)
    DCompare(AbstractCursor)
-   DefineCursorForAbstractCollect(AbstractCollection, AbstractCursor)
    StaticInheritConversions(AbstractCursor, PureAbstractCursor)
+   const AbstractCollection& getSupport() const { return getSSupport(); }
 
    virtual bool isValid() const override
       { AssumeCondition(SPAbstractCollection::isValid()) return true; }
@@ -169,19 +171,23 @@ class AbstractCursor : public PureAbstractCursor, private SPAbstractCollection {
    bool hasSupport() const { return SPAbstractCollection::isValid(); }
 };
 
-class PPAbstractCursor : public PNT::PassPointer<AbstractCursor> {
+class PPAbstractCursor : public PNT::PPassPointer<AbstractCursor> {
+  protected:
+   PPAbstractCursor(const PPAbstractCursor& source) = delete;
+
   public:
    PPAbstractCursor() {}
    PPAbstractCursor(AbstractCursor* cursor, Init)
-      :  PNT::PassPointer<AbstractCursor>(cursor, Init()) {}
-   PPAbstractCursor(const AbstractCursor& cursor) : PNT::PassPointer<AbstractCursor>(cursor) {}
-   PPAbstractCursor(const PPAbstractCursor& source) = default;
+      :  PNT::PPassPointer<AbstractCursor>(cursor, Init()) {}
+   PPAbstractCursor(const AbstractCursor& cursor) : PNT::PPassPointer<AbstractCursor>(cursor) {}
+   PPAbstractCursor(PPAbstractCursor&& source) = default;
    PPAbstractCursor(const PPAbstractCursor& source, Duplicate duplicate)
-      :  PNT::PassPointer<AbstractCursor>(source, duplicate) {}
-   DefineCopy(PPAbstractCursor)
-   PPAbstractCursor& operator=(const PPAbstractCursor& source) = default;
+      :  PNT::PPassPointer<AbstractCursor>(source, duplicate) {}
+   DDefineMove(PPAbstractCursor)
+   PPAbstractCursor& operator=(const PPAbstractCursor& source) = delete;
+   PPAbstractCursor& operator=(PPAbstractCursor&& source) = default;
    void assign(AbstractCursor* cursor, Init)
-      {  PNT::PassPointer<AbstractCursor>::assign(cursor, Init()); }
+      {  PNT::PPassPointer<AbstractCursor>::assign(cursor, Init()); }
 };
 
 /*****************************************/
@@ -261,5 +267,4 @@ AbstractCollection::newCursor() const { return snewCursor(); }
 
 } // end of namespace COL
 
-#endif
 

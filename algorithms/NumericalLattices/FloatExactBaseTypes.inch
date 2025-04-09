@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -51,13 +49,13 @@
 #define DefineBuiltFloat TBuiltFloat
 #define DefineReadDouble TReadDouble
 #define DefineBaseTypeConstReference                                 \
-   unsigned int
+   uint32_t
 #define DefineBaseType                                               \
-   unsigned int
+   uint32_t
 #define DefineIsBigEndian isBigEndian
 #define DefineFillContent fillContent
 #define DefineSizeofBaseTypeInBits                                   \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineSetContent setContent
 
 #else
@@ -101,7 +99,7 @@ DefineSingleTemplateHeader(URealBitsNumber)
 #ifndef DefineGeneric
 class DefineFloatConversion : public DefineBuiltAccess
       ::TFloatConversion DefineMantissaExponentTemplateParameters(
-      (URealBitsNumber+(8*sizeof(unsigned))+5-1)/(8*sizeof(unsigned)), 2)
+      (URealBitsNumber+(8*sizeof(uint32_t))+5-1)/(8*sizeof(uint32_t)), 2)
 #else
 class DefineFloatConversion : public DefineBuiltAccess
       ::TFloatConversion DefineMantissaExponentTemplateParameters(
@@ -155,8 +153,8 @@ class DefineBuiltFloat
 
   public:
    typedef typename inherited::ReadParameters ReadParameters;
-   DefineBuiltFloat() {}
-   DefineBuiltFloat(unsigned int value) : inherited(value) {}
+   DefineBuiltFloat() = default;
+   DefineBuiltFloat(uint32_t value) : inherited(value) {}
    DefineBuiltFloat(const typename inherited::IntConversion& value, ReadParameters& params)
       :  inherited(value, params) {}
    DefineBuiltFloat(const DefineFloatConversion DefineSingleTemplateParameters(URealBitsNumber)& value,
@@ -199,7 +197,7 @@ class DefineBuiltReal
   public:
    typedef typename inherited::ReadParameters ReadParameters;
 
-   DefineBuiltReal() {}
+   DefineBuiltReal() = default;
    DefineBuiltReal(DefineBaseTypeConstReference value) : inherited(value) {}
    DefineBuiltReal(const typename inherited::IntConversion& value, ReadParameters& params) : inherited(value, params) {}
    DefineBuiltReal(const typename inherited::FloatConversion& value, ReadParameters& params) : inherited(value, params) {}
@@ -236,7 +234,7 @@ DefineIsBigEndian() {
    return false;
 #endif
 #else
-   int dummy = 0x1234;
+   int32_t dummy = 0x1234;
    unsigned char dummy[4];
    memcpy((unsigned char*) dummy, &dummy, 4);
    return *dummy == 0x12;
@@ -256,7 +254,7 @@ DefineFillContent(TypeBuiltDouble& builtDouble,
    //       && TypeBuiltDouble::TFloatDigits<TypeImplementation>::UBitFullSizeExponent >= sourceExponentSize)
    static const int sourceSizeInSizeofUnsigned
 #ifndef DefineGeneric
-      = (sizeof(source) + sizeof(unsigned) - 1)/sizeof(unsigned);
+      = (sizeof(source) + sizeof(uint32_t) - 1)/sizeof(uint32_t);
 #else
       = (8*sizeof(source) + BaseStoreTraits::USizeBaseInBits - 1) / BaseStoreTraits::USizeBaseInBits;
 #endif
@@ -269,7 +267,7 @@ DefineFillContent(TypeBuiltDouble& builtDouble,
          mask += sourceSizeInSizeofUnsigned-1;
       // int sourceMantissaSizeInSizeofUnsigned
       // #ifndef DefineGeneric
-      //    = (sourceMantissaSize + sizeof(unsigned) - 1)/sizeof(unsigned);
+      //    = (sourceMantissaSize + sizeof(uint32_t) - 1)/sizeof(uint32_t);
       // #else
       //    = (8*sourceMantissaSize + BaseStoreTraits::sizeBaseInBits() - 1)/BaseStoreTraits::sizeBaseInBits();
       // #endif
@@ -370,8 +368,8 @@ template <class TypeBuiltDouble, typename TypeImplementation, class TypeFloatDig
 void
 DefineSetContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble, const TypeFloatDigitsHelper&) {
 #ifndef DefineGeneric
-   DefineBaseType doubleContent[(sizeof(result) + sizeof(unsigned) - 1)/sizeof(unsigned)];
-   memset(doubleContent, 0, sizeof(unsigned)*((sizeof(result) + sizeof(unsigned) - 1)/sizeof(unsigned)));
+   DefineBaseType doubleContent[(sizeof(result) + sizeof(uint32_t) - 1)/sizeof(uint32_t)];
+   memset(doubleContent, 0, sizeof(uint32_t)*((sizeof(result) + sizeof(uint32_t) - 1)/sizeof(uint32_t)));
 #else
    typedef typename TypeBuiltDouble::BuiltDouble::BaseStoreTraits BaseStoreTraits;
    DefineBaseType doubleContent[(sizeof(result)*8 + BaseStoreTraits::USizeBaseInBits - 1)/BaseStoreTraits::USizeBaseInBits];
@@ -427,9 +425,9 @@ DefineSetContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble,
 #endif
 
 #ifndef DefineGeneric
-      unsigned int aval = (unsigned int) (exponent >> shift);
+      uint32_t aval = (uint32_t) (exponent >> shift);
 #else
-      unsigned int aval = (unsigned int) BaseStoreTraits::getHighPart(exponent, shift);
+      uint32_t aval = (uint32_t) BaseStoreTraits::getHighPart(exponent, shift);
 #endif
       unsigned char val = (unsigned char) aval;
       *mask |= val;
@@ -439,9 +437,9 @@ DefineSetContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble,
          else
             ++mask;
 #ifndef DefineGeneric
-         aval = (unsigned int) (exponent >> shift);
+         aval = (uint32_t) (exponent >> shift);
 #else
-         aval = (unsigned int) BaseStoreTraits::getHighPart(exponent, shift);
+         aval = (uint32_t) BaseStoreTraits::getHighPart(exponent, shift);
 #endif
          val = (unsigned char) aval;
          *mask |= val;
@@ -452,9 +450,9 @@ DefineSetContent(TypeImplementation& result, const TypeBuiltDouble& builtDouble,
          ++mask;
       if (shift > -8)
 #ifndef DefineGeneric
-         aval = (unsigned int) (exponent << (-shift));
+         aval = (uint32_t) (exponent << (-shift));
 #else
-         aval = (unsigned int) BaseStoreTraits::getStoreHighPart(exponent, -shift);
+         aval = (uint32_t) BaseStoreTraits::getStoreHighPart(exponent, -shift);
 #endif
          val = (unsigned char) aval;
          *mask |= val;

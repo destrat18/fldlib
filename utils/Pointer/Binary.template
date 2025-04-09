@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Implementation of template methods of balanced binary trees.
 //
 
-#ifndef COL_BinaryTEMPLATE
-#define COL_BinaryTEMPLATE
+#pragma once
 
 namespace COL {
 
@@ -245,4 +242,3 @@ CustomImplBinaryTree::tlocateBefore(TemplateLocate locate) const {
 
 } // end of namespace COL
 
-#endif // COLBinaryTEMPLATE

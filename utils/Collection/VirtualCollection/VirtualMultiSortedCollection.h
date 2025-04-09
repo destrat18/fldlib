@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -30,8 +28,7 @@
 //   It is the base class of all sorted multiset collections.
 //
 
-#ifndef COL_VirtualMultiSortedCollectionH
-#define COL_VirtualMultiSortedCollectionH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualSortedCollection.h"
 
@@ -247,4 +244,3 @@ VirtualMultiSortedCollectionCursor::_gotoReference(const EnhancedObject& element
 
 } // end of namespace COL
 
-#endif // COL_VirtualMultiSortedCollectionH

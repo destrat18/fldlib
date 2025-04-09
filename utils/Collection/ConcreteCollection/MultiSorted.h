@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   and double linked lists for the elements with the same key.
 //
 
-#ifndef COL_MultiSortedH
-#define COL_MultiSortedH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualMultiSortedCollection.h"
 #include "Collection/ConcreteCollection/List.h"
@@ -201,7 +198,7 @@ class TSingleElementSortedTraits : public TypeBase {
    class ReceiverSingleElement : public SortedCollection::Node {
      private:
       typedef typename SortedCollection::Node inherited;
-      PNT::AutoPointer<SingleElement> aptseElement;
+      PNT::PPassPointer<SingleElement> aptseElement;
 
      public:
       ReceiverSingleElement(typename Key::KeyType key, SingleElement* element)
@@ -1264,7 +1261,7 @@ class TMultipleSortedCollection : public VirtualMultiSortedCollection, public DM
          end = ((end == nullptr) || !end->isValid()) ? nullptr : end;
          if (start && end && (start->sortedCursor() > end->sortedCursor()))
             return true;
-         if (start && end && start->sortedCursor().isEqual(end->sortedCursor())) {
+         if (start && end && start->sortedCursor() == end->sortedCursor()) {
             if (start->multipleCursor().isValid()) {
                AssumeCondition(end->multipleCursor().isValid())
                return ((const ReceiverMultipleElement&) start->sortedCursor().elementAt())
@@ -1310,7 +1307,7 @@ class TMultipleSortedCollection : public VirtualMultiSortedCollection, public DM
          end = ((end == nullptr) || !end->isValid()) ? nullptr : end;
          if (start && end && (start->sortedCursor() < end->sortedCursor()))
             return true;
-         if (start && end && start->sortedCursor().isEqual(end->sortedCursor())) {
+         if (start && end && start->sortedCursor() == end->sortedCursor()) {
             if (start->multipleCursor().isValid()) {
                AssumeCondition(end->multipleCursor().isValid())
                return ((const ReceiverMultipleElement&) start->sortedCursor().elementAt())
@@ -1636,6 +1633,4 @@ class TMultiMapAdaptor : public TypeBase {
 };
    
 } // end of namespace COL
-
-#endif // COL_MultiSortedH
 

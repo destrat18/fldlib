@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,11 +27,9 @@
 //   Definition of many extended pointer classes.
 //
 
-#ifndef PNT_ExtPointerHpp
-#define PNT_ExtPointerHpp
+#pragma once
 
 #include "Pointer/Pointer.hpp"
 #include "Pointer/SharedPointer.h"
 #include "Pointer/SharedCollection.h"
 
-#endif // PNT_ExtPointerHpp

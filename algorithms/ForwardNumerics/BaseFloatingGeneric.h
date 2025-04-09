@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -25,12 +23,12 @@
 // Library   : ForwardNumerics
 // Unit      : Floating
 // File      : BaseFloatingGeneric.h
+//
 // Description :
 //   Definition of a class of floating points with unbound size.
 //
 
-#ifndef Numerics_BaseFloatingGenericH
-#define Numerics_BaseFloatingGenericH
+#pragma once
 
 #include "ForwardNumerics/BaseIntegerGeneric.h"
 #include "ForwardNumerics/BaseFloatingParameters.h"
@@ -42,6 +40,4 @@ namespace Numerics {
 #undef DefineGeneric
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseFloatingGenericH
 

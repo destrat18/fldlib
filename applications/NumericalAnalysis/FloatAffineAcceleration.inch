@@ -1,0 +1,362 @@
+/**************************************************************************/
+/*                                                                        */
+/*  Copyright (C) 2025-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
+/*                                                                        */
+/*  you can redistribute it and/or modify it under the terms of the GNU   */
+/*  Lesser General Public License as published by the Free Software       */
+/*  Foundation, version 2.1.                                              */
+/*                                                                        */
+/*  It is distributed in the hope that it will be useful,                 */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/*  GNU Lesser General Public License for more details.                   */
+/*                                                                        */
+/*  See the GNU Lesser General Public License version 2.1                 */
+/*  for more details (enclosed in the file LICENSE).                      */
+/*                                                                        */
+/**************************************************************************/
+
+/////////////////////////////////
+//
+// Library   : NumericalDomains
+// Unit      : Affine relationships
+// File      : FloatAffineAcceleration.inch
+// Description :
+//   Definition of a class of quick coefficients for affine forms.
+//
+
+class BuiltReal {
+  private:
+   double dValue = 0.0;
+
+  public:
+   BuiltReal() = default;
+   BuiltReal(int64_t value) : dValue(value) {}
+   BuiltReal(const BuiltReal&) = default;
+   BuiltReal& operator=(const BuiltReal&) = default;
+
+   struct Exponent {
+      uint64_t content;
+      Exponent(uint64_t source=0) : content(source) {}
+      uint64_t& operator[](int index) { AssumeCondition(index == 0) return content; }
+      Exponent& operator=(uint64_t source) { content = source; return *this; }
+      Exponent& operator=(const Exponent& source) = default;
+
+      struct Carry { bool carry = false; bool hasCarry() const { return carry; } };
+      Carry minusAssign(uint64_t source)
+         {  bool hasCarry = content < source;
+            content -= source;
+            return Carry { hasCarry };
+         }
+      void plusAssign(uint64_t source) { content += source; }
+      Exponent& neg() { content = ~content; return *this; }
+      Exponent& inc() { ++content; return *this; }
+      bool isZero() const { return content == 0; }
+      Exponent& operator<<=(int shift) { content << shift; return *this; }
+      std::strong_ordering operator<=>(const Exponent& source) const
+         {  return content <=> source.content; }
+      bool operator==(const Exponent& source) const
+         {  return content == source.content; }
+   };
+   class ExponentProperty {
+     private:
+      double& dValue;
+     public:
+      ExponentProperty(double& source) : dValue(source) {}
+      ExponentProperty(const ExponentProperty&) = default;
+      ExponentProperty& operator=(uint64_t exponent)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            result &= ~(~(uint64_t(1) << 11) << 52);
+            result |= exponent << 52;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return *this;
+         }
+      ExponentProperty& operator=(const Exponent& exponent) { return operator=(exponent.content); }
+      struct Carry { bool carry = false; bool hasCarry() const { return carry; } };
+      Carry minusAssign(uint64_t value)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            uint64_t new_result = (result & (~uint64_t(0) >> 1)) >> 52;
+            bool carry = new_result < value;
+            new_result -= value;
+            result &= ~(~(uint64_t(1) << 11) << 52);
+            result |= new_result << 52;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return Carry { carry };
+         }
+      Carry minusAssign(const Exponent& value) { return minusAssign(value.content); }
+      Carry dec() { return minusAssign(1); }
+      ExponentProperty& neg()
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            uint64_t new_result = (result & (~uint64_t(0) >> 1)) >> 52;
+            new_result = ~new_result;
+            result &= ~(~(uint64_t(1) << 11) << 52);
+            result |= new_result << 52;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return *this;
+         }
+      ExponentProperty& operator[](int index) { AssumeCondition(index == 0) return *this; }
+      operator uint64_t() const
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            return (result & (~uint64_t(0) >> 1)) >> 52;
+         }
+      uint64_t operator[](int index) const
+         {  AssumeCondition(index == 0)
+            uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            return (result & (~uint64_t(0) >> 1)) >> 52;
+         }
+      void clear() { operator=(0); }
+   };
+   struct Mantissa {
+      uint64_t content;
+      uint64_t& operator[](int index) { AssumeCondition(index == 0) return content; }
+
+      Mantissa& operator=(uint64_t source) { content = source; return *this; }
+      Mantissa& operator=(const Mantissa& source) = default;
+      Mantissa& operator<<=(int shift) { content << shift; return *this; }
+   };
+   class MantissaProperty {
+     private:
+      double& dValue;
+     public:
+      MantissaProperty(double& source) : dValue(source) {}
+      MantissaProperty(const MantissaProperty&) = default;
+      MantissaProperty& operator=(uint64_t mantissa)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            result &= (~uint64_t(0) << 52);
+            result |= mantissa;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return *this;
+         }
+      MantissaProperty& operator=(const Mantissa& mantissa) { return operator=(mantissa.content); }
+      MantissaProperty& operator<<=(uint64_t shift)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            uint64_t mantissa = result & ~(~uint64_t(0) << 52);
+            mantissa <<= shift;
+            mantissa &= ~(~uint64_t(0) << 52);
+            result &= (~uint64_t(0) << 52);
+            result |= mantissa;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return *this;
+         }
+      void plusAssign(uint64_t value)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            uint64_t new_result = (result & ~(~uint64_t(0) << 52));
+            new_result += value;
+            result &= (~uint64_t(0) << 52);
+            result |= new_result;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+         }
+      struct Carry { bool carry = false; bool hasCarry() const { return carry; } };
+      Carry minusAssign(uint64_t value)
+         {  uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            uint64_t new_result = (result & ~(~uint64_t(0) << 52));
+            bool carry = new_result < value;
+            new_result -= value;
+            result &= (~uint64_t(0) << 52);
+            result |= new_result;
+            memcpy(&dValue, &result, sizeof(uint64_t));
+            return Carry { carry };
+         }
+      void plusAssign(const Mantissa& source) { plusAssign(source.content); }
+      Carry minusAssign(const Mantissa& source) { return minusAssign(source.content); }
+      MantissaProperty& operator[](int index) { AssumeCondition(index == 0) return *this; }
+      uint64_t operator[](int index) const
+         {  AssumeCondition(index == 0)
+            uint64_t result = 0;
+            memcpy(&result, &dValue, sizeof(uint64_t));
+            return result & ~(~uint64_t(0) << 52);
+         }
+   };
+   friend class ExponentProperty;
+   friend class MantissaProperty;
+
+   struct IntConversion {
+      uint64_t result = 0;
+      bool isUnsigned = false;
+
+      IntConversion& assign(int64_t value)
+         {  isUnsigned = false;
+            memcpy(&result, &value, sizeof(uint64_t));
+            return *this;
+         }
+      IntConversion& assign(uint64_t value)
+         {  isUnsigned = true; result = value; return *this; }
+      IntConversion& setSigned() { isUnsigned = false; return *this; }
+      IntConversion& setUnsigned() { isUnsigned = true; return *this; }
+      int64_t asInt() const { int64_t res; memcpy(&res, &result, sizeof(uint64_t)); return res; }
+      int64_t asUnsignedInt() const { return result; }
+      static const int getSize() { return sizeof(uint64_t)*8; }
+      uint64_t& sresult() { return result; }
+   };
+   struct FloatConversion {
+      Mantissa amantissa = { 0 };
+      Exponent aexponent = { 0 };
+      bool isNegative = false;
+      int sizeMantissa = 0, sizeExponent = 0;
+
+      FloatConversion& setSizeMantissa(int asizeMantissa) { sizeMantissa = asizeMantissa; return *this; }
+      FloatConversion& setSizeExponent(int asizeExponent) { sizeExponent = asizeExponent; return *this; }
+      Mantissa& mantissa() { return amantissa; }
+      Exponent& exponent() { return aexponent; }
+      void setNegative(bool aisNegative) { isNegative = aisNegative; }
+   };
+   typedef Numerics::DDouble::Access::ReadParameters ReadParameters;
+   typedef Numerics::DDouble::Access::WriteParameters WriteParameters;
+   typedef BuiltReal BaseDouble;
+   typedef BuiltReal BuiltDouble;
+
+   BuiltReal(const IntConversion& value, ReadParameters& params)
+      {  setInteger(value, params); }
+   BuiltReal(const FloatConversion& value, ReadParameters& params)
+      {  setFloat(value, params); }
+   void setFloat(const FloatConversion& value, ReadParameters& params)
+      {  if (value.sizeMantissa == 23 && value.sizeExponent == 8) {
+            uint32_t res = ((value.isNegative ? 1U : 0U) << 31)
+                  | (value.aexponent.content << 23) | value.amantissa.content;
+            float result;
+            memcpy(&result, &res, sizeof(uint32_t));
+            dValue = result;
+         }
+         else if (value.sizeMantissa == 52 && value.sizeExponent == 11) {
+            uint64_t res = ((value.isNegative ? uint64_t(1) : uint64_t(0)) << 63)
+                  | (value.aexponent.content << 52) | value.amantissa.content;
+            memcpy(&dValue, &res, sizeof(uint64_t));
+         }
+         else { AssumeUncalled }
+      }
+   void setInteger(const IntConversion& value, ReadParameters& params)
+      {  if (value.isUnsigned) dValue = value.result;
+         else { int64_t source; memcpy(&source, &value.result, sizeof(uint64_t)); dValue = source; }
+      }
+   void retrieveInteger(IntConversion& result, ReadParameters& params) const
+      {  if (result.isUnsigned) result.result = dValue;
+         else { int64_t res = dValue; memcpy(&result.result, &res, sizeof(uint64_t)); }
+      }
+   ComparisonResult compare(const BuiltReal& source) const
+      {  auto result = dValue <=> source.dValue;
+         return (result > 0) ? CRGreater : ((result < 0) ? CRLess
+               : ((result == 0) ? CREqual : CRNonComparable));
+      }
+   ComparisonResult compareValue(const BuiltReal& source) const
+      {  return compare(source); }
+   std::partial_ordering operator<=>(const BuiltReal& source) const
+      {  return dValue <=> source.dValue; }
+   bool operator==(const BuiltReal& source) const { return dValue == source.dValue; }
+
+   void setZero() { dValue = 0.0; }
+   void setOne() { dValue = 1.0; }
+   bool isPositive() const { return dValue >= 0; }
+   bool isNegative() const { return dValue <= 0; }
+   void setSign(bool isPositive) { if (isPositive != (dValue >= 0)) dValue = -dValue; }
+   BuiltReal& opposite() { dValue = -dValue; return *this; }
+   void setPositive() { if (dValue < 0) dValue = -dValue; }
+   void setNegative(bool isNegative=true) { if (isNegative != (dValue <= 0)) dValue = -dValue; }
+
+   bool isZero() const { return dValue == 0; }
+   bool isOne() const { return dValue == 1.0; }
+   bool isTwoPower() const
+      {  int coeff = std::log(dValue*1.0000000001)/std::log(2.0);
+         return dValue == std::pow(2.0, coeff);
+      }
+   bool isFourPower() const
+      {  int coeff = std::log(dValue*1.0000000001)/std::log(4.0);
+         return dValue == std::pow(4.0, coeff);
+      }
+
+   BuiltReal& plusAssignDouble(const BuiltReal& source, ReadParameters& params)
+      {  dValue += source.dValue; return *this; }
+   BuiltReal& plusAssign(const BuiltReal& source, ReadParameters& params)
+      {  dValue += source.dValue; return *this; }
+   BuiltReal& minusAssignDouble(const BuiltReal& source, ReadParameters& params)
+      {  dValue -= source.dValue; return *this; }
+   BuiltReal& minusAssign(const BuiltReal& source, ReadParameters& params)
+      {  dValue -= source.dValue; return *this; }
+   BuiltReal& multAssign(uint64_t source, ReadParameters& params)
+      {  dValue *= source; return *this; }
+   BuiltReal& multAssignDouble(const BuiltReal& source, ReadParameters& params)
+      {  dValue *= source.dValue; return *this; }
+   BuiltReal& multAssign(const BuiltReal& source, ReadParameters& params)
+      {  dValue *= source.dValue; return *this; }
+   BuiltReal& divAssign(uint64_t source, ReadParameters& params)
+      {  dValue /= source; return *this; }
+   BuiltReal& divAssignDouble(const BuiltReal& source, ReadParameters& params)
+      {  dValue /= source.dValue; return *this; }
+   BuiltReal& divAssign(const BuiltReal& source, ReadParameters& params)
+      {  dValue /= source.dValue; return *this; }
+   void sqrtAssign(BuiltDouble& errMin, BuiltDouble& errMax, ReadParameters&)
+      {  dValue = sqrt(dValue); }
+   void expAssign(BuiltDouble& errMin, BuiltDouble& errMax, ReadParameters&)
+      {  dValue = exp(dValue); }
+   void logAssign(BuiltDouble& errMin, BuiltDouble& errMax, ReadParameters&)
+      {  dValue = log(dValue); }
+   BuiltReal& inverseAssign(ReadParameters& params)
+      {  dValue = 1.0/dValue; return *this; }
+   BuiltReal& nthExponentAssign(int powValue, ReadParameters&)
+      {  dValue = pow(dValue, powValue); return *this; }
+
+   void read(STG::IOObject::ISBase& in, ReadParameters& params)
+      {  in.read(dValue, false); }
+   void readDecimal(STG::IOObject::ISBase& in, ReadParameters& params)
+      {  in.read(dValue, false); }
+   void write(STG::IOObject::OSBase& out, const WriteParameters& params) const
+      {  out.write(dValue, false); }
+   void writeDecimal(STG::IOObject::OSBase& out) const
+      {  out.write(dValue, false); }
+
+   void clear() { dValue = 0.0; }
+   void swap(BuiltReal& source)
+      {  std::swap(dValue, source.dValue); }
+   Exponent getBasicExponent() const
+      {  uint64_t result = 0;
+         memcpy(&result, &dValue, sizeof(uint64_t));
+         return Exponent((result & (~uint64_t(0) >> 1)) >> 52);
+      }
+   void setInfty()
+      {  uint64_t result = ~(~uint64_t(0) << 11) << 52;
+         if (dValue < 0)
+            result |= uint64_t(0) << 63;
+         memcpy(&dValue, &result, sizeof(uint64_t));
+      }
+   void setSNaN()
+      {  dValue = std::numeric_limits<double>::signaling_NaN(); }
+   void setPlusInfty()
+      {  dValue = std::numeric_limits<double>::infinity(); }
+   void setMinusInfty()
+      {  dValue = -std::numeric_limits<double>::infinity(); }
+   bool isInfty() const { return std::isinf(dValue); }
+   bool isInftyExponent() const { return std::isinf(dValue) || std::isnan(dValue); }
+   bool isNaN() const { return std::isnan(dValue); }
+   ExponentProperty getSBasicExponent() { return ExponentProperty(dValue); }
+   MantissaProperty getSMantissa() { return MantissaProperty(dValue); }
+   Mantissa getMantissa() const
+      {  uint64_t result = 0;
+         memcpy(&result, &dValue, sizeof(uint64_t));
+         return Mantissa(result & ~(~uint64_t(0) << 52));
+      }
+   void setBasicExponent(uint64_t exponent)
+      {  uint64_t result = 0;
+         memcpy(&result, &dValue, sizeof(uint64_t));
+         result &= ~(~uint64_t(0) << 52);
+         result |= exponent << 52;
+         memcpy(&dValue, &result, sizeof(uint64_t));
+      }
+   void setBasicExponent(Exponent exponent) { setBasicExponent(exponent.content); }
+   void setToPrevious() {}
+   void setToNext() {}
+   static const int BitSizeMantissa = 52;
+   static const int BitSizeExponent = 11;
+   static const int bitSizeMantissa() { return 52; }
+   static const int bitSizeExponent() { return 11; }
+};
+

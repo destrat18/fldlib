@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   for the COL::List collection.
 //
 
-#ifndef COL_ImplListH
-#define COL_ImplListH
+#pragma once
 
 #include "StandardClasses/StandardClasses.hpp"
 
@@ -39,7 +36,7 @@ namespace COL {
 
 namespace DVirtualCollection {
 
-#if defined(__GNUC__) && GCC_VERSION >= 40600
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
@@ -62,8 +59,8 @@ class VirtualCastWithElement : public VirtualCast {
       {  return _castTo(collectionObject, nullptr); }
 
   public:
-   VirtualCastWithElement() {}
-   VirtualCastWithElement(const VirtualCastWithElement& source) : inherited(source) {}
+   VirtualCastWithElement() = default;
+   VirtualCastWithElement(const VirtualCastWithElement& source) = default;
 
    bool isValid() const { return hasOwnField(); }
    bool isCastWithElement() const { return hasOwnField(); }
@@ -122,7 +119,7 @@ class VirtualCastWithElement : public VirtualCast {
             :  VirtualCast::castTo(collectionObject);
       }
 };
-#if defined(__GNUC__) && GCC_VERSION >= 40600
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
 
@@ -163,7 +160,7 @@ class ImplListElement : public EnhancedObject {
 class ImplList : public EnhancedObject {
   private:
    typedef DVirtualCollection::VirtualCastWithElement VirtualCastWithElement;
-   ImplListElement* pileFirst;
+   ImplListElement* pileFirst = nullptr;
 
   protected:
    int queryNumberOfElementsBetween(ImplListElement* min, ImplListElement* max) const;
@@ -174,10 +171,10 @@ class ImplList : public EnhancedObject {
 
   public:
    enum Direction { DNext, DPrevious };
-   ImplList() : pileFirst(nullptr) {}
+   ImplList() = default;
    ImplList(ImplList&& source) : pileFirst(source.pileFirst) { source.pileFirst = nullptr; }
    ImplList(const ImplList& source, bool doesDuplicate=false)
-      :  EnhancedObject(source), pileFirst(nullptr)
+      :  EnhancedObject(source)
       {  if (doesDuplicate) addCopyAll(source); }
    virtual ~ImplList() { if (pileFirst) removeAll(); }
    DefineCopy(ImplList)
@@ -327,9 +324,9 @@ class TImplList : public ImplList {
    TImplList(Element* first) : ImplList((ImplListElement*) Cast::castTo(first)) {}
 
   public:
-   TImplList() : ImplList() {}
-   TImplList(thisType&& source) : ImplList(source) {}
-   TImplList(const thisType& source) : ImplList(source) {}
+   TImplList() = default;
+   TImplList(thisType&& source) = default;
+   TImplList(const thisType& source) = default;
    TImplList(const thisType& source, bool doesDuplicate) : ImplList(source, doesDuplicate) {}
    TImplList<Element, Cast>& operator=(const TImplList<Element, Cast>& source) = default;
    TImplList<Element, Cast>& operator=(TImplList<Element, Cast>&& source) = default;
@@ -448,7 +445,5 @@ class TImplList : public ImplList {
 };
 
 } // end of namespace COL
-
-#endif // COL_ImplListH
 
 

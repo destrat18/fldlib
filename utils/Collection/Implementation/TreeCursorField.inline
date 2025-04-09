@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,7 +29,7 @@
 
 class CollectionCursorLevel : public ImplListElement {
   private:
-   PNT::AutoPointer<VirtualCollectionCursor> apvcCursor;
+   PNT::CPassPointer<VirtualCollectionCursor> apvcCursor;
    
   protected:
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override;
@@ -113,8 +111,8 @@ class CollectionCursorsStack : public TList<CollectionCursorLevel> {
          return cursor.elementAt().cursor();
       }
    const VirtualCollectionCursor& getParentCursor() const { return parentCursor(); }
-   void push(const VirtualCollection::PPCursor& cursor)
-      {  insertAtEnd(new CollectionCursorLevel(cursor), AMNoDuplicate, RMFree); }
+   void push(VirtualCollection::PPCursor&& cursor)
+      {  insertAtEnd(new CollectionCursorLevel(std::move(cursor)), AMNoDuplicate, RMFree); }
    bool push()
       {  bool result = !lastElement().isFinal();
          if (result)

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,9 +27,7 @@
 //   Implementation of the classes SharedPointer, SharedElement and of the template TSharedPointer.
 //
 
-#include "Pointer/ExtPointer.hpp"
-// #include "Pointer/SharedPointer.h"
-
+#include "Pointer/SharedPointer.h"
 #include "Pointer/ImplList.template"
 
 namespace PNT {

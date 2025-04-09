@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,8 +29,7 @@
 //   nodes. Their construction is recursive to keep a static typing.
 //
 
-#ifndef PNT_TreeMethodsH
-#define PNT_TreeMethodsH
+#pragma once
 
 #include "StandardClasses/StandardClasses.hpp"
 
@@ -374,6 +371,4 @@ class TMovableStaticMethodTable : public TBaseStaticMethodTable<TypeDecisionNode
 };
 
 } // end of namespace PNT
-
-#endif // PNT_TreeMethodsH
 

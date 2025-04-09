@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,10 +29,6 @@
 //
 
 #include "Collection/ConcreteCollection/BasicSortedAVL.h"
-// #include "Collection/Collection.hpp"
-
-namespace COL {}
-
 #include "Pointer/Binary.template"
 #include "Collection/VirtualCollection/VirtualCollection.template"
 #include "Collection/ConcreteCollection/SortedAVL.template"

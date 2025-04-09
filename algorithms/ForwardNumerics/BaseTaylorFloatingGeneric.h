@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   defined by Taylor approximations
 //
 
-#ifndef Numerics_BaseTaylorFloatingGenericH
-#define Numerics_BaseTaylorFloatingGenericH
+#pragma once
 
 #include "ForwardNumerics/BaseFloatingGeneric.h"
 
@@ -42,6 +39,4 @@ namespace Numerics {
 #undef DefineGeneric
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseTaylorFloatingGenericH
 

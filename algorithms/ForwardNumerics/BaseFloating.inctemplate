@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -34,16 +32,21 @@
 #define DefineTypeMantissaAndReadTemplateHeader(TypeMantissa, TypeReadParameters) \
    template <class TypeMantissa, class TypeReadParameters>
 #define DefineBaseType                                     \
-   unsigned int
+   uint32_t
 #define DefineBaseTypeConstReference                       \
-   unsigned int
+   uint32_t
 #define DefineBuiltAccess BuiltAccess
 #define DefineMantissaAndExponentTemplateHeader(SizeMantissa, SizeExponent) \
    template <int SizeMantissa, int SizeExponent>
+#define DefineMantissaAndExponentSTemplateHeader(SizeMantissa, SizeExponent) \
+   template <int SizeMantissa, int SizeExponent, typename UnsignedType, typename SignedType> \
+   requires std::integral<UnsignedType> and std::integral<SignedType>
 #define DefineMantissaAndExponentTemplateParameters(SizeMantissa, SizeExponent) \
    <SizeMantissa, SizeExponent>
+#define DefineMantissaAndExponentSTemplateParameters(SizeMantissa, SizeExponent) \
+   <SizeMantissa, SizeExponent, UnsignedType, SignedType>
 #define DefineSizeofBaseTypeInBits                         \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineBuiltDoubleTraits BuiltDoubleTraits
 #define DefineBuiltDouble TBuiltDouble
 #define DefineReadDouble TReadDouble
@@ -60,8 +63,13 @@
 #define DefineBuiltAccess GBuiltAccess
 #define DefineMantissaAndExponentTemplateHeader(SizeMantissa, SizeExponent) \
    template <class BaseStoreTraits, int SizeMantissa, int SizeExponent>
+#define DefineMantissaAndExponentSTemplateHeader(SizeMantissa, SizeExponent) \
+   template <class BaseStoreTraits, int SizeMantissa, int SizeExponent, typename UnsignedType, typename SignedType> \
+   requires std::integral<UnsignedType> and std::integral<SignedType>
 #define DefineMantissaAndExponentTemplateParameters(SizeMantissa, SizeExponent) \
    <BaseStoreTraits, SizeMantissa, SizeExponent>
+#define DefineMantissaAndExponentSTemplateParameters(SizeMantissa, SizeExponent) \
+   <BaseStoreTraits, SizeMantissa, SizeExponent, UnsignedType, SignedType>
 #define DefineSizeofBaseTypeInBits                         \
    BaseStoreTraits::sizeBaseInBits()
 #define DefineBuiltDoubleTraits GBuiltDoubleTraits
@@ -107,7 +115,7 @@ DefineBuiltAccess::trightShift(
    mantissa >>= shift;
    bool isOddValue = (bitSizeMantissa == shift)
 #ifndef DefineGeneric
-         && (value & 1U);
+         && (value & (DefineBaseType) 1);
 #else
          && (BaseStoreTraits::getBit(value, 0));
 #endif
@@ -128,7 +136,7 @@ DefineBuiltAccess::trightShift(
    if (result.hasCarry()) {
       ++value;
 #ifndef DefineGeneric
-      if ((value == 0U) || ((shift < (int) DefineSizeofBaseTypeInBits) && (value >= (1U << shift))))
+      if ((value == (DefineBaseType) 0) || ((shift < (int) DefineSizeofBaseTypeInBits) && (value >= ((DefineBaseType) 1 << shift))))
 #else
       typename BaseStoreTraits::BaseType limit = 0x1;
       BaseStoreTraits::leftShift(limit, shift);
@@ -168,29 +176,29 @@ DefineBuiltAccess::trightShift(
 /* Implementation of the template class TBuiltDouble and TGBuiltDouble */
 /***********************************************************************/
 
-DefineMantissaAndExponentTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
-typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
-DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::zeroExponent
-   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
-      typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::Zero());
+DefineMantissaAndExponentSTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
+typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
+DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::zeroExponent
+   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
+      typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::Zero());
 
-DefineMantissaAndExponentTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
-typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
-DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::oneExponent
-   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
-      typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::One());
+DefineMantissaAndExponentSTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
+typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
+DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::oneExponent
+   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
+      typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::One());
 
-DefineMantissaAndExponentTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
-typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
-DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::minusOneExponent
-   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
-      typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::MinusOne());
+DefineMantissaAndExponentSTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
+typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
+DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::minusOneExponent
+   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
+      typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::MinusOne());
 
-DefineMantissaAndExponentTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
-typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
-DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::inftyExponent
-   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
-      typename DefineBuiltDoubleTraits DefineMantissaAndExponentTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::Max());
+DefineMantissaAndExponentSTemplateHeader(UBitSizeMantissa, UBitSizeExponent)
+typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent
+DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::inftyExponent
+   = typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent(
+      typename DefineBuiltDoubleTraits DefineMantissaAndExponentSTemplateParameters(UBitSizeMantissa, UBitSizeExponent)::Exponent::Max());
 
 template <class TypeTraits>
 DefineBuiltDouble<TypeTraits>::DefineBuiltDouble(DefineBaseTypeConstReference value,
@@ -201,7 +209,7 @@ DefineBuiltDouble<TypeTraits>::DefineBuiltDouble(DefineBaseTypeConstReference va
       biExponent.setSize(sourceForSizes->biExponent.getSize());
    };
 #ifndef DefineGeneric
-   if (value != 0U)
+   if (value != (DefineBaseType) 0)
 #else
    if (!BaseStoreTraits::isZeroValue(value))
 #endif
@@ -451,7 +459,7 @@ DefineBuiltDouble<TypeTraits>::setInteger(const IntConversion& valueSource, Read
          biExponent.add(logResult-1);
       }
       else if (logResult <= bitSizeMantissa()) {
-         for (int index = 0; index < (int) ((value.getSize()-1)/DefineSizeofBaseTypeInBits+1);
+         for (int index = 0; index < (int) ((logResult+DefineSizeofBaseTypeInBits-1)/DefineSizeofBaseTypeInBits);
                ++index)
             biMantissa[index] = (DefineBaseType) value[index];
          biMantissa.normalize();
@@ -721,7 +729,7 @@ DefineBuiltDouble<TypeTraits>::retrieveInteger(IntConversion& result, ReadParame
    };
    if (fNegative && result.isUnsigned()) {
       params.setUpApproximate();
-      result.assign((unsigned int) 0);
+      result.assign((typename IntConversion::UnsignedIntConversionType) 0);
       return;
    };
    if (biExponent < TypeTraits::getZeroExponent(biExponent)) {
@@ -741,9 +749,13 @@ DefineBuiltDouble<TypeTraits>::retrieveInteger(IntConversion& result, ReadParame
             params.setApproximate(doesAdd ? ReadParameters::Up : ReadParameters::Down);
       };
       if (result.isUnsigned())
-         result.assign(doesAdd ? (unsigned int) 1 : (unsigned int) 0);
+         result.assign(doesAdd ? (typename IntConversion::UnsignedIntConversionType) 1
+                               : (typename IntConversion::UnsignedIntConversionType) 0);
       else
-         result.assign(doesAdd ? (fNegative ? -1 : 1) : 0);
+         result.assign(doesAdd ? (fNegative
+               ? (typename IntConversion::SignedIntConversionType) -1
+               : (typename IntConversion::SignedIntConversionType) 1)
+               : (typename IntConversion::SignedIntConversionType) 0);
       return;
    };
    Exponent digits = biExponent;
@@ -786,9 +798,16 @@ DefineBuiltDouble<TypeTraits>::retrieveInteger(IntConversion& result, ReadParame
       localResult <<= (int) (digits.getValue()-bitSizeMantissa());
       localResult.setTrueBitArray((int) digits.getValue());
    };
+#if defined(__GNUC__) and not defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
+#endif // __GNUC__
    for (int index = 0; index < (int) ((result.getSize()-1)/DefineSizeofBaseTypeInBits+1);
          ++index)
       result[index] = (DefineBaseType) localResult[index];
+#if defined(__GNUC__) and not defined(__clang__)
+#pragma GCC diagnostic pop
+#endif // __GNUC__
    if (fNegative)
       result.opposite();
 }
@@ -1887,20 +1906,20 @@ DefineBuiltDouble<TypeTraits>::multAssign(DefineBaseTypeConstReference value,
             AssumeCondition((valueDigits == BaseStoreTraits::log_base_2(carry.carry()))
                   || (valueDigits == 1+ BaseStoreTraits::log_base_2(carry.carry())))
 #ifndef DefineGeneric
-            if ((carry.carry() & (1U << (valueDigits-1))) == 0)
+            if ((carry.carry() & ((DefineBaseType) 1 << (valueDigits-1))) == 0)
 #else
             if (!BaseStoreTraits::getBit(carry.carry(), valueDigits-1))
 #endif
             {  --valueDigits;
 #ifndef DefineGeneric
-               AssumeCondition((carry.carry() & (1U << (valueDigits-1))) != 0)
+               AssumeCondition((carry.carry() & ((DefineBaseType) 1 << (valueDigits-1))) != 0)
 #else
                AssumeCondition(BaseStoreTraits::getBit(carry.carry(), valueDigits-1))
 #endif
             };
             if (DefineRightShift(
 #ifndef DefineGeneric
-                  mantissa, valueDigits, carry.carry() & ~(~0U << (valueDigits-1)),
+                  mantissa, valueDigits, carry.carry() & ~(~(DefineBaseType) 0 << (valueDigits-1)),
 #else
                   typename TypeTraits::BaseStoreTraits(),
                   mantissa, valueDigits, BaseStoreTraits::getLowPart(carry.carry(), valueDigits-1),
@@ -2465,7 +2484,7 @@ DefineBuiltDouble<TypeTraits>::multAssignDN(const thisType& source, const MultPa
 #endif
                biMantissa, (int) biExponent.getValue()+1, 0x1, params, fNegative, bitSizeMantissa()).hasCarry()) {
             params.clearUnderflow();
-            biExponent = 1U;
+            biExponent = (DefineBaseType) 1;
             return *this;
          };
       }
@@ -2500,7 +2519,7 @@ DefineBuiltDouble<TypeTraits>::multAssignDN(const thisType& source, const MultPa
       };
       biExponent.clear();
    }
-   else if ((biExponent == 1U) && biMantissa.isZero()
+   else if ((biExponent == (DefineBaseType) 1) && biMantissa.isZero()
          && params.isApproximate(doesAdd ? ReadParameters::Down : ReadParameters::Up))
       params.setUnderflow();
    return *this;
@@ -2871,7 +2890,7 @@ DefineBuiltDouble<TypeTraits>&
 DefineBuiltDouble<TypeTraits>::divAssign(DefineBaseTypeConstReference value, ReadParameters& params) {
 #ifndef DefineGeneric
    AssumeCondition((value > 0)
-         && (value < (1U << (sizeof(unsigned int)*4))))
+         && (value < ((DefineBaseType) 1 << (sizeof(DefineBaseType)*4))))
 #else
    AssumeCondition((value > 0)
          && BaseStoreTraits::isZeroValue(BaseStoreTraits::getMidHighPart(value)))
@@ -2889,7 +2908,7 @@ DefineBuiltDouble<TypeTraits>::divAssign(DefineBaseTypeConstReference value, Rea
       DefineBaseType leftQuotient = 0x0;
       if ((shift == (int) (DefineSizeofBaseTypeInBits/2+1))
 #ifndef DefineGeneric
-            && ((result.remainder() & (1U << 4*sizeof(unsigned int))) != 0U)
+            && ((result.remainder() & ((DefineBaseType) 1 << 4*sizeof(DefineBaseType))) != (DefineBaseType) 0)
 #else
             && BaseStoreTraits::getBit(result.remainder(), DefineSizeofBaseTypeInBits/2)
 #endif
@@ -2904,7 +2923,7 @@ DefineBuiltDouble<TypeTraits>::divAssign(DefineBaseTypeConstReference value, Rea
             result.remainder() -= value;
          };
 #ifndef DefineGeneric
-         AssumeCondition(leftQuotient < (1U << 4*sizeof(unsigned int)))
+         AssumeCondition(leftQuotient < ((DefineBaseType) 1 << 4*sizeof(DefineBaseType)))
 #else
          AssumeCondition(BaseStoreTraits::isZeroValue(BaseStoreTraits::getMidHighPart(leftQuotient)))
 #endif
@@ -2937,7 +2956,7 @@ DefineBuiltDouble<TypeTraits>::divAssign(DefineBaseTypeConstReference value, Rea
                doesAdd = mantissa.cbitArray(leftshift-1);
                if (doesAdd && params.isRoundToEven()) {
 #ifndef DefineGeneric
-                  isRoundToEven = (result.remainder() == 0U)
+                  isRoundToEven = (result.remainder() == (DefineBaseType) 0)
 #else
                   isRoundToEven = BaseStoreTraits::isZeroValue(result.remainder())
 #endif
@@ -3700,7 +3719,7 @@ DefineBuiltDouble<TypeTraits>::readDecimal(STG::IOObject::ISBase& in, ReadParame
       unsigned int subExponentValue = 0;
       for (DefineBaseType bitIndex
 #ifndef DefineGeneric
-               = (1U << (log_base_2(decimalExponent)-1)); bitIndex != 0; bitIndex >>= 1
+               = ((DefineBaseType) 1 << (log_base_2(decimalExponent)-1)); bitIndex != 0; bitIndex >>= 1
 #else
                = BaseStoreTraits::getStoreHighPart(0x1, BaseStoreTraits::log_base_2(decimalExponent)-1);
             !BaseStoreTraits::isZeroValue(bitIndex); BaseStoreTraits::rightShift(bitIndex, 1)
@@ -3775,7 +3794,7 @@ DefineBuiltDouble<TypeTraits>::readDecimal(STG::IOObject::ISBase& in, ReadParame
    thisType exponent(0x1);
    for (DefineBaseType bitIndex
 #ifndef DefineGeneric
-            = (1U << (log_base_2(decimalExponent)-1)); bitIndex != 0;
+            = ((DefineBaseType) 1 << (log_base_2(decimalExponent)-1)); bitIndex != 0;
          bitIndex >>= 1
 #else
             = BaseStoreTraits::getStoreHighPart(0x1, BaseStoreTraits::log_base_2(decimalExponent)-1);
@@ -3795,7 +3814,7 @@ DefineBuiltDouble<TypeTraits>::readDecimal(STG::IOObject::ISBase& in, ReadParame
 template <class TypeTraits>
 void
 DefineBuiltDouble<TypeTraits>::read(STG::IOObject::ISBase& in, ReadParameters& params) {
-#ifdef StandardClassesHPP
+#ifndef DefineNoEnhancedObject
    if (params.isNative()) {
       in.assume('[');
       int read = in.get();
@@ -3839,10 +3858,10 @@ DefineBuiltDouble<TypeTraits>::writeDecimal(STG::IOObject::OSBase& out) const {
    if (fNegative)
       source.opposite();
    thisType exponent;
-#ifdef StandardClassesHPP
-   COL::TVector<thisType> successiveExponents;
-#else
+#ifdef DefineNoEnhancedObject
    std::vector<thisType> successiveExponents;
+#else
+   COL::TVector<thisType> successiveExponents;
 #endif
    unsigned int addNegativeDecimalExponent = 0;
    if (isNegativeExponent) {
@@ -3850,10 +3869,10 @@ DefineBuiltDouble<TypeTraits>::writeDecimal(STG::IOObject::OSBase& out) const {
       addNegativeDecimalExponent = 1;
       while (thisType(exponent).multAssign(source, params).getBasicExponent()
             < TypeTraits::getZeroExponent(biExponent)) {
-#ifdef StandardClassesHPP
-         successiveExponents.insertAtEnd(exponent);
-#else
+#ifdef DefineNoEnhancedObject
          successiveExponents.push_back(exponent);
+#else
+         successiveExponents.insertAtEnd(exponent);
 #endif
          exponent.multAssign(exponent, params);
          addNegativeDecimalExponent *= 2;
@@ -3863,10 +3882,10 @@ DefineBuiltDouble<TypeTraits>::writeDecimal(STG::IOObject::OSBase& out) const {
    else {
       exponent = thisType(0xa, this);
       while (exponent <= source) {
-#ifdef StandardClassesHPP
-         successiveExponents.insertAtEnd(exponent);
-#else
+#ifdef DefineNoEnhancedObject
          successiveExponents.push_back(exponent);
+#else
+         successiveExponents.insertAtEnd(exponent);
 #endif
          exponent.multAssign(exponent, params);
       };
@@ -3874,100 +3893,100 @@ DefineBuiltDouble<TypeTraits>::writeDecimal(STG::IOObject::OSBase& out) const {
    
    unsigned int decimalExponent = 0;
    if (isNegativeExponent) {
-#ifdef StandardClassesHPP
-      if (successiveExponents.count() == 0)
-#else
+#ifdef DefineNoEnhancedObject
       if (successiveExponents.size() == 0)
+#else
+      if (successiveExponents.count() == 0)
 #endif
       {  source.multAssign(0xa, params);
          ++addNegativeDecimalExponent;
       }
       else {
-#ifdef StandardClassesHPP
-         source.multAssign(successiveExponents.last(), params);
-#else
+#ifdef DefineNoEnhancedObject
          source.multAssign(successiveExponents.back(), params);
+#else
+         source.multAssign(successiveExponents.last(), params);
 #endif
          int exponentAdditional = 1;
          int indexExponent = 0;
          while (
             thisType(source).multAssign(successiveExponents[indexExponent], params)
                .getBasicExponent() < TypeTraits::getZeroExponent(biExponent)) {
-#ifdef StandardClassesHPP
-            if (indexExponent < successiveExponents.count() - 1)
-#else
+#ifdef DefineNoEnhancedObject
             if (indexExponent < (int) successiveExponents.size() - 1)
+#else
+            if (indexExponent < successiveExponents.count() - 1)
 #endif
             {  exponentAdditional *= 2;
                ++indexExponent;
             }
             else {
-#ifdef StandardClassesHPP
-               source.multAssign(successiveExponents.last(), params);
-#else
+#ifdef DefineNoEnhancedObject
                source.multAssign(successiveExponents.back(), params);
+#else
+               source.multAssign(successiveExponents.last(), params);
 #endif
                addNegativeDecimalExponent += exponentAdditional;
             };
          };
-#ifdef StandardClassesHPP
-         int count = successiveExponents.count();
-#else
+#ifdef DefineNoEnhancedObject
          int count = successiveExponents.size();
+#else
+         int count = successiveExponents.count();
 #endif
          while (++indexExponent < count)
-#ifdef StandardClassesHPP
-            successiveExponents.removeAtEnd();
-#else
+#ifdef DefineNoEnhancedObject
             successiveExponents.pop_back();
+#else
+            successiveExponents.removeAtEnd();
 #endif
 
-#ifdef StandardClassesHPP
-         source.multAssign(successiveExponents.last(), params);
-#else
+#ifdef DefineNoEnhancedObject
          source.multAssign(successiveExponents.back(), params);
+#else
+         source.multAssign(successiveExponents.last(), params);
 #endif
          addNegativeDecimalExponent += exponentAdditional;
          AssumeCondition(source.getBasicExponent() >= TypeTraits::getZeroExponent(biExponent))
-#ifdef StandardClassesHPP
-         successiveExponents.removeAtEnd();
-#else
+#ifdef DefineNoEnhancedObject
          successiveExponents.pop_back();
+#else
+         successiveExponents.removeAtEnd();
 #endif
       };
    };
-#ifdef StandardClassesHPP
-   while (successiveExponents.count() > 0)
-#else
+#ifdef DefineNoEnhancedObject
    while (successiveExponents.size() > 0)
+#else
+   while (successiveExponents.count() > 0)
 #endif
    {  decimalExponent <<= 1;
-#ifdef StandardClassesHPP
-      if (source >= successiveExponents.last())
-#else
+#ifdef DefineNoEnhancedObject
       if (source >= successiveExponents.back())
+#else
+      if (source >= successiveExponents.last())
 #endif
       {
-         decimalExponent |= 1U;
-#ifdef StandardClassesHPP
-         source.divAssign(successiveExponents.last(), params);
-#else
+         decimalExponent |= (DefineBaseType) 1;
+#ifdef DefineNoEnhancedObject
          source.divAssign(successiveExponents.back(), params);
+#else
+         source.divAssign(successiveExponents.last(), params);
 #endif
       };
-#ifdef StandardClassesHPP
-      successiveExponents.removeAtEnd();
-#else
+#ifdef DefineNoEnhancedObject
       successiveExponents.pop_back();
+#else
+      successiveExponents.removeAtEnd();
 #endif
    };
 
    AssumeCondition((source >= thisType(0x1, this)) && (source < thisType(0xa, this)))
    bool isFirst = true;
    int significantBits = (int) (((double) bitSizeMantissa())*log(2.0)/log(10.0));
-   int resultSize = significantBits + 4; // "0. ... \0"
+   unsigned resultSize = significantBits + 4; // "0. ... \0"
    char* result = new char[resultSize];
-   int resultIndex = 0;
+   unsigned resultIndex = 0;
    do {
       ReadParameters params;
       params.setNearestRound();
@@ -4058,7 +4077,7 @@ DefineBuiltDouble<TypeTraits>::write(STG::IOObject::OSBase& out, const WritePara
          out.put('-');
       out << queryExponent().getValue();
    }
-#ifdef StandardClassesHPP
+#ifndef DefineNoEnhancedObject
    else if (params.isNative()) {
       out.writesome(isPositive() ? "[+][" : "[-][");
       biExponent.write(out, typename Exponent::FormatParameters().setFullHexaDecimal(biExponent.getSize()));
@@ -4380,6 +4399,41 @@ DefineBuiltDouble<TypeTraits>::nthRootAssign(int n) {
 
 template <class TypeTraits>
 DefineBuiltDouble<TypeTraits>&
+DefineBuiltDouble<TypeTraits>::nthExponentAssign(int n, ReadParameters& params) {
+   AssumeCondition(n >= 0)
+   if (n == 0) {
+      biMantissa.clear();
+      biExponent = getZeroExponent();
+      fNegative = false;
+      return *this;
+   };
+   DefineBaseType exponent = n;
+   if (exponent == 0x1)
+      return *this;
+   thisType result = *this;
+#ifndef DefineGeneric
+   int indexBitExponent = DInteger::Access::log_base_2(exponent)-2;
+#else
+   int indexBitExponent = BaseStoreTraits::log_base_2(exponent)-2;
+#endif
+   while (indexBitExponent >= 0) {
+      params.clear();
+      result.multAssign(result, params);
+#ifndef DefineGeneric
+      if (exponent & (1U << indexBitExponent))
+#else
+      if (BaseStoreTraits::getBit(exponent, indexBitExponent))
+#endif
+      {  params.clear();
+         result.multAssign(*this, params);
+      };
+      --indexBitExponent;
+   };
+   return operator=(result);
+}
+
+template <class TypeTraits>
+DefineBuiltDouble<TypeTraits>&
 DefineBuiltDouble<TypeTraits>::nthExponentAssign(int n) {
    if (n == 0) {
       biMantissa.clear();
@@ -4402,7 +4456,7 @@ DefineBuiltDouble<TypeTraits>::nthExponentAssign(int n) {
       params.clear();
       result.multAssign(result, params);
 #ifndef DefineGeneric
-      if (exponent & (1U << indexBitExponent))
+      if (exponent & ((DefineBaseType) 1 << indexBitExponent))
 #else
       if (BaseStoreTraits::getBit(exponent, indexBitExponent))
 #endif
@@ -4475,7 +4529,9 @@ DefineReadDouble<TypeDouble, TypeDouble_n>::nthExponentAssign(int n, ReadParamet
 #undef DefineBaseTypeConstReference
 #undef DefineBuiltAccess
 #undef DefineMantissaAndExponentTemplateHeader
+#undef DefineMantissaAndExponentSTemplateHeader
 #undef DefineMantissaAndExponentTemplateParameters
+#undef DefineMantissaAndExponentSTemplateParameters
 #undef DefineSizeofBaseTypeInBits
 #undef DefineBuiltDoubleTraits
 #undef DefineBuiltDouble

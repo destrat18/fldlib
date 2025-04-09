@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Implementation of a class of floating point intervals
 //
 
-#ifndef NumericalDomains_FloatIntervalBaseTemplate
-#define NumericalDomains_FloatIntervalBaseTemplate
+#pragma once
 
 #include "NumericalDomains/FloatIntervalBase.h"
 
@@ -94,7 +91,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       else { // bfMax >= source.bfMin && bfMin < source.bfMax
          ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
          ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
-         bool doesTakeThen = inherited::getThenBranch(dValue < source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+            (dValue < source.dValue);
+#else
+            (true);
+#endif
          if (doesTakeThen) {
             if (compareThisMaxSourceMax == CRGreater || compareThisMaxSourceMax == CREqual) {
                const_cast<thisType&>(*this).bfMax = source.bfMax;
@@ -132,7 +134,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       if (compareThisMinSourceMax == CRGreater)
          result = false;
       else { // bfMax > source.bfMin && bfMin <= source.bfMax
-         bool doesTakeThen = inherited::getThenBranch(dValue <= source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+            (dValue <= source.dValue);
+#else
+            (true);
+#endif
          ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
          ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
          if (doesTakeThen) {
@@ -174,7 +181,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       else if (compareThisMinSourceMax == CREqual && compareThisMaxSourceMin == CREqual)
          result = true;
       else { // bfMax >= source.bfMin && bfMin <= source.bfMax
-         bool doesTakeThen = inherited::getThenBranch(dValue == source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+            (dValue == source.dValue);
+#else
+            (true);
+#endif
          if (doesTakeThen) {
             ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
             ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
@@ -210,7 +222,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       else if (compareThisMinSourceMax == CREqual && compareThisMaxSourceMin == CREqual)
          result = false;
       else { // bfMax >= source.bfMin && bfMin <= source.bfMax
-         bool doesTakeThen = inherited::getThenBranch(dValue != source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+            (dValue != source.dValue);
+#else
+            (true);
+#endif
          if (!doesTakeThen) {
             ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
             ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
@@ -244,7 +261,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       if (compareThisMinSourceMax == CRGreater || compareThisMinSourceMax == CREqual)
          result = true;
       else { // bfMax >= source.bfMin && bfMin < source.bfMax
-         bool doesTakeThen = inherited::getThenBranch(dValue >= source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+               (dValue >= source.dValue);
+#else
+               (true);
+#endif
          ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
          ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
          if (!doesTakeThen) {
@@ -284,7 +306,12 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       if (compareThisMinSourceMax == CRGreater)
          result = true;
       else { // bfMax > source.bfMin && bfMin <= source.bfMax
-         bool doesTakeThen = inherited::getThenBranch(dValue > source.dValue);
+         bool doesTakeThen = inherited::getThenBranch
+#ifdef FLOAT_CONCRETE
+            (dValue > source.dValue);
+#else
+            (true);
+#endif
          ComparisonResult compareThisMaxSourceMax = bfMax.compareValue(source.bfMax);
          ComparisonResult compareThisMinSourceMin = bfMin.compareValue(source.bfMin);
          if (!doesTakeThen) {
@@ -315,7 +342,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>&
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::operator*=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue *= source.dValue;
+#endif
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
    if (bfMin.isPositive() || bfMin.isZero()) {
@@ -405,7 +434,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>&
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::operator/=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue /= source.dValue;
+#endif
    bool isDivisionByZero = false;
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
@@ -491,10 +522,10 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 }
 
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
-int
+int64_t
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
-      ::asInt(ReadParametersBase::RoundMode roundMode) const {
-   int resultMin, resultMax;
+      ::asLongInt(ReadParametersBase::RoundMode roundMode) const {
+   int64_t resultMin, resultMax;
    auto& minParams = inherited::minParams();
    Numerics::DDouble::Access::ReadParameters roundParams(minParams);
    if (roundMode != ReadParametersBase::RMNearest)
@@ -517,9 +548,20 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       return resultMin;
 
    if ((resultMax - resultMin <= 0) || (resultMax - resultMin >= (1 << 12)))
-      return (int) dValue;
+#ifndef FLOAT_CONCRETE
+      return (resultMin + resultMax)/2;
+#else
+      return (int64_t) dValue;
+#endif
 
-   int result = resultMin + inherited::getConversionBranch(resultMax-resultMin, (int) dValue - resultMin);
+   int64_t result = resultMin + inherited::getConversionBranch((uint64_t) (resultMax-resultMin)
+#ifdef FLOAT_CONCRETE
+         , (int64_t) dValue - resultMin
+      
+#else
+         , 0
+#endif
+      );
    if (result < resultMax) {
       // roundMode == RMZero && result >= 0 => *this <= result+1
       // roundMode == RMZero && result < 0 => *this <= result
@@ -529,7 +571,7 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       auto& maxParams = inherited::maxParams();
       typename TypeBuiltDouble::IntConversion conversion;
       conversion.setSigned();
-      conversion.assign(result);
+      conversion.assign((int64_t) result);
       const_cast<thisType&>(*this).bfMax.setInteger(conversion, maxParams);
       maxParams.clear();
       if ((roundMode != ReadParametersBase::RMHighest) // && [TODO] towards infty
@@ -555,7 +597,7 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       // roundMode == RMHighest => *this >= result-1
       typename TypeBuiltDouble::IntConversion conversion;
       conversion.setSigned();
-      conversion.assign(result);
+      conversion.assign((int64_t) result);
       const_cast<thisType&>(*this).bfMin.setInteger(conversion, minParams);
       minParams.clear();
       if ((roundMode != ReadParametersBase::RMLowest) // && [TODO] towards infty
@@ -578,9 +620,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 }
 
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
-unsigned
+uint64_t
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
-      ::asUnsigned(ReadParametersBase::RoundMode roundMode) const {
+      ::asUnsignedLong(ReadParametersBase::RoundMode roundMode) const {
    auto& minParams = inherited::minParams();
    Numerics::DDouble::Access::ReadParameters roundParams(minParams);
    if (roundMode != ReadParametersBase::RMNearest)
@@ -588,7 +630,7 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
    else
       roundParams.setNearestRound().setRoundToEven();
 
-   unsigned resultMin, resultMax;
+   uint64_t resultMin, resultMax;
    {  typename TypeBuiltDouble::IntConversion conversion;
       bfMin.retrieveInteger(conversion.setUnsigned(), roundParams);
       roundParams.clear();
@@ -604,14 +646,24 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       return resultMin;
 
    if ((resultMax - resultMin <= 0) || (resultMax - resultMin >= (1 << 12)))
-      return (unsigned) dValue;
+#ifndef FLOAT_CONCRETE
+      return (resultMin + resultMax)/2;
+#else
+      return (uint64_t) dValue;
+#endif
 
-   unsigned result = resultMin + inherited::getConversionBranch(resultMax-resultMin, (unsigned) dValue - resultMin);
+   uint64_t result = resultMin + inherited::getConversionBranch((uint64_t) (resultMax-resultMin)
+#ifdef FLOAT_CONCRETE
+         , (uint64_t) dValue - resultMin
+#else
+         , 0
+#endif
+      );
    if (result < resultMax) {
       auto& maxParams = inherited::maxParams();
       typename TypeBuiltDouble::IntConversion conversion;
       conversion.setUnsigned();
-      conversion.assign(result);
+      conversion.assign((uint64_t) result);
       const_cast<thisType&>(*this).bfMax.setInteger(conversion, maxParams);
       maxParams.clear();
       if ((roundMode != ReadParametersBase::RMHighest)) { // && [TODO] towards infty
@@ -630,7 +682,7 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
    if (result > resultMin) {
       typename TypeBuiltDouble::IntConversion conversion;
       conversion.setUnsigned();
-      conversion.assign(result);
+      conversion.assign((uint64_t) result);
       const_cast<thisType&>(*this).bfMin.setInteger(conversion, minParams);
       minParams.clear();
       if ((roundMode != ReadParametersBase::RMLowest)) { // && [TODO] towards infty
@@ -656,7 +708,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::sinAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::sin((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -763,7 +817,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::cosAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::cos((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -846,7 +902,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::asinAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::asin((double) dValue);
+#endif
    TypeImplementation min, max;
    NumericalDomains::DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    NumericalDomains::DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -865,7 +923,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::acosAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::acos((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -894,7 +954,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::atanAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::atan((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -913,7 +975,9 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>
       ::expAssign() {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::exp((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -940,7 +1004,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
          bfMax = 0;
    };
 
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::log((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -969,7 +1035,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
          bfMax = 0;
    };
 
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::log10((double) dValue);
+#endif
    TypeImplementation min, max;
    DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -998,7 +1066,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
          bfMax = 0;
    };
 
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::pow((double) dValue, (double) value.dValue);
+#endif
    TypeImplementation thisMin, thisMax;
    TypeImplementation powMin, powMax;
    DDoubleInterval::setContent(thisMin, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
@@ -1031,6 +1101,4 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 }
 
 }} // end of namespace NumericalDomains::DDoubleInterval
-
-#endif // NumericalDomains_FloatIntervalBaseTemplate
 

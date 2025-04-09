@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of affine relations.
 //
 
-#ifndef NumericalDomains_FloatAffineBaseCommonH
-#define NumericalDomains_FloatAffineBaseCommonH
+#pragma once
 
 #include "StandardClasses/Persistence.h"
 #include "Pointer/SharedCollection.h"
@@ -49,7 +46,7 @@ class BaseConstraintsSet : public STG::IOObject {
 
 class SymbolRegistration : public COL::List::Node {
   public:
-   SymbolRegistration() {}
+   SymbolRegistration() = default;
    SymbolRegistration(const SymbolRegistration& source) = default;
 };
 
@@ -68,7 +65,7 @@ class Symbol : public SymbolRegistration, public PNT::SharedCollection::Element,
 
   private:
    typedef SymbolRegistration inherited;
-   int uOrder;
+   int uOrder = 0;
 
   protected:
    DefineExtendedParameters(3, ExtendedParameters)
@@ -76,16 +73,16 @@ class Symbol : public SymbolRegistration, public PNT::SharedCollection::Element,
       {  ComparisonResult result = inherited::_compare(asource);
          if (result == CREqual) {
             const Symbol& source = castFromCopyHandler(asource);
-            result = fcompare(queryOwnField(), source.queryOwnField());
+            result = convertToCompare(queryOwnField() <=> source.queryOwnField());
             if (result == CREqual)
-               result = fcompare(uOrder, source.uOrder);
+               result = convertToCompare(uOrder <=> source.uOrder);
          };
          return result;
       }
    void setType(Type type) { AssumeCondition(!hasOwnField()) mergeOwnField(type); }
 
   public:
-   Symbol() : uOrder(0) {}
+   Symbol() = default;
    Symbol(const Symbol& source)
       :  inherited(source), PNT::SharedCollection::Element(source), STG::IOObject(source),
          ExtendedParameters(source), uOrder(0) {}
@@ -349,19 +346,20 @@ class SymbolsManager : public EnhancedObject {
    COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> > lsNoiseSymbols;
    COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> > lsDefinedSymbols;
    COL::TCopyCollection<COL::TList<Symbol, Symbol::Registration> > lsHighLevelSymbols;
-   int uHighLevelSymbolsCounter;
-   bool fPermanent;
+   int uHighLevelSymbolsCounter = 0;
+   bool fPermanent = false;
 
   protected:
    void setPermanent() { fPermanent = true; }
 
   public:
-   SymbolsManager() : uHighLevelSymbolsCounter(0), fPermanent(false) {}
+   SymbolsManager() = default;
    SymbolsManager(const SymbolsManager& source)
       : EnhancedObject(source), uHighLevelSymbolsCounter(0), fPermanent(source.fPermanent) {}
    DefineCopy(SymbolsManager)
 
    virtual VirtualSymbolDefinitionTracker* getSymbolDefinitionTracker() { return nullptr; }
+   virtual bool doesDisableConstraintPropagation() const { return false; }
    void swap(SymbolsManager& source)
       {  lsCentralSymbols.swap(source.lsCentralSymbols);
          lsNoiseSymbols.swap(source.lsNoiseSymbols);
@@ -394,28 +392,22 @@ class SymbolsManager : public EnhancedObject {
 
    class MergeTable {
      private:
-      int uCentralSymbolsLimit;
-      int uNoiseSymbolsLimit;
-      int uDefinedSymbolsLimit;
-      int uHighLevelSymbolsLimit;
+      int uCentralSymbolsLimit = 0;
+      int uNoiseSymbolsLimit = 0;
+      int uDefinedSymbolsLimit = 0;
+      int uHighLevelSymbolsLimit = 0;
 
-      int uCentralSymbolsAfterMerge;
-      int uNoiseSymbolsAfterMerge;
-      int uDefinedSymbolsAfterMerge;
-      int uHighLevelSymbolsAfterMerge;
+      int uCentralSymbolsAfterMerge = 0;
+      int uNoiseSymbolsAfterMerge = 0;
+      int uDefinedSymbolsAfterMerge = 0;
+      int uHighLevelSymbolsAfterMerge = 0;
      public:
-      MergeTable()
-         :  uCentralSymbolsLimit(0), uNoiseSymbolsLimit(0),
-            uDefinedSymbolsLimit(0), uHighLevelSymbolsLimit(0),
-            uCentralSymbolsAfterMerge(0), uNoiseSymbolsAfterMerge(0),
-            uDefinedSymbolsAfterMerge(0), uHighLevelSymbolsAfterMerge(0) {}
+      MergeTable() = default;
       MergeTable(const SymbolsManager& symbolsManager)
          :  uCentralSymbolsLimit(symbolsManager.lsCentralSymbols.count()),
             uNoiseSymbolsLimit(symbolsManager.lsNoiseSymbols.count()),
             uDefinedSymbolsLimit(symbolsManager.lsDefinedSymbols.count()),
-            uHighLevelSymbolsLimit(symbolsManager.uHighLevelSymbolsCounter),
-            uCentralSymbolsAfterMerge(0), uNoiseSymbolsAfterMerge(0),
-            uDefinedSymbolsAfterMerge(0), uHighLevelSymbolsAfterMerge(0) {}
+            uHighLevelSymbolsLimit(symbolsManager.uHighLevelSymbolsCounter) {}
 
       void setInitial(const SymbolsManager& symbolsManager)
          {  uCentralSymbolsLimit = symbolsManager.lsCentralSymbols.count();
@@ -722,7 +714,7 @@ ClosedSymbol::_compare(const EnhancedObject& asource) const {
       result = inherited::_compare(asource);
    else {
       AssumeCondition(dynamic_cast<const ClosedSymbol*>(&source))
-      result = fcompare(uLevel, ((const ClosedSymbol&) source).uLevel);
+      result = convertToCompare(uLevel <=> ((const ClosedSymbol&) source).uLevel);
       if (result == CREqual)
          result = inherited::_compare(asource);
    };
@@ -730,6 +722,4 @@ ClosedSymbol::_compare(const EnhancedObject& asource) const {
 }
 
 }} // end of namespace NumericalDomains::DAffine
-
-#endif // NumericalDomains_FloatAffineBaseCommonH
 

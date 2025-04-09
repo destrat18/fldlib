@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2005-2017                                               */
+/*  Copyright (C) 2005-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of floating points with unbound size.
 //
 
-#ifndef Numerics_BaseProjectionFloatingH
-#define Numerics_BaseProjectionFloatingH
+#pragma once
 
 namespace Numerics {
 
@@ -46,7 +43,7 @@ class TProjectionDouble : public TypeDouble {
       typedef TypeDouble_1 inherited;
 
      public:
-      EnhancedDouble() {}
+      EnhancedDouble() = default;
       EnhancedDouble(const inherited& source) : inherited(source) {}
       EnhancedDouble(const TypeDouble& source)
          {  int lastCellIndex = source.getMantissa().lastCellIndex();
@@ -126,7 +123,7 @@ class TProjectionDouble : public TypeDouble {
    bool multAcceptInfty(const thisType& source, ReadParameters& params, bool& isHandled);
    
   public:
-   TProjectionDouble() {}
+   TProjectionDouble() = default;
    TProjectionDouble(typename TypeDouble::BaseStoreTraits::BaseTypeConstReference value) : inherited(value) {}
 
    TProjectionDouble(const typename inherited::IntConversion& value, ReadParameters& params)
@@ -146,6 +143,4 @@ class TProjectionDouble : public TypeDouble {
 };
 
 } // end of namespace Numerics
-
-#endif // Numerics_BaseProjectionFloatingH
 

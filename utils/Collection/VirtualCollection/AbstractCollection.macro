@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -386,6 +386,16 @@ TypeCollection<FstT, SndT, ThirdT, FourthT, FifThT>::createNewCursor() const    
    friend class TypeCollection;                                                              \
                                                                                              \
   public:                                                                                    \
+   ComparisonResult compare(const TypeCursor& source) const                                  \
+      {  return _compare(TypeCursor::castToCopyHandler(source)); }                           \
+   bool isComparable(const TypeCursor& typeObject) const                                     \
+      {  return _compare(TypeCursor::castToCopyHandler(typeObject)) != CRNonComparable; }    \
+   friend std::partial_ordering operator<=>(const TypeCursor& first, const TypeCursor& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor& first, const TypeCursor& second)                 \
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor& first, const TypeCursor& second)                 \
+      {  return !first.isEqual(second); }                                                    \
    const TypeCollection& getSupport() const                                                  \
       {  return (const TypeCollection&) TypeCollection::CastCollectionHandler::castFrom(getSSupport()); }
 
@@ -394,6 +404,16 @@ TypeCollection<FstT, SndT, ThirdT, FourthT, FifThT>::createNewCursor() const    
    friend class TypeCollection<FstT>;                                                        \
                                                                                              \
   public:                                                                                    \
+   ComparisonResult compare(const TypeCursor<FstT>& source) const                                  \
+      {  return _compare(TypeCursor<FstT>::castToCopyHandler(source)); }                           \
+   bool isComparable(const TypeCursor<FstT>& typeObject) const                                     \
+      {  return _compare(TypeCursor<FstT>::castToCopyHandler(typeObject)) != CRNonComparable; }    \
+   friend std::partial_ordering operator<=>(const TypeCursor<FstT>& first, const TypeCursor<FstT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor<FstT>::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor<FstT>& first, const TypeCursor<FstT>& second)     \
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor<FstT>& first, const TypeCursor<FstT>& second)     \
+      {  return !first.isEqual(second); }                                                    \
    const TypeCollection<FstT>& getSupport() const                                            \
       {  return (const TypeCollection<FstT>&) TypeCollection<FstT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); }
 
@@ -402,6 +422,16 @@ TypeCollection<FstT, SndT, ThirdT, FourthT, FifThT>::createNewCursor() const    
    friend class TypeCollection<FstT, SndT>;                                                  \
                                                                                              \
   public:                                                                                    \
+   ComparisonResult compare(const TypeCursor<FstT, SndT>& source) const                      \
+      {  return _compare(TypeCursor<FstT, SndT>::castToCopyHandler(source)); }               \
+   bool isComparable(const TypeCursor<FstT, SndT>& typeObject) const                         \
+      {  return _compare(TypeCursor<FstT, SndT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
+   friend std::partial_ordering operator<=>(const TypeCursor<FstT, SndT>& first, const TypeCursor<FstT, SndT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor<FstT, SndT>::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor<FstT, SndT>& first, const TypeCursor<FstT, SndT>& second)\
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor<FstT, SndT>& first, const TypeCursor<FstT, SndT>& second)\
+      {  return !first.isEqual(second); }                                                    \
    const TypeCollection<FstT, SndT>& getSupport() const                                      \
       {  return (const TypeCollection<FstT, SndT>&) TypeCollection<FstT, SndT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); }
 
@@ -410,6 +440,16 @@ TypeCollection<FstT, SndT, ThirdT, FourthT, FifThT>::createNewCursor() const    
    friend class TypeCollection<FstT, SndT, ThdT>;                                            \
                                                                                              \
   public:                                                                                    \
+   ComparisonResult compare(const TypeCursor<FstT, SndT, ThdT>& source) const                \
+      {  return _compare(TypeCursor<FstT, SndT, ThdT>::castToCopyHandler(source)); }         \
+   bool isComparable(const TypeCursor<FstT, SndT, ThdT>& typeObject) const                   \
+      {  return _compare(TypeCursor<FstT, SndT, ThdT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
+   friend std::partial_ordering operator<=>(const TypeCursor<FstT, SndT, ThdT>& first, const TypeCursor<FstT, SndT, ThdT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor<FstT, SndT, ThdT>::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor<FstT, SndT, ThdT>& first, const TypeCursor<FstT, SndT, ThdT>& second)\
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor<FstT, SndT, ThdT>& first, const TypeCursor<FstT, SndT, ThdT>& second)\
+      {  return !first.isEqual(second); }                                                    \
    const TypeCollection<FstT, SndT, ThdT>& getSupport() const                                \
       {  return (const TypeCollection<FstT, SndT, ThdT>&)                                    \
             TypeCollection<FstT, SndT, ThdT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); \
@@ -420,20 +460,38 @@ TypeCollection<FstT, SndT, ThirdT, FourthT, FifThT>::createNewCursor() const    
    friend class TypeCollection<FstT, SndT, ThdT, FourthT>;                                   \
                                                                                              \
   public:                                                                                    \
+   ComparisonResult compare(const TypeCursor<FstT, SndT, ThdT, FourthT>& source) const       \
+      {  return _compare(TypeCursor<FstT, SndT, ThdT, FourthT>::castToCopyHandler(source)); }\
+   bool isComparable(const TypeCursor<FstT, SndT, ThdT, FourthT>& typeObject) const          \
+      {  return _compare(TypeCursor<FstT, SndT, ThdT, FourthT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
+   friend std::partial_ordering operator<=>(const TypeCursor<FstT, SndT, ThdT, FourthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor<FstT, SndT, ThdT, FourthT>::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor<FstT, SndT, ThdT, FourthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT>& second)\
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor<FstT, SndT, ThdT, FourthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT>& second)\
+      {   return !first.isEqual(second); }                                                   \
    const TypeCollection<FstT, SndT, ThdT, FourthT>& getSupport() const                       \
       {  return (const TypeCollection<FstT, SndT, ThdT, FourthT>&)                           \
             TypeCollection<FstT, SndT, ThdT, FourthT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); \
       }
 
-#define Template5DefineCursorForAbstractCollect(TypeCollection, TypeCursor, FstT, SndT, ThdT, FourthT, fifthT) \
+#define Template5DefineCursorForAbstractCollect(TypeCollection, TypeCursor, FstT, SndT, ThdT, FourthT, FifthT) \
   protected:                                                                                 \
-   friend class TypeCollection<FstT, SndT, ThdT, FourthT, fifthT>;                           \
+   friend class TypeCollection<FstT, SndT, ThdT, FourthT, FifthT>;                           \
                                                                                              \
   public:                                                                                    \
-   const TypeCollection<FstT, SndT, ThdT, FourthT, fifthT>& getSupport() const               \
-      {  return (const TypeCollection<FstT, SndT, ThdT, FourthT, fifthT>&)                   \
-            TypeCollection<FstT, SndT, ThdT, FourthT, fifthT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); \
+   ComparisonResult compare(const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& source) const\
+      {  return _compare(TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>::castToCopyHandler(source)); }\
+   bool isComparable(const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& typeObject) const  \
+      {  return _compare(TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
+   friend std::partial_ordering operator<=>(const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>::castToCopyHandler(second))); }\
+   friend bool operator==(const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& second)\
+      {  return first.isEqual(second); }                                                     \
+   friend bool operator!=(const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& first, const TypeCursor<FstT, SndT, ThdT, FourthT, FifthT>& second)\
+      {  return !first.isEqual(second); }                                                    \
+   const TypeCollection<FstT, SndT, ThdT, FourthT, FifthT>& getSupport() const               \
+      {  return (const TypeCollection<FstT, SndT, ThdT, FourthT, FifthT>&)                   \
+            TypeCollection<FstT, SndT, ThdT, FourthT, FifthT>::CastCollectionHandler::castFrom(AbstractCursor::getSSupport()); \
       }
-
-
 

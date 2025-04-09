@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   through simple reference counters.
 //
 
-#ifndef PNT_MngPointerH
-#define PNT_MngPointerH
+#pragma once
 
 #include "Pointer/Pointer.h"
 
@@ -152,4 +149,3 @@ class TMngPointer : public MngPointer {
 
 } // end of namespace
 
-#endif // PNT_MngPointerH

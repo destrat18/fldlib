@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of affine relations.
 //
 
-#ifndef NumericalDomains_FloatAffineBaseGenericH
-#define NumericalDomains_FloatAffineBaseGenericH
+#pragma once
 
 #include "NumericalLattices/FloatAffineBaseComponentsGeneric.h"
 
@@ -41,6 +38,4 @@ namespace NumericalDomains {
 #undef DefineGeneric
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatAffineBaseGenericH
 

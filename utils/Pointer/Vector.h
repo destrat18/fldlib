@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -32,8 +30,7 @@
 //   duplicated for each TVector instantiation.
 //
 
-#ifndef COL_VectorH
-#define COL_VectorH
+#pragma once
 
 #include "Pointer/ImplList.h"
 
@@ -101,9 +98,9 @@ class TVector {
   private:
    typedef TVector<TypeElement, TypeElementTraits, TypeReallocTraits> thisType;
 
-   TypeElement* ateArray;
-   int uCount;
-   int uAllocated;
+   TypeElement* ateArray = nullptr;
+   int uCount = 0;
+   int uAllocated = 0;
 
   protected:
    void realloc(int newAllocated);
@@ -118,7 +115,7 @@ class TVector {
    void moveToAtEnd(thisType& destination, int first, int last);
 
   public:
-   TVector() : ateArray(nullptr), uCount(0), uAllocated(0) {}
+   TVector() = default;
    TVector(thisType&& source) : ateArray(source.ateArray), uCount(source.uCount), uAllocated(source.uAllocated)
       {  source.ateArray = nullptr; source.uCount = 0; source.uAllocated = 0; }
    TVector(const thisType& source);
@@ -207,6 +204,4 @@ TVector<TypeElement, TypeElementTraits, TypeReallocTraits>::swap(thisType& sourc
 }
 
 } // end of namespace COL
-
-#endif // COL_VectorH
 

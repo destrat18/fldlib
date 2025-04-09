@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   These classes manage shared elements that can notify the pointers that point onto them.
 //
 
-#ifndef PNT_SharedPointerH
-#define PNT_SharedPointerH
+#pragma once
 
 #include "Pointer/Pointer.h"
 #include "Pointer/ImplList.h"
@@ -277,4 +274,3 @@ class TSharedPointer : public SharedPointer {
 
 } // end of namespace PNT
 
-#endif // PNT_SharedPointerH

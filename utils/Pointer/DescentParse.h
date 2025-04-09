@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,11 +27,10 @@
 //   Definition of classes to implement recursive descent parsers.
 //
 
-#ifndef DescentParserH
-#define DescentParserH
+#pragma once
 
 #include "StandardClasses/Persistence.h"
-#include "Pointer/AutoPointer.h"
+#include "Pointer/PassPointer.h"
 #include "Pointer/ImplArray.h"
 
 namespace STG {
@@ -60,15 +57,9 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
    typedef TypeArguments ParseArgument;
    class VirtualParseState : public EnhancedObject {
      private:
-      char* pvContent; // pvContent=nullptr <=> uAllocatedSize == 0
-      size_t uAllocatedSize;
-      char* pvCurrentPointer; // pvCurrentPointer == nullptr <=> empty
-      // else pvContent != nullptr && pvCurrentPointer points onto last element
-      // pvCurrentPointer - pvContent < uAllocatedSize
-      // pvCurrentPointer - pvContent + pvContent->getSize() <= uAllocatedSize
       typedef EnhancedObject inherited;
-      int uPoint;
-      mutable int uPreviousSize;
+      int uPoint = 0;
+      mutable int uPreviousSize = 0;
       friend class TStateStack<TypeArguments>;
 
      protected:
@@ -92,16 +83,16 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
       virtual void* getResultPlace() { return nullptr; }
 
      public:
-      VirtualParseState() : uPoint(0), uPreviousSize(0) {}
+      VirtualParseState() = default;
       VirtualParseState(const VirtualParseState& source)
-         :  inherited(source), uPoint(source.uPoint), uPreviousSize(0) {}
+         :  inherited(source), uPoint(source.uPoint) {}
       VirtualParseState& operator=(const VirtualParseState& source)
          {  inherited::operator=(source);
             uPoint = source.uPoint;
             return *this;
          }
       DefineCopy(VirtualParseState)
-      DDefineAssign(VirtualParseState)
+      // DDefineAssign(VirtualParseState)
 
       int& point() { return uPoint; }
       const int& point() const { return uPoint; }
@@ -164,7 +155,7 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
       TVirtualParseState(thisType&& source) = default;
       thisType& operator=(const thisType&) = default;
       TemplateDefineCopy(TVirtualParseState, TypeResult)
-      DTemplateDefineAssign(TVirtualParseState, TypeResult)
+      // DTemplateDefineAssign(TVirtualParseState, TypeResult)
 
       virtual void* getResultPlace() override { return &rResult; }
       bool hasResult() const { return rResult.isValid(); }
@@ -214,7 +205,7 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
          }
       thisType& operator=(const thisType&) = default;
       DefineCopy(thisType)
-      DDefineAssign(thisType)
+      // DDefineAssign(thisType)
 
       virtual void* getResultPlace() override { return &rResult; }
       UnionResult<Ts...>& getSResult() { return rResult; }
@@ -232,8 +223,8 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
      private:
       typedef TVirtualParseState<TypeResult> inherited;
       typedef TParseState<TypeObject, ReadPointerMethod, TypeResult> thisType;
-      ReadPointerMethod rpmReadMethod;
-      TypeObject* poObject;
+      ReadPointerMethod rpmReadMethod = nullptr;
+      TypeObject* poObject = nullptr;
 
      protected:
       virtual ComparisonResult _compare(const EnhancedObject& asource) const override
@@ -251,16 +242,16 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
 #include "StandardClasses/DefineNew.h"
 
      public:
-      TParseState() : rpmReadMethod(nullptr), poObject(nullptr) {}
+      TParseState() = default;
       TParseState(const ReadPointerMethod& readMethod)
-         :  rpmReadMethod(readMethod), poObject(nullptr) {}
+         :  rpmReadMethod(readMethod) {}
       TParseState(TypeObject& object, const ReadPointerMethod& readMethod)
          :  rpmReadMethod(readMethod), poObject(&object) {}
       TParseState(const thisType& source) = default;
       TParseState(thisType&& source) = default;
       thisType& operator=(const thisType&) = default;
       Template3DefineCopy(TParseState, TypeObject, ReadPointerMethod, TypeResult)
-      DTemplate3DefineAssign(TParseState, TypeObject, ReadPointerMethod, TypeResult)
+      // DTemplate3DefineAssign(TParseState, TypeObject, ReadPointerMethod, TypeResult)
 
       virtual auto operator()(TStateStack<TypeArguments>& stateStack, ParseArgument& arguments)
          -> typename ParseArgument::ResultAction override
@@ -285,8 +276,8 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
      private:
       typedef TVirtualParseState<TypeResult> inherited;
       typedef TLevelParseState<TypeObject, ReadPointerMethod, TypeParseMultiState, TypeResult> thisType;
-      ReadPointerMethod rpmReadMethod;
-      TypeObject* poObject;
+      ReadPointerMethod rpmReadMethod = nullptr;
+      TypeObject* poObject = nullptr;
 
      protected:
       virtual ComparisonResult _compare(const EnhancedObject& asource) const
@@ -304,7 +295,7 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
 #include "StandardClasses/DefineNew.h"
 
      public:
-      TLevelParseState() : poObject(nullptr), rpmReadMethod(nullptr) {}
+      TLevelParseState() = default;
       TLevelParseState(TypeObject& object, const ReadPointerMethod& readMethod)
          :  rpmReadMethod(readMethod), poObject(&object) {}
       TLevelParseState(const thisType& source) = default;
@@ -860,9 +851,84 @@ class TStateStack : public EnhancedObject, public Lexer::Base {
    template <class TypeResult>
    bool hasParentResult(TypeResult*) const
       {  return reinterpret_cast<TVirtualParseState<TypeResult>&>(upLast()).getResult().isValid(); }
+
+   bool doesContainAddress(void* pointer) const
+      {  return pointer && pvCurrentPointer && pointer >= pvContent
+               && pointer < (pvCurrentPointer
+                     + reinterpret_cast<VirtualParseState*>(pvCurrentPointer)->getSize());
+      }
+   size_t convertAddressToRelative(void* pointer) const
+      {  return static_cast<char*>(pointer) - pvContent; }
+   void* convertRelativeToAddress(size_t shift) const
+      {  return reinterpret_cast<void*>(shift + reinterpret_cast<size_t>(pvContent)); }
+
+   template <class Type>
+   class TPureStackPointer;
+   template <class Type>
+   class TStackPointer {
+     private:
+      size_t ptPointer;
+      bool fIsStack;
+      friend class TPureStackPointer<Type>;
+
+     public:
+      TStackPointer(TStateStack<TypeArguments>& state, Type* pointer=nullptr)
+         :  ptPointer(reinterpret_cast<size_t>(pointer)), fIsStack(false)
+         {  if (state.doesContainAddress(pointer)) {
+               ptPointer = state.convertAddressToRelative(pointer);
+               fIsStack = true;
+            }
+         }
+      TStackPointer(const TStackPointer<Type>& source) = default;
+      TStackPointer(const TPureStackPointer<Type>& source)
+         :  ptPointer(source.ptPointer), fIsStack(true) {}
+      TStackPointer<Type>& operator=(const TStackPointer<Type>& source) = default;
+      TStackPointer<Type>& operator=(const TPureStackPointer<Type>& source)
+         {  ptPointer = source.ptPointer;
+            fIsStack = true;
+            return *this;
+         }
+
+      bool isStackPointer() const { return fIsStack; }
+      Type& deref(TStateStack<TypeArguments>& state) const
+         {  if (!fIsStack)
+               return *reinterpret_cast<Type*>(ptPointer);
+            else
+               return *reinterpret_cast<Type*>(state.convertRelativeToAddress(ptPointer));
+         }
+      Type* value(TStateStack<TypeArguments>& state) const
+         {  if (!fIsStack)
+               return reinterpret_cast<Type*>(ptPointer);
+            else
+               return reinterpret_cast<Type*>(state.convertRelativeToAddress(ptPointer));
+         }
+   };
+
+   template <class Type>
+   class TPureStackPointer {
+     private:
+      size_t ptPointer;
+      friend class TStackPointer<Type>;
+
+     public:
+      TPureStackPointer(TStateStack<TypeArguments>& state, Type* pointer)
+         {  AssumeCondition(state.doesContainAddress(pointer))
+            ptPointer = state.convertAddressToRelative(pointer);
+         }
+      TPureStackPointer(const TPureStackPointer<Type>& source) = default;
+      TPureStackPointer<Type>& operator=(const TPureStackPointer<Type>& source) = default;
+
+      Type& deref(TStateStack<TypeArguments>& state) const
+         {  return *reinterpret_cast<Type*>(state.convertRelativeToAddress(ptPointer)); }
+      Type* value(TStateStack<TypeArguments>& state) const
+         {  return reinterpret_cast<Type*>(state.convertRelativeToAddress(ptPointer)); }
+   };
+   template <class Type> TStackPointer<Type> acquirePointer(Type* pointer)
+      {  return TStackPointer<Type>(*this, pointer); }
+   template <class Type> TStackPointer<Type> acquirePurePointer(Type* pointer)
+      {  return TPureStackPointer<Type>(*this, pointer); }
 };
 
 }} // end of namespace STG::Parser
 
-#endif // DescentParserH
 

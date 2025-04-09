@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -30,8 +28,7 @@
 //   It is the base class of all sorted collections.
 //
 
-#ifndef COL_VirtualSortedCollectionH
-#define COL_VirtualSortedCollectionH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 
@@ -48,16 +45,18 @@ class VirtualSortedCollection : public VirtualCollection {
    class LocationResult : protected ExtendedParameters {
      private:
       RelativePosition rpPos;
-      PNT::PassPointer<ExtendedInsertionParameters> ppInsertion;
+      PNT::CPassPointer<ExtendedInsertionParameters> ppInsertion;
 
      protected:
-      PNT::PassPointer<ExtendedInsertionParameters>& insertion() { return ppInsertion; }
+      PNT::CPassPointer<ExtendedInsertionParameters>& insertion() { return ppInsertion; }
       ExtendedInsertionParameters& getInsertion() const { return *ppInsertion; }
 
      public:
       LocationResult(RelativePosition pos=RPUndefined) : rpPos(pos) {}
       LocationResult(const LocationResult& source) = default;
+      LocationResult(LocationResult&& source) = default;
       LocationResult& operator=(const LocationResult& source) = default;
+      LocationResult& operator=(LocationResult&& source) = default;
       bool operator==(const RelativePosition& pos) const { return rpPos == pos; }
       bool operator==(const LocationResult& source) const { return rpPos == source.rpPos; }
       bool operator!=(const RelativePosition& pos) const { return rpPos != pos; }
@@ -228,13 +227,12 @@ template <class TKey>
 class AllocKeyTraits {
   public:
    typedef const TKey& KeyType;
-   typedef PNT::PassPointer<TKey> ControlKeyType;
-   static const TKey& see(const PNT::PassPointer<TKey>& key) { return *key; }
-   static PNT::PassPointer<TKey> store(const TKey& key) { return PNT::PassPointer<TKey>(key); }
-   static PNT::PassPointer<TKey> copy(const PNT::PassPointer<TKey>& key)
-      {  return PNT::PassPointer<TKey>(key, PNT::Pointer::Duplicate()); }
+   typedef PNT::PPassPointer<TKey> ControlKeyType;
+   static const TKey& see(const PNT::PPassPointer<TKey>& key) { return *key; }
+   static PNT::PPassPointer<TKey> store(const TKey& key) { return PNT::PPassPointer<TKey>(key); }
+   static PNT::PPassPointer<TKey> copy(const PNT::PPassPointer<TKey>& key)
+      {  return PNT::PPassPointer<TKey>(key, PNT::Pointer::Duplicate()); }
 };
 
 } // end of namespace COL
 
-#endif

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Includes all concrete collections
 //
 
-#ifndef CollectionHPP
-#define CollectionHPP
+#pragma once
 
 #include "Collection/ConcreteCollection/List.h"
 #include "Collection/ConcreteCollection/BasicList.h"
@@ -47,4 +44,3 @@
 #include "Collection/VirtualCollection/VirtualMapCollection.h"
 #include "Collection/ELMCollection.h"
 
-#endif // CollectionHPP

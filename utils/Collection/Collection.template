@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Includes all implementations of concrete collections
 //
 
-#ifndef CollectionTEMPLATE
-#define CollectionTEMPLATE
+#pragma once
 
 #include "Pointer/Vector.template"
 #include "Pointer/ImplArray.template"
@@ -45,4 +42,3 @@
 #include "Collection/ConcreteCollection/TreeCommon.template"
 #include "Collection/VirtualCollection/VirtualMapCollection.template"
 
-#endif // CollectionTEMPLATE

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,7 +27,10 @@
 //   Implementation of a class of affine relations.
 //
 
+#pragma once
+
 #include "NumericalAnalysis/FloatAffineExecutionPath.h"
+#include "NumericalAnalysis/BackTrace.h"
 
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
 #include "NumericalDomains/FloatAffineBase.template"
@@ -37,12 +38,10 @@
 #include "NumericalDomains/FloatAffineBaseGeneric.template"
 #endif
 
-#ifndef FLOAT_LONG_WRITE
 #if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
 #include "NumericalLattices/FloatAffineBaseTypes.template"
 #else
 #include "NumericalLattices/FloatAffineBaseTypesGeneric.template"
-#endif
 #endif
 
 namespace NumericalDomains { namespace DAffine {
@@ -636,6 +635,8 @@ template <class TypeExecutionPath>
 template <class TypeFloatAffine>
 void
 TBaseFloatAffine<TypeExecutionPath>::writeBranchCompare(const TypeFloatAffine& source, bool isUnstable) const {
+   if (this->doesSupportBacktrace())
+      writeBackTrace(*inherited::oTraceFile);
    if (isUnstable) {
       BaseExecutionPath::Mode mode = inherited::getMode();
       if (mode == BaseExecutionPath::MOnlyReal) {
@@ -761,12 +762,12 @@ TBaseFloatAffine<TypeExecutionPath>::retrieveBranch(int cases,
 
 
 template <class TypeExecutionPath>
-unsigned
-TBaseFloatAffine<TypeExecutionPath>::getConversionValue(unsigned realNumber, unsigned implementationNumber,
-      unsigned firstReal, unsigned /* lastReal */, unsigned firstImplementation, unsigned /* lastImplementation */,
-      unsigned commonNumber, unsigned firstCommon, unsigned lastCommon, unsigned executionResult,
-      unsigned result, bool realChoice, bool implementationChoice) {
-   unsigned addition;
+uint64_t
+TBaseFloatAffine<TypeExecutionPath>::getConversionValue(uint64_t realNumber, uint64_t implementationNumber,
+      uint64_t firstReal, uint64_t /* lastReal */, uint64_t firstImplementation, uint64_t /* lastImplementation */,
+      uint64_t commonNumber, uint64_t firstCommon, uint64_t lastCommon, uint64_t executionResult,
+      uint64_t result, bool realChoice, bool implementationChoice) {
+   uint64_t addition;
    if (realNumber == 0 || implementationNumber == 0) {
       if (implementationNumber != 0) {
          if (!inherited::fSupportFirstFollowFloat)
@@ -832,7 +833,7 @@ TBaseFloatAffine<TypeExecutionPath>::getConversionValue(unsigned realNumber, uns
          else { // result > 0
             AssumeCondition(realChoice && !implementationChoice)
             addition = firstReal + result;
-            if (commonNumber == 1 && addition < firstCommon)
+            if (commonNumber == 1 && addition <= firstCommon)
                --addition;
          };
       }
@@ -868,21 +869,21 @@ TBaseFloatAffine<TypeExecutionPath>::getConversionValue(unsigned realNumber, uns
 }
 
 template <class TypeExecutionPath>
-unsigned
-TBaseFloatAffine<TypeExecutionPath>::getConversionBranch(unsigned conversionNumber, unsigned firstReal,
-      unsigned lastReal, unsigned firstImplementation, unsigned lastImplementation,
-      bool& realChoice, bool& implementationChoice, unsigned executionResult, unsigned& alternativeResult) const {
-   unsigned firstCommon = firstReal < firstImplementation ? firstImplementation : firstReal;
-   unsigned lastCommon = lastReal < lastImplementation ? lastReal : lastImplementation;
-   unsigned commonNumber = (firstCommon <= lastCommon) ? (lastCommon-firstCommon+1) : 0;
-   unsigned realNumber = (firstReal <= lastReal) ? (lastReal-firstReal+1) : 0;
-   unsigned implementationNumber = (firstImplementation <= lastImplementation) ? (lastImplementation - firstImplementation+1) : 0;
+uint32_t
+TBaseFloatAffine<TypeExecutionPath>::getConversionBranch(uint64_t conversionNumber, uint64_t firstReal,
+      uint64_t lastReal, uint64_t firstImplementation, uint64_t lastImplementation,
+      bool& realChoice, bool& implementationChoice, uint64_t executionResult, uint64_t& alternativeResult) const {
+   uint64_t firstCommon = firstReal < firstImplementation ? firstImplementation : firstReal;
+   uint64_t lastCommon = lastReal < lastImplementation ? lastReal : lastImplementation;
+   uint64_t commonNumber = (firstCommon <= lastCommon) ? (lastCommon-firstCommon+1) : 0;
+   uint64_t realNumber = (firstReal <= lastReal) ? (lastReal-firstReal+1) : 0;
+   uint64_t implementationNumber = (firstImplementation <= lastImplementation) ? (lastImplementation - firstImplementation+1) : 0;
 
-   unsigned addition = 0;
-   alternativeResult = ~0U;
-   unsigned result = inherited::followNewConversionBranch(conversionNumber,
+   uint64_t addition = 0;
+   alternativeResult = ~0UL;
+   uint32_t result = inherited::followNewConversionBranch(conversionNumber,
          realChoice, implementationChoice, realNumber, implementationNumber, commonNumber,
-         firstReal-firstCommon, firstImplementation-firstCommon, alternativeResult);
+         firstCommon, firstReal, firstImplementation, alternativeResult);
    addition = getConversionValue(realNumber, implementationNumber, firstReal, lastReal,
          firstImplementation, lastImplementation, commonNumber, firstCommon, lastCommon,
          executionResult, result, realChoice, implementationChoice);
@@ -926,10 +927,7 @@ TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementati
 template <class TypeExecutionPath>
 TMergeBranches<TypeExecutionPath>::TMergeBranches(const char* file, int line)
    :  fActive((inherited::getMode() != BaseExecutionPath::MRealAndImplementation)
-         && inherited::isSynchronizedWith(file, line)),
-      fIsTableSynchronized(false),
-      uNumberOfFloatBranches(0), uNumberOfRealBranches(0),
-      uFloatSelection(0), uRealSelection(0) {
+         && inherited::isSynchronizedWith(file, line)) {
    if (fActive) {
       mtMergeTable = inherited::initialMergeTable();
       if (inherited::doesFollowFlow())
@@ -941,7 +939,7 @@ TMergeBranches<TypeExecutionPath>::TMergeBranches(const char* file, int line)
          ++uNumberOfFloatBranches;
       else
          ++uNumberOfRealBranches;
-      if (inherited::hasOutput())
+      if (inherited::hasOutput() || inherited::doesSupportUnstableInLoop())
          inherited::writeBranchNumbers(uNumberOfFloatBranches, uNumberOfRealBranches);
    }
    else
@@ -949,28 +947,22 @@ TMergeBranches<TypeExecutionPath>::TMergeBranches(const char* file, int line)
 }
 
 template <class TypeExecutionPath>
-template <int USizeMantissa, int USizeExponent, typename TypeImplementation>
-TMergeBranches<TypeExecutionPath>&
-TMergeBranches<TypeExecutionPath>::operator<<(TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>& value) {
+template <class RealAndImplementationValue>
+void
+TMergeBranches<TypeExecutionPath>::pushForMerge(RealAndImplementationValue& value) {
    if (!fActive)
-      return *this;
+      return;
    if (!fIsTableSynchronized) {
       mtMergeTable.setAfterMerge(inherited::symbolsManager());
       fIsTableSynchronized = true;
    };
 
-   typedef typename TFloatZonotope<TypeExecutionPath, USizeMantissa, USizeExponent, TypeImplementation>::BuiltDouble BuiltDouble;
+   typedef typename RealAndImplementationValue::BuiltDouble BuiltDouble;
    BaseExecutionPath::Mode mode = inherited::getMode();
    AssumeCondition(mode != BaseExecutionPath::MRealAndImplementation)
    value.updateLocalState();
 
-#if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
-   typedef TEquation<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
-#elif defined(FLOAT_GENERIC_BASE_LONG)
-   typedef TGEquation<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
-#else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
-   typedef TGEquation<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<TypeExecutionPath> > Equation;
-#endif
+   typedef typename RealAndImplementationValue::Equation Equation;
    if (inherited::doesFollowFlow()) {
       int floatBranchesToRead = uNumberOfFloatBranches;
       int realBranchesToRead = uNumberOfRealBranches;
@@ -1001,7 +993,6 @@ TMergeBranches<TypeExecutionPath>::operator<<(TFloatZonotope<TypeExecutionPath, 
    typename BuiltDouble::WriteParameters implWriteParams;
    implWriteParams.setDecimal();
    inherited::writeSynchronizedValue(mode, value, implWriteParams, equationWriteParams);
-   return *this;
 }
 
 template <class TypeExecutionPath>

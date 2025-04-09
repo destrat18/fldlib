@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -34,12 +32,12 @@
 
 #define DefineTaylorDouble TTaylorDouble
 #define DefineBaseTypeConstReference                       \
-   unsigned int
+   uint32_t
 #define DefineBaseStoreTraits 
 #define DefineBaseType                                     \
-   unsigned int
+   uint32_t
 #define DefineSizeofBaseTypeInBits                         \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 
 #else
 

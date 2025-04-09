@@ -1,0 +1,183 @@
+/**************************************************************************/
+/*                                                                        */
+/*  Copyright (C) 2011-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
+/*                                                                        */
+/*  you can redistribute it and/or modify it under the terms of the GNU   */
+/*  Lesser General Public License as published by the Free Software       */
+/*  Foundation, version 2.1.                                              */
+/*                                                                        */
+/*  It is distributed in the hope that it will be useful,                 */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/*  GNU Lesser General Public License for more details.                   */
+/*                                                                        */
+/*  See the GNU Lesser General Public License version 2.1                 */
+/*  for more details (enclosed in the file LICENSE).                      */
+/*                                                                        */
+/**************************************************************************/
+
+/////////////////////////////////
+//
+// Library   : NumericalDomains
+// Unit      : Affine relationships
+// File      : FloatAffine.cpp
+// Description :
+//   Implementation of a class of affine relations.
+//
+
+#include "FloatAffine.h"
+
+#include <iostream>
+#include "NumericalAnalysis/FloatAffineExecutionPath.template"
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+
+#include "Pointer/Vector.template"
+
+#include "FloatInstrumentation/FloatAffine.incc"
+
+namespace NumericalDomains { namespace DAffine {
+
+template <> int tfinite(long double val) { return finite((double) val); }
+template <> int tfinite(double val) { return finite(val); }
+template <> int tfinite(float val) { return finite(val); }
+
+template <> int tisfinite(long double val) { return std::isfinite(val); }
+template <> int tisfinite(double val) { return std::isfinite(val); }
+template <> int tisfinite(float val) { return std::isfinite(val); }
+
+template <> int tisnan(long double val) { return std::isnan(val); }
+template <> int tisnan(double val) { return std::isnan(val); }
+template <> int tisnan(float val) { return std::isnan(val); }
+
+template <> int tisinf(long double val) { return std::isinf(val); }
+template <> int tisinf(double val) { return std::isinf(val); }
+template <> int tisinf(float val) { return std::isinf(val); }
+
+#ifndef LDBL_EXPONENT_DIG
+#define LDBL_EXPONENT_DIG \
+      ((LDBL_MAX_EXP == (1 << (16-2))) ? 15 : sizeof(long double)*8-LDBL_MANT_DIG)
+#endif
+
+template class TInstrumentedFloatZonotope<23, 8, float>;
+template class TInstrumentedFloatZonotope<52, 11, double>;
+template class TInstrumentedFloatZonotope<LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>;
+template class TBaseFloatAffine<ExecutionPath>;
+
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TInstrumentedFloatZonotope<23, 8, float> >(TInstrumentedFloatZonotope<23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TInstrumentedFloatZonotope<52, 11, double> >(TInstrumentedFloatZonotope<52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TInstrumentedFloatZonotope<LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TInstrumentedFloatZonotope<LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TInstrumentedFloatZonotope<23, 8, float> >(TInstrumentedFloatZonotope<23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TInstrumentedFloatZonotope<52, 11, double> >(TInstrumentedFloatZonotope<52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TInstrumentedFloatZonotope<LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TInstrumentedFloatZonotope<LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+
+#if !defined(FLOAT_GENERIC_BASE_UNSIGNED) && !defined(FLOAT_GENERIC_BASE_LONG)
+template class TEquation<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TEquationServices<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float>;
+template class TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double>;
+template class TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template int64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template uint64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TBasicFloatZonotope<FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+#elif defined(FLOAT_GENERIC_BASE_LONG)
+template class TGEquation<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TGEquationServices<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float>;
+template class TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double>;
+template class TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedLongBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+#else // defined(FLOAT_GENERIC_BASE_UNSIGNED)
+template class TGEquation<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TGEquationServices<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> >;
+template class TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float>;
+template class TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double>;
+template class TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::writeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 23, 8, float> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , 52, 11, double> const&, bool) const;
+template void TBaseFloatAffine<ExecutionPath>::assumeCompare<TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> >(TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath> , LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double> const&, bool) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, int64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&, int64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template bool TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::retrieveConcreteChoicesForConversion<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, ExecutionPath::EquationHolder&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&, uint64_t&) const;
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template int64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<int64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, int64_t, bool, bool, int64_t, bool, bool, ExecutionPath::EquationHolder&, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 23, 8, float>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>, 52, 11, double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+template uint64_t TGBasicFloatZonotope<Numerics::UnsignedBaseStoreTraits, FLOAT_REAL_BITS_NUMBER, TBaseFloatAffine<ExecutionPath>,  LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>::setConversionResult<uint64_t>(Numerics::DDouble::Access::ReadParameters::RoundMode, BaseExecutionPath::Mode, uint64_t, bool, bool, uint64_t, bool, bool, ExecutionPath::EquationHolder&, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+#endif
+template class TFloatZonotope<ExecutionPath, 23, 8, float>;
+template class TFloatZonotope<ExecutionPath, 52, 11, double>;
+template class TFloatZonotope<ExecutionPath, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>;
+
+template class TMergeBranches<ExecutionPath>;
+
+} // end of namespace DAffine
+
+template DAffine::TMergeBranches<DAffine::ExecutionPath>&
+DAffine::TMergeBranches<DAffine::ExecutionPath>::operator<<(DAffine::TFloatZonotope<ExecutionPath, 23, 8, float>&);
+
+template DAffine::TMergeBranches<DAffine::ExecutionPath>&
+DAffine::TMergeBranches<DAffine::ExecutionPath>::operator<<(DAffine::TFloatZonotope<ExecutionPath, 52, 11, double>&);
+
+template DAffine::TMergeBranches<DAffine::ExecutionPath>&
+DAffine::TMergeBranches<DAffine::ExecutionPath>::operator<<(DAffine::TFloatZonotope<ExecutionPath, LDBL_MANT_DIG-1, LDBL_EXPONENT_DIG, long double>&);
+
+} // end of namespace NumericalDomains
+
+template class COL::TVector<NumericalDomains::DAffine::THighLevelUpdate<NumericalDomains::DAffine::ExecutionPath::Equation>, COL::DVector::TElementTraits<NumericalDomains::DAffine::THighLevelUpdate<NumericalDomains::DAffine::ExecutionPath::Equation>>, COL::DVector::ReallocTraits>;
+// template class COL::TVector<NumericalDomains::DAffine::TMergeBranches<NumericalDomains::DAffine::ExecutionPath>::HighLevelUpdate, COL::DVector::TElementTraits<NumericalDomains::DAffine::TMergeBranches<NumericalDomains::DAffine::ExecutionPath>::HighLevelUpdate>, COL::DVector::ReallocTraits>;
+
+template class COL::TVector<NumericalDomains::FloatZonotope>;
+template class COL::TVector<NumericalDomains::DoubleZonotope>;
+template class COL::TVector<NumericalDomains::LongDoubleZonotope>;
+
+template class COL::TVector<NumericalDomains::DAffine::Equation>;
+template class COL::TVector<NumericalDomains::FloatZonotope::BuiltDouble>;
+template class COL::TVector<NumericalDomains::DoubleZonotope::BuiltDouble>;
+template class COL::TVector<NumericalDomains::LongDoubleZonotope::BuiltDouble>;
+template class COL::TVector<int, COL::DVector::TElementTraits<int>, COL::DVector::ReallocTraits>;
+

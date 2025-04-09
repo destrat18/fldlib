@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,8 +27,7 @@
 //   Definition of the template class TVirtualMap.
 //
 
-#ifndef COL_VirtualMapCollectionH
-#define COL_VirtualMapCollectionH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualSortedCollection.h"
 
@@ -145,17 +142,20 @@ class Access {
       typedef COL::ImplListElement inherited;
       typedef TInitialStoreKeyNewValue<TypeKeyTraits> thisType;
       typename TypeKeyTraits::ControlKeyType cktKey;
-      PNT::PassPointer<EnhancedObject> ppeoObject;
+      PNT::PPassPointer<EnhancedObject> ppeoObject;
 
      public:
       TInitialStoreKeyNewValue(typename TypeKeyTraits::KeyType key)
          :  inherited(), cktKey(TypeKeyTraits::store(key)), ppeoObject() {}
-      TInitialStoreKeyNewValue(typename TypeKeyTraits::KeyType key, const PNT::PassPointer<EnhancedObject>& object)
-         :  inherited(), cktKey(TypeKeyTraits::store(key)), ppeoObject(object) {}
+      TInitialStoreKeyNewValue(typename TypeKeyTraits::KeyType key, PNT::PPassPointer<EnhancedObject>&& object)
+         :  inherited(), cktKey(TypeKeyTraits::store(key)), ppeoObject(std::move(object)) {}
       TInitialStoreKeyNewValue(typename TypeKeyTraits::KeyType key, EnhancedObject* object)
          :  inherited(), cktKey(TypeKeyTraits::store(key)), ppeoObject(object, PNT::Pointer::Init()) {}
       TInitialStoreKeyNewValue(const thisType& source)
-         :  inherited(source), cktKey(TypeKeyTraits::copy(source.cktKey)), ppeoObject(source.ppeoObject) {}
+         :  inherited(source), cktKey(TypeKeyTraits::copy(source.cktKey)), ppeoObject(source.ppeoObject, PNT::Pointer::Duplicate())
+         {  AssumeUncalled }
+      TInitialStoreKeyNewValue(thisType&& source)
+         :  inherited(source), cktKey(TypeKeyTraits::copy(source.cktKey)), ppeoObject(std::move(source.ppeoObject)) {}
       TemplateDefineCopy(TInitialStoreKeyNewValue, TypeKeyTraits)
       DTemplateDefineAssign(TInitialStoreKeyNewValue, TypeKeyTraits)
       thisType& operator=(const thisType& source)
@@ -173,7 +173,7 @@ class Access {
          {  AssumeCondition(!ppeoObject.isValid())
             ppeoObject.absorbElement(object);
          }
-      PNT::PassPointer<EnhancedObject>& element() { return ppeoObject; }
+      PNT::PPassPointer<EnhancedObject>& element() { return ppeoObject; }
       typename TypeKeyTraits::KeyType queryKey() const { return TypeKeyTraits::see(cktKey); }
       virtual bool isValid() const override
          {  return inherited::isValid() && (ppeoObject.isValid()); }
@@ -206,12 +206,15 @@ class Access {
             inherited::add(storeKeyValue = new TInitialStoreKeyNewValue<TypeKeyTraits>(key));
             return TInitialElementNewValues<Element, TypeKeyTraits, Cast>(*this, *storeKeyValue);
          }
-      TMapInitialNewValues<Element, TypeKeyTraits, Cast>& setFrom(typename TypeKeyTraits::KeyType key, const PNT::PassPointer<Element>& source)
+      TMapInitialNewValues<Element, TypeKeyTraits, Cast>& setFrom(
+            typename TypeKeyTraits::KeyType key, PNT::PPassPointer<Element>&& source)
          {  TInitialStoreKeyNewValue<TypeKeyTraits>* storeKeyValue = nullptr;
-            inherited::add(storeKeyValue = new TInitialStoreKeyNewValue<TypeKeyTraits>(key, PNT::PassPointer<Element>(source).extractElement()));
+            inherited::add(storeKeyValue = new TInitialStoreKeyNewValue<TypeKeyTraits>(key,
+                  PNT::PPassPointer<Element>(std::move(source)).extractElement()));
             return *this;
          }
-      TMapInitialNewValues<Element, TypeKeyTraits, Cast>& setFrom(typename TypeKeyTraits::KeyType key, Element* source)
+      TMapInitialNewValues<Element, TypeKeyTraits, Cast>& setFrom(
+            typename TypeKeyTraits::KeyType key, Element* source)
          {  TInitialStoreKeyNewValue<TypeKeyTraits>* storeKeyValue = nullptr;
             inherited::add(storeKeyValue = new TInitialStoreKeyNewValue<TypeKeyTraits>(key, source));
             return *this;
@@ -234,8 +237,8 @@ class Access {
          :  ivReferent(source.ivReferent), iskvStoreKeyValue(source.iskvStoreKeyValue) {}
       
       TMapInitialNewValues<Element, TypeKeyTraits, Cast>&
-         operator<<(const PNT::PassPointer<Element>& source)
-         {  iskvStoreKeyValue.absorbElement(Cast::castTo(PNT::PassPointer<Element>(source).extractElement()));
+         operator<<(PNT::PPassPointer<Element>&& source)
+         {  iskvStoreKeyValue.absorbElement(Cast::castTo(PNT::PPassPointer<Element>(std::move(source)).extractElement()));
             return ivReferent;
          }
       TMapInitialNewValues<Element, TypeKeyTraits, Cast>& operator<<(Element* source)
@@ -878,6 +881,14 @@ class TInterfaceMapCollectionCursor : public TVirtualMapCursor<Element, TypeKeyT
    static const TypeCollectionCursor* implementation(const VirtualCollectionCursor* cursor)
       {  return (cursor != nullptr) ? &((const thisType*) cursor)->tccImplementation : nullptr ; }
 
+   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
+      {  auto result = inherited::_compare(asource);
+         if (result == CREqual) {
+            const auto& source = static_cast<const thisType&>(inherited::castFromCopyHandler(asource));
+            result = tccImplementation.compare(source.tccImplementation);
+         }
+         return result;
+      }
    virtual bool _isPositionned(const ExtendedLocateParameters& pos,
          const VirtualCollectionCursor* cursor=nullptr) const
       {  return tccImplementation.isPositionned(pos, implementation(cursor)); }
@@ -921,9 +932,9 @@ class TInterfaceMapCollectionCursor : public TVirtualMapCursor<Element, TypeKeyT
 
 Template5InlineCollectionForAbstractCollect(TInterfaceMapCollection, TInterfaceMapCollectionCursor, TypeCollection, Element, Key, CastToImplementation, Cast)
 
-/*******************************************/
-/* Définition du patron TMapCastCollection */
-/*******************************************/
+/*******************************************************/
+/* Definition of the template class TMapCastCollection */
+/*******************************************************/
 
 template <class TypeBase, class TypeElement, class TypeKeyTraits, class Cast>
 class TMapCastCollectionCursor;
@@ -996,7 +1007,7 @@ class TMapCastCollectionCursor : public TypeBase::Cursor {
 
   protected:
    virtual ComparisonResult _compare(const EnhancedObject& asource) const { return inherited::_compare(asource); }
-   
+
    virtual EnhancedObject* _getSElement() const { return inherited::_getSElement(); }
    virtual typename TypeKeyTraits::ControlKeyType _queryKey() const { return inherited::_queryKey(); }
 
@@ -1029,4 +1040,3 @@ Template4InlineCollectionForAbstractCollect(TMapCastCollection, TMapCastCollecti
 
 } // end of namespace COL
 
-#endif // COL_VirtualMapCollectionH

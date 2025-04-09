@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,8 +29,7 @@
 //   to localize them quickly in the tree.
 //
 
-#ifndef COL_ImplTreeParentH
-#define COL_ImplTreeParentH
+#pragma once
 
 #include "Collection/Implementation/ImplCommonTree.h"
 #include "Collection/ConcreteCollection/Array.h"
@@ -49,18 +46,16 @@ class TGenericParentTreeElement : public TypeFlatNode, public ImplTreeElement {
   private:
    typedef TypeFlatNode inherited;
    typedef TGenericParentTreeElement<TypeFlatCollection, TypeFlatNode> thisType;
-   thisType* pgpteParent;
-
-  protected:
-   virtual ComparisonResult _compare(const EnhancedObject& asource) const override
-      {  return inherited::_compare(asource); }
+   thisType* pgpteParent = nullptr;
 
   public:
-   TGenericParentTreeElement() : pgpteParent(nullptr) {}
+   TGenericParentTreeElement() = default;
    TGenericParentTreeElement(TypeFlatCollection* sonsCollection)
-      :  ImplTreeElement(sonsCollection), pgpteParent(nullptr) {}
+      :  ImplTreeElement(sonsCollection) {}
    TGenericParentTreeElement(const thisType& source)
-      :  inherited(source), ImplTreeElement(source), pgpteParent(nullptr) {}
+      :  inherited(source), ImplTreeElement(source) {}
+   std::strong_ordering operator<=>(const thisType& source) const
+      {  return inherited::operator<=>(source); }
    DefineCopy(thisType)
    DDefineAssign(thisType)
    thisType& operator=(const thisType& source)
@@ -205,7 +200,7 @@ class TGenericImplParentTreeCursor : public ExtendedParameters {
 
   private:
    PPSonsCursor ppscElement;
-   Node* pnFather;
+   Node* pnFather = nullptr;
 
    bool invariantFather() const
       {  return pnFather == HandlerSonsAndSubTreeCast::castFrom(ppscElement->elementAt()).parent(); }
@@ -214,7 +209,7 @@ class TGenericImplParentTreeCursor : public ExtendedParameters {
    DefineExtendedParameters(2, ExtendedParameters)
 
   public:
-   TGenericImplParentTreeCursor() : pnFather(nullptr) { setOwnField(VMUpRoot); }
+   TGenericImplParentTreeCursor() { setOwnField(VMUpRoot); }
    TGenericImplParentTreeCursor(const Tree& support);
    TGenericImplParentTreeCursor(const thisType& source)
       :  ExtendedParameters(source),
@@ -451,7 +446,7 @@ TGenericImplParentTreeCursor<TypeFlatCollection, TypeFlatNode>::setFatherWithLas
    }
    else {
       AssumeCondition(pnFather != nullptr)
-      result = ppscElement;
+      result = std::move(ppscElement);
       if (pnFather->hasParent()) {
          ppscElement = pnFather->getParent().getSons().newCursor();
          ppscElement->gotoReference(*pnFather);
@@ -596,4 +591,3 @@ TGenericImplParentTreeCursor<TypeFlatCollection, TypeFlatNode>::setSon(const Fla
 
 } // end of namespace COL
 
-#endif // COL_ImplTreeParentH

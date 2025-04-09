@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -36,7 +34,7 @@
 #ifdef DefTypeSorted
 bool
 DefTypeCollection::locateOrAdd(DefTypeElement* element, AddMode dupMode) {
-   TPassPointer<DefTypeCursor> cursor = newCursor();
+   PPassPointer<DefTypeCursor> cursor = newCursor();
    bool result = false;
    if ((result = DefTypeFinal _locate(*DefTypeCCastToCollectHandler(element), *cursor,
                           ExtendedLocateParameters(RPBefore))) == false)
@@ -58,7 +56,7 @@ DefTypeCollection::locateOrAdd(DefTypeElement* element, DefTypeCursor& cursor,
 
 bool
 DefTypeCollection::locateOrAddCopy(const DefTypeElement& element) {
-   TPassPointer<DefTypeCursor> cursor = newCursor();
+   PPassPointer<DefTypeCursor> cursor = newCursor();
    bool result = false;
    if ((result = DefTypeFinal _locate(*DefTypeCCastToCollectHandler(&element), *cursor,
                           ExtendedLocateParameters(RPBefore))) == false)

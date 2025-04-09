@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,14 +28,15 @@
 //   for the COL::TArray collection.
 //
 
-#ifndef COL_ImplArrayTemplate
-#define COL_ImplArrayTemplate
+#pragma once
 
 #include "Pointer/ImplArray.h"
 
 #include <memory.h>
 
 namespace COL {
+
+#define DefineCastElement(x) (const ElementType&) Cast::castFrom((const typename Cast::Base&) x)
 
 template <class TemplateParameters>
 void
@@ -51,8 +50,8 @@ ImplArray::bubbleSort(const TemplateParameters& parameters, int first, int last)
    while (last > first) {
       int blob = first;
       do {
-         if (parameters.key((const ElementType&) Cast::castFrom(*apeoArray[blob]))
-               > parameters.key((const ElementType&) Cast::castFrom(*apeoArray[blob+1]))) {
+         if (parameters.key(DefineCastElement(*apeoArray[blob]))
+               > parameters.key(DefineCastElement(*apeoArray[blob+1]))) {
             EnhancedObject* temp = apeoArray[blob];
             apeoArray[blob] = apeoArray[blob+1];
             apeoArray[blob+1] = temp;
@@ -82,11 +81,11 @@ ImplArray::quickSort(const TemplateParameters& parameters, int first, int last) 
    apeoArray[first] = temp;
    int inc = first+1, dec = last;
    while (inc < dec) {
-      while (parameters.key((const ElementType&) Cast::castFrom(*apeoArray[dec]))
-            > parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first])))
+      while (parameters.key(DefineCastElement(*apeoArray[dec]))
+            > parameters.key(DefineCastElement(*apeoArray[first])))
          dec--;
-      while ((parameters.key((const ElementType&) Cast::castFrom(*apeoArray[inc]))
-               <= parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first])))
+      while ((parameters.key(DefineCastElement(*apeoArray[inc]))
+               <= parameters.key(DefineCastElement(*apeoArray[first])))
             && (inc < last))
          inc++;
       if (inc < dec) {
@@ -98,8 +97,8 @@ ImplArray::quickSort(const TemplateParameters& parameters, int first, int last) 
 
    int exchange = dec;
    if ((dec == inc)
-         && (parameters.key((const ElementType&) Cast::castFrom(*apeoArray[dec]))
-            > parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first]))))
+         && (parameters.key(DefineCastElement(*apeoArray[dec]))
+            > parameters.key(DefineCastElement(*apeoArray[first]))))
       exchange--;
    temp = apeoArray[first];
    apeoArray[first] = apeoArray[exchange];
@@ -132,11 +131,11 @@ ImplArray::selectNth(const TemplateParameters& parameters, int number, int first
    apeoArray[first] = temp;
    int inc = first+1, dec = last;
    while (inc < dec) {
-      while (parameters.key((const ElementType&) Cast::castFrom(*apeoArray[dec]))
-            > parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first])))
+      while (parameters.key(DefineCastElement(*apeoArray[dec]))
+            > parameters.key(DefineCastElement(*apeoArray[first])))
          dec--;
-      while ((parameters.key((const ElementType&) Cast::castFrom(*apeoArray[inc]))
-               <= parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first])))
+      while ((parameters.key(DefineCastElement(*apeoArray[inc]))
+               <= parameters.key(DefineCastElement(*apeoArray[first])))
             && (inc < last))
          inc++;
       if (inc < dec) {
@@ -147,8 +146,8 @@ ImplArray::selectNth(const TemplateParameters& parameters, int number, int first
    };
 
    int exchange = dec;
-   if ((dec == inc) && (parameters.key((const ElementType&) Cast::castFrom(*apeoArray[dec]))
-         > parameters.key((const ElementType&) Cast::castFrom(*apeoArray[first]))))
+   if ((dec == inc) && (parameters.key(DefineCastElement(*apeoArray[dec]))
+         > parameters.key(DefineCastElement(*apeoArray[first]))))
       exchange--;
    temp = apeoArray[first];
    apeoArray[first] = apeoArray[exchange];
@@ -177,7 +176,7 @@ ImplArray::localize(typename TemplateParameters::Key::KeyType key,
    while ((last - first > 1) && (compare != CREqual)) {
       middle = (first + last)/2;
       compare = parameters.keyCompare(
-         parameters.key((const ElementType&) Cast::castFrom(*apeoArray[middle])),
+         parameters.key(DefineCastElement(*apeoArray[middle])),
          key);
       switch (compare) {
          case CRLess: first = middle; break;
@@ -190,7 +189,7 @@ ImplArray::localize(typename TemplateParameters::Key::KeyType key,
       middle = first;
       while (middle <= last) {
          compare = parameters.keyCompare(
-            parameters.key((const ElementType&) Cast::castFrom(*apeoArray[middle])),
+            parameters.key(DefineCastElement(*apeoArray[middle])),
             key);
          if ((compare == CRLess) && (middle < last))
             middle++;
@@ -227,8 +226,8 @@ ImplArray::merge(const TemplateParameters& parameters, const ImplArray& source, 
       for (; (lastPosition > last) && (lastPosition > lastSource-firstSource); lastPosition--) {
          AssumeCondition(lastPosition >= 0)
          ComparisonResult compare = parameters.keyCompare(
-            parameters.key((const ElementType&) Cast::castFrom(*apeoArray[last])),
-            parameters.key((const ElementType&) Cast::castFrom(*source.apeoArray[lastSource])));
+            parameters.key(DefineCastElement(*apeoArray[last])),
+            parameters.key(DefineCastElement(*source.apeoArray[lastSource])));
          AssumeCondition(compare != CRNonComparable)
          if (compare == CRLess) {
             EnhancedObject* sourceElement = source.apeoArray[lastSource--]; 
@@ -265,6 +264,7 @@ ImplArray::merge(const TemplateParameters& parameters, const ImplArray& source, 
    return result;
 }
 
+#undef DefineCastElement
+
 } // end of namespace COL
 
-#endif // COL_ImplArrayTemplate

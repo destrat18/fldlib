@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -28,11 +28,9 @@
 //   and double linked lists for the elements with the same key.
 //
 
-#ifndef COL_MultiSortedTEMPLATE
-#define COL_MultiSortedTEMPLATE
+#pragma once
 
 #include "Collection/ConcreteCollection/MultiSorted.h"
-// #include "Collection/Collection.hpp"
 
 namespace COL {
 
@@ -153,8 +151,10 @@ TMultipleSortedCollection<TypeTraits>::correctDuplicationCopyReceiver(const this
 
    for (bool doesContinue = (cursor.isValid() && sourceCursor.isValid()); doesContinue;
       doesContinue = (direction == RPAfter)
-         ? (cursor.setToNext() && sourceCursor.setToNext() && (!sourceEnd || !sourceCursor.isEqual(*sourceEnd)))
-         : (cursor.setToPrevious() && sourceCursor.setToPrevious() && (!sourceStart || !sourceCursor.isEqual(*sourceStart)))) {
+         ? (cursor.setToNext() && sourceCursor.setToNext()
+               && (!sourceEnd || sourceCursor != *sourceEnd))
+         : (cursor.setToPrevious() && sourceCursor.setToPrevious()
+               && (!sourceStart || sourceCursor != *sourceStart))) {
       typename SortedCollection::Node* node = &cursor.elementSAt();
       IdentificationElement identification = TypeTraits::identifyElementFromSorted(*node);
       if (identification == IEReceiverMultiple) {
@@ -629,12 +629,12 @@ TMultipleSortedCollection<TypeTraits>::paddAll(const thisType& source,
          sourceCursor->setToLast();
    };
 
-   if (this == &source) // collision fortement probable pouvant mener à une non-terminaison
+   if (this == &source) // probable collision that could lead to non-termination
       throw ENotImplemented();
 
    if (sourceCursor->isValid() && (isForward
-            ? ((endSource==nullptr) || (!sourceCursor->isEqual(*endSource)))
-            : ((startSource==nullptr) || (!sourceCursor->isEqual(*startSource))))) {
+            ? (endSource==nullptr || *sourceCursor != *endSource)
+            : (startSource==nullptr || *sourceCursor != *startSource))) {
       CommonElement* sourceElement = sourceCursor->getSElement();
       DVirtualCollection::TReferenceInsertionParameters<ExtendedInsertionParameters,
          ExtendedInsertionParameters> paramsCopy(parameters, parameters);
@@ -649,11 +649,12 @@ TMultipleSortedCollection<TypeTraits>::paddAll(const thisType& source,
          _add(sourceCursor->queryKey(), UniqueBaseCast::castFrom(sourceElement), paramsCopy, cursor);
       };
 
-      for (sourceCursor->position(VirtualCollectionCursor::Position().setDirection(isForward ? COL::VirtualCollection::RPAfter : COL::VirtualCollection::RPBefore));
-           sourceCursor->isValid() && (isForward
-               ? ((endSource==nullptr) || (!sourceCursor->isEqual(*endSource)))
-               : ((startSource==nullptr) || (!sourceCursor->isEqual(*startSource))));
-           sourceCursor->position(VirtualCollectionCursor::Position()
+      for (sourceCursor->position(VirtualCollectionCursor::Position()
+               .setDirection(isForward ? COL::VirtualCollection::RPAfter : COL::VirtualCollection::RPBefore));
+            sourceCursor->isValid() && (isForward
+               ? (endSource==nullptr || *sourceCursor != *endSource)
+               : (startSource==nullptr || *sourceCursor != *startSource));
+            sourceCursor->position(VirtualCollectionCursor::Position()
                .setDirection(isForward ? COL::VirtualCollection::RPAfter : COL::VirtualCollection::RPBefore))) {
          sourceElement = sourceCursor->getSElement();
          identification = TypeTraits::identifyElementFromCommon(*sourceElement);
@@ -872,7 +873,7 @@ TMultipleSortedCollection<TypeTraits>::_removeAll(const ExtendedSuppressParamete
    else {
       if ((start != nullptr) && start->isValid() && (end != nullptr) && end->isValid()
                && start->multipleCursor().isValid() && end->multipleCursor().isValid()
-               && start->sortedCursor().isEqual(end->sortedCursor())) {
+               && start->sortedCursor() == end->sortedCursor()) {
          ReceiverMultipleElement* base = (ReceiverMultipleElement*) &start->sortedCursor().elementSAt();
          AssumeCondition(dynamic_cast<const ReceiverMultipleElement*>((typename SortedCollection::Node*) base))
          int removed = base->count();
@@ -926,7 +927,7 @@ TMultipleSortedCollection<TypeTraits>::_removeAll(const ExtendedSuppressParamete
          else {
             removed -= sendNode->count();
             uCount -= removed;
-            if (copyParameters.isAfter()) { // le curseur sera invalidé dans tous les cas
+            if (copyParameters.isAfter()) { // the cursor will be invalid in all cases
                if (!const_cast<typename SortedCollection::Cursor&>(end->sortedCursor())
                      .setToPrevious())
                   return;
@@ -959,9 +960,9 @@ TMultipleSortedCollection<TypeTraits>::_removeAll(const ExtendedSuppressParamete
 namespace DMultipleSortedCollection {
 
 template <class TypeReceiver, class TypeElement, class TypeSortedCollection>
-class ReplaceWithReceiver : public PNT::AutoPointer<TypeReceiver> {
+class ReplaceWithReceiver : public PNT::PPassPointer<TypeReceiver> {
   private:
-   typedef PNT::AutoPointer<TypeReceiver> inherited;
+   typedef PNT::PPassPointer<TypeReceiver> inherited;
    VirtualCollection::ExtendedReplaceParameters erpParameters;
    bool fFreeOnError;
 
@@ -1384,7 +1385,7 @@ TMultipleSortedCollectionCursor<TypeTraits>::_isPositionned(const ExtendedLocate
    if (cursor && cursor->isValid()) {
       if (ppmccMultipleCursor.isValid()) {
          if (cursor->ppmccMultipleCursor.isValid()) // Les deux curseurs sont multiples
-            return (sccCursor.isEqual(cursor->sccCursor))
+            return (sccCursor == cursor->sccCursor)
                 ? ppmccMultipleCursor->isPositionned(pos, cursor->ppmccMultipleCursor.key())
                 : (sccCursor.isPositionned(pos, &cursor->sccCursor)
                   && ppmccMultipleCursor->isPositionned(pos)
@@ -1451,6 +1452,4 @@ TMultipleSortedCollectionCursor<TypeTraits>::_position(const inherited::Position
 }
 
 } // end of namespace COL
-
-#endif // COL_MultiSortedTEMPLATE
 

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -27,13 +25,13 @@
 // File      : FloatIntervalExecutionPath.h
 // Description :
 //   Definition of a class of floating point intervals
+//   Requires the definition of FLOAT_REAL_BITS_NUMBER.
 //
 
-#ifndef FloatInstrumentation_FloatIntervalExecutionPathH
-#define FloatInstrumentation_FloatIntervalExecutionPathH
+#pragma once
 
 #include <cfloat>
-#include "config.h"
+
 #include "NumericalDomains/FloatIntervalBase.h"
 
 namespace NumericalDomains { namespace DDoubleInterval {
@@ -76,17 +74,35 @@ namespace DFloatDigitsHelper {
    };
 }
 
-class FloatDigitsHelper {
-  public:
+struct FloatDigitsHelper {
    template <typename TypeImplementation>
    class TFloatDigits : public DFloatDigitsHelper::TFloatDigits<TypeImplementation> {};
 };
+
+template <class TypeBuiltDouble, typename TypeImplementation>
+struct TFloatDigitsConnectionHelper {};
 
 typedef TBuiltFloat<FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa+1, 23, 8> BuiltFloat;
 typedef TBuiltFloat<FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa+1, 52, 11> BuiltDouble;
 typedef TBuiltFloat<FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa+1,
    FloatDigitsHelper::TFloatDigits<long double>::UBitSizeMantissa,
    FloatDigitsHelper::TFloatDigits<long double>::UBitSizeExponent> BuiltLongDouble;
+
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      float>
+   {  typedef BuiltFloat BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      double>
+   {  typedef BuiltDouble BuiltType; };
+template <int UMaxBitsNumber, int UMantissaBitsNumber, int UExponentBitsNumber>
+struct TFloatDigitsConnectionHelper<
+      TBuiltFloat<UMaxBitsNumber, UMantissaBitsNumber, UExponentBitsNumber>,
+      long double>
+   {  typedef BuiltLongDouble BuiltType; };
 
 class BaseExecutionPath {
   protected:
@@ -159,7 +175,7 @@ class ExecutionPathContract : public BaseExecutionPath {
    void updateThresholdDetection(const TypeBuiltDouble& relativeError, const TypeBuiltDouble& meanValue) const;
 
    bool followNewUnresolvedBranch(bool& /* isLastBranch */) const { return true; }
-   unsigned followNewConversionBranch(unsigned /* conversion */, bool& /* isLastBranch */) const { return 0; }
+   uint32_t followNewConversionBranch(uint64_t /* conversion */, bool& /* isLastBranch */) const { return 0; }
 };
 
 template <class TypeExecutionPath>
@@ -169,7 +185,7 @@ class TBaseFloatInterval : public TypeExecutionPath {
 
   public:
    bool getThenBranch(bool executionResult) const;
-   unsigned getConversionBranch(unsigned diff, unsigned executionResult) const;
+   uint32_t getConversionBranch(uint64_t diff, uint64_t executionResult) const;
 
   public:
    static Numerics::DDouble::Access::ReadParameters& minParams() { return inherited::minParams(); }
@@ -266,8 +282,8 @@ template <class TypeExecutionPath>
 template <class TFloatInterval>
 inline void
 TBaseFloatInterval<TypeExecutionPath>::notifyForCompare(const TFloatInterval& source) const {  
-   bool doesAssume;
-   bool hasOutput;
+   bool doesAssume = false;
+   bool hasOutput = false;
    if (inherited::fSupportVerbose || inherited::fSupportThreshold) {
       doesAssume = inherited::doesFollowFlow();
       hasOutput = inherited::hasOutput();
@@ -347,12 +363,10 @@ class TFloatInterval : public TCompareFloatInterval<
    static PQueryDebugValue pqueryDebugValue;
 
   public:
-   TFloatInterval() {}
+   TFloatInterval() = default;
    TFloatInterval(TypeImplementation min, TypeImplementation max) : inherited(min, max) {}
-   TFloatInterval(int value) : inherited(value) {}
-   TFloatInterval(long int value) : inherited(value) {}
-   TFloatInterval(unsigned value) : inherited(value) {}
-   TFloatInterval(unsigned long value) : inherited(value) {}
+   template <typename TypeValue> TFloatInterval(TypeValue value) requires std::integral<TypeValue>
+      :  inherited(value) {}
    TFloatInterval(const thisType& source) = default;
    TFloatInterval(thisType&& source) = default; // [TODO] keep symbolic for constraints
    TFloatInterval& operator=(const thisType& source) = default;
@@ -367,6 +381,4 @@ class TFloatInterval : public TCompareFloatInterval<
 };
 
 }} // end of namespace NumericalDomains::DDoubleInterval
-
-#endif // FloatInstrumentation_FloatIntervalExecutionPathH
 

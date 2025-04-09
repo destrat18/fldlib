@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -40,19 +38,19 @@
 #define DefineCellTemplateParameters(CellSize)             \
    <CellSize>
 #define DefineBaseType                                     \
-   unsigned int
+   uint32_t
 #define DefineBaseTypeConstReference                       \
-   unsigned int
+   uint32_t
 #define DefineSBaseType                                    \
-   unsigned int
+   uint32_t
 #define DefineSBaseTypeConstReference                      \
-   unsigned int
+   uint32_t
 #define DefineMemcpy(dest, source, size)                   \
-   std::memcpy(dest, source, size*sizeof(unsigned int))
+   std::memcpy(dest, source, size*sizeof(uint32_t))
 #define DefineSizeofBaseType                               \
-   sizeof(unsigned int)
+   sizeof(uint32_t)
 #define DefineSizeofBaseTypeInBits                         \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineBigCellTemplateHeader                        \
    template <class IntegerTraits>
 #define DefineBigCellSTemplateHeader                       \
@@ -205,7 +203,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    static DefineSBaseType sub(ArrayProperty cell, DefineSBaseTypeConstReference value)
       {  
 #ifndef DefineGeneric
-         unsigned int temp = cell;
+         uint32_t temp = cell;
 #else
          BaseType result = BaseStoreTraits::detectCarryBeforeSubstraction(cell, value);
 #endif
@@ -247,11 +245,11 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
       MidArray& operator=(DefineSBaseTypeConstReference value)
          {  
 #ifndef DefineGeneric
-            unsigned int store = pitArray->array(uIndex >> 1);
+            uint32_t store = pitArray->array(uIndex >> 1);
             pitArray->array(uIndex >> 1) = (uIndex & 1U)
-               ? ((value << (4*sizeof(unsigned int)))
-                  | (store & ~(~0U << 4*sizeof(unsigned int))))
-               : ((store & (~0U << 4*sizeof(unsigned int))) | value);
+               ? ((value << (4*sizeof(uint32_t)))
+                  | (store & ~(~(uint32_t) 0 << 4*sizeof(uint32_t))))
+               : ((store & (~(uint32_t) 0 << 4*sizeof(uint32_t))) | value);
 #else
             if (uIndex & 0x1)
                BaseStoreTraits::storeIntoMidHighPart(value, pitArray->array(uIndex >> 1));
@@ -264,8 +262,8 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
          {  
             return (uIndex & 1U)
 #ifndef DefineGeneric
-               ? (pitArray->array(uIndex >> 1) >> 4*sizeof(unsigned int))
-               : (pitArray->array(uIndex >> 1) & ~(~0U << 4*sizeof(unsigned int)));
+               ? (pitArray->array(uIndex >> 1) >> 4*sizeof(uint32_t))
+               : (pitArray->array(uIndex >> 1) & ~(~(uint32_t) 0 << 4*sizeof(uint32_t)));
 #else
                ? BaseStoreTraits::getMidHighPart(pitArray->array(uIndex >> 1))
                : BaseStoreTraits::getMidLowPart(pitArray->array(uIndex >> 1));
@@ -277,8 +275,8 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    DefineSBaseType midArray(int index) const
       {  return (index & 1U)
 #ifndef DefineGeneric
-            ? (array(index >> 1) >> 4*sizeof(unsigned int))
-            : (array(index >> 1) & ~(~0U << 4*sizeof(unsigned int)));
+            ? (array(index >> 1) >> 4*sizeof(uint32_t))
+            : (array(index >> 1) & ~(~(uint32_t) 0 << 4*sizeof(uint32_t)));
 #else
             ? BaseStoreTraits::getMidHighPart(array(index >> 1))
             : BaseStoreTraits::getMidLowPart(array(index >> 1));
@@ -287,11 +285,11 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    void setMidArray(int index, DefineSBaseTypeConstReference value)
       {  
 #ifndef DefineGeneric
-         unsigned int store = array(index >> 1);
+         uint32_t store = array(index >> 1);
          array(index >> 1) = (index & 1U)
-            ? ((value << (4*sizeof(unsigned int)))
-               | (store & ~(~0U << 4*sizeof(unsigned int))))
-            : ((store & (~0U << 4*sizeof(unsigned int))) | value);
+            ? ((value << (4*sizeof(uint32_t)))
+               | (store & ~(~(uint32_t) 0 << 4*sizeof(uint32_t))))
+            : ((store & (~(uint32_t) 0 << 4*sizeof(uint32_t))) | value);
 #else
          if (index & 0x1)
             BaseStoreTraits::storeIntoMidHighPart(value, array(index >> 1));
@@ -317,7 +315,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
          {  if (value)
 #ifndef DefineGeneric
                pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits))
-                  |= (1U << (uIndex%DefineSizeofBaseTypeInBits));
+                  |= ((uint32_t) 1 << (uIndex%DefineSizeofBaseTypeInBits));
 #else
                BaseStoreTraits::setTrueBit(pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits)),
                   uIndex%DefineSizeofBaseTypeInBits);
@@ -325,7 +323,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
             else
 #ifndef DefineGeneric
                pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits))
-                  &= ~(1U << (uIndex%DefineSizeofBaseTypeInBits));
+                  &= ~((uint32_t) 1 << (uIndex%DefineSizeofBaseTypeInBits));
 #else
                BaseStoreTraits::setFalseBit(pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits)),
                   uIndex%DefineSizeofBaseTypeInBits);
@@ -336,7 +334,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
          {  
 #ifndef DefineGeneric
             return (pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits))
-                  & (1U << (uIndex%DefineSizeofBaseTypeInBits)))
+                  & ((uint32_t) 1 << (uIndex%DefineSizeofBaseTypeInBits)))
                ? true : false;
 #else
             return BaseStoreTraits::getBit(pitArray->array((int) (uIndex/DefineSizeofBaseTypeInBits)),
@@ -349,7 +347,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    bool bitArray(int index) const
       {  
 #ifndef DefineGeneric
-         return (array((int) (index/DefineSizeofBaseTypeInBits)) & (1U << (index%DefineSizeofBaseTypeInBits)))
+         return (array((int) (index/DefineSizeofBaseTypeInBits)) & ((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits)))
             ? true : false;
 #else
          return BaseStoreTraits::getBit(array((int) (index/DefineSizeofBaseTypeInBits)),
@@ -359,7 +357,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    bool cbitArray(int index) const
       {  
 #ifndef DefineGeneric
-         return (array((int) (index/DefineSizeofBaseTypeInBits)) & (1U << (index%DefineSizeofBaseTypeInBits)))
+         return (array((int) (index/DefineSizeofBaseTypeInBits)) & ((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits)))
             ? true : false;
 #else
          return BaseStoreTraits::getBit(array((int) (index/DefineSizeofBaseTypeInBits)),
@@ -369,14 +367,14 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    void setBitArray(int index, bool value)
       {  if (value)
 #ifndef DefineGeneric
-            array((int) (index/DefineSizeofBaseTypeInBits)) |= (1U << (index%DefineSizeofBaseTypeInBits));
+            array((int) (index/DefineSizeofBaseTypeInBits)) |= ((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits));
 #else
             BaseStoreTraits::setTrueBit(array((int) (index/DefineSizeofBaseTypeInBits)),
                index%DefineSizeofBaseTypeInBits);
 #endif
          else
 #ifndef DefineGeneric
-            array((int) (index/DefineSizeofBaseTypeInBits)) &= ~(1U << (index%DefineSizeofBaseTypeInBits));
+            array((int) (index/DefineSizeofBaseTypeInBits)) &= ~((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits));
 #else
             BaseStoreTraits::setFalseBit(array((int) (index/DefineSizeofBaseTypeInBits)),
                index%DefineSizeofBaseTypeInBits);
@@ -385,7 +383,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    void setTrueBitArray(int index)
       {  
 #ifndef DefineGeneric
-         array((int) (index/DefineSizeofBaseTypeInBits)) |= (1U << (index%DefineSizeofBaseTypeInBits));
+         array((int) (index/DefineSizeofBaseTypeInBits)) |= ((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits));
 #else
          BaseStoreTraits::setTrueBit(array((int) (index/DefineSizeofBaseTypeInBits)),
             index%DefineSizeofBaseTypeInBits);
@@ -394,7 +392,7 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
    void setFalseBitArray(int index)
       {  
 #ifndef DefineGeneric
-         array((int) (index/DefineSizeofBaseTypeInBits)) &= ~(1U << (index%DefineSizeofBaseTypeInBits));
+         array((int) (index/DefineSizeofBaseTypeInBits)) &= ~((uint32_t) 1 << (index%DefineSizeofBaseTypeInBits));
 #else
          BaseStoreTraits::setFalseBit(array((int) (index/DefineSizeofBaseTypeInBits)),
             index%DefineSizeofBaseTypeInBits);
@@ -402,18 +400,12 @@ class DefineBigCellIntAlgo : public DInteger::Access, protected IntegerTraits
       }
 
    ComparisonResult compare(const thisType& source) const;
-   bool operator<(const thisType& source) const
-      {  return compare(source) == CRLess; }
-   bool operator>(const thisType& source) const
-      {  return compare(source) == CRGreater; }
-   bool operator<=(const thisType& source) const
-      {  return compare(source) <= CREqual; }
-   bool operator>=(const thisType& source) const
-      {  return compare(source) >= CREqual; }
+   std::strong_ordering operator<=>(const thisType& source) const
+      {  auto result = compare(source);
+         return result == CRLess ? std::strong_ordering::less : (result == CRGreater ? std::strong_ordering::greater : std::strong_ordering::equal);
+      }
    bool operator==(const thisType& source) const
       {  return compare(source) == CREqual; }
-   bool operator!=(const thisType& source) const
-      {  return compare(source) != CREqual; }
 
    class Carry {
      private:
@@ -464,7 +456,48 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
 #endif
 
   public:
-#ifdef StandardClassesHPP
+#ifdef DefineNoEnhancedObject
+   class FormatParameters {
+     private:
+      int uLength;
+      
+     protected:
+      enum Type { TInternal, TBinary, TFullBinary, TFullHexaDecimal, THexaDecimal, TIntegerCell, TDecimal };
+      
+     private:
+      bool fRaw  : 1;
+      Type tType : 3;
+      bool fSign : 1;
+
+     public:
+      FormatParameters() : uLength(0), fRaw(false), tType(TInternal), fSign(false) {}
+      FormatParameters(const FormatParameters& source) = default;
+
+      bool isRaw() const { return fRaw; }
+      bool isBinary() const { return (tType == TFullBinary) || (tType == TBinary); }
+      bool isFullBinary() const { return tType == TFullBinary; }
+      bool isLightBinary() const { return tType == TBinary; }
+      bool isFullHexaDecimal() const { return tType == TFullHexaDecimal; }
+      bool isHexaDecimal() const { return tType == THexaDecimal; }
+      bool isInternal() const { return tType == TInternal; }
+      bool isIntegerCell() const { return tType == TIntegerCell; }
+      bool isDecimal() const { return tType == TDecimal; }
+      bool isSigned() const { return fSign; }
+
+      FormatParameters& setRaw() { fRaw = true; return *this; }
+      FormatParameters& setInternal() { tType = TInternal; return *this; }
+      FormatParameters& setFullBinary(int length)
+         {  tType = TFullBinary; uLength = length; return *this; }
+      FormatParameters& setFullHexaDecimal(int length)
+         {  tType = TFullHexaDecimal; uLength = length; return *this; }
+      FormatParameters& setHexaDecimal() { tType = THexaDecimal; return *this; }
+      FormatParameters& setBinary() { tType = TBinary; return *this; }
+      FormatParameters& setIntegerCell() { tType = TIntegerCell; return *this; }
+      FormatParameters& setDecimal() { tType = TDecimal; return *this; }
+      FormatParameters& setSigned(int length) { fSign = true; uLength = length; return *this; }
+      const int& getLength() const { return uLength; }
+   };
+#else // !DefineNoEnhancedObject
    class FormatParameters : public STG::IOObject::FormatParameters {
      private:
       typedef STG::IOObject::FormatParameters inherited;
@@ -511,48 +544,7 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
       FormatParameters& setSigned(int length) { mergeSignField(1); uLength = length; return *this; }
       const int& getLength() const { return uLength; }
    };
-#else // !StandardClassesHPP
-   class FormatParameters {
-     private:
-      int uLength;
-      
-     protected:
-      enum Type { TInternal, TBinary, TFullBinary, TFullHexaDecimal, THexaDecimal, TIntegerCell, TDecimal };
-      
-     private:
-      bool fRaw  : 1;
-      Type tType : 3;
-      bool fSign : 1;
-
-     public:
-      FormatParameters() : uLength(0), fRaw(false), tType(TInternal), fSign(false) {}
-      FormatParameters(const FormatParameters& source) = default;
-
-      bool isRaw() const { return fRaw; }
-      bool isBinary() const { return (tType == TFullBinary) || (tType == TBinary); }
-      bool isFullBinary() const { return tType == TFullBinary; }
-      bool isLightBinary() const { return tType == TBinary; }
-      bool isFullHexaDecimal() const { return tType == TFullHexaDecimal; }
-      bool isHexaDecimal() const { return tType == THexaDecimal; }
-      bool isInternal() const { return tType == TInternal; }
-      bool isIntegerCell() const { return tType == TIntegerCell; }
-      bool isDecimal() const { return tType == TDecimal; }
-      bool isSigned() const { return fSign; }
-
-      FormatParameters& setRaw() { fRaw = true; return *this; }
-      FormatParameters& setInternal() { tType = TInternal; return *this; }
-      FormatParameters& setFullBinary(int length)
-         {  tType = TFullBinary; uLength = length; return *this; }
-      FormatParameters& setFullHexaDecimal(int length)
-         {  tType = TFullHexaDecimal; uLength = length; return *this; }
-      FormatParameters& setHexaDecimal() { tType = THexaDecimal; return *this; }
-      FormatParameters& setBinary() { tType = TBinary; return *this; }
-      FormatParameters& setIntegerCell() { tType = TIntegerCell; return *this; }
-      FormatParameters& setDecimal() { tType = TDecimal; return *this; }
-      FormatParameters& setSigned(int length) { fSign = true; uLength = length; return *this; }
-      const int& getLength() const { return uLength; }
-   };
-#endif // StandardClassesHPP
+#endif // DefineNoEnhancedObject
 
 #ifdef DefineGeneric
    typedef typename IntegerTraits::ArrayProperty ArrayProperty;
@@ -639,12 +631,9 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
 
 #ifdef DefineGeneric
    ComparisonResult compare(const thisType& source) const { return inherited::compare(source); }
-   bool operator<(const thisType& source) const { return inherited::operator<(source); }
-   bool operator>(const thisType& source) const { return inherited::operator>(source); }
-   bool operator<=(const thisType& source) const { return inherited::operator<=(source); }
-   bool operator>=(const thisType& source) const { return inherited::operator>=(source); }
+   std::strong_ordering operator<=>(const thisType& source) const
+      {  return inherited::operator<=>(source); }
    bool operator==(const thisType& source) const { return inherited::operator==(source); }
-   bool operator!=(const thisType& source) const { return inherited::operator!=(source); }
    thisType& operator<<=(int shift) { return (thisType&) inherited::operator<<=(shift); }
    thisType& operator>>=(int shift) { return (thisType&) inherited::operator>>=(shift); }
 #endif
@@ -659,6 +648,7 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
    thisType& clearHigh(int shift);
    thisType& saturate(int shift);
    bool isZero() const;
+   bool isOne() const;
    bool hasZero(int shift) const;
    
 #ifndef DefineGeneric
@@ -774,7 +764,7 @@ class DefineBigCellInt : protected DefineBigCellIntAlgo DefineBigCellTemplatePar
             DefineSBaseTypeConstReference source);
 
      public:
-      AtomicDivisionResult(DefineSBaseType remainder=0U) : uRemainder(remainder) {}
+      AtomicDivisionResult(DefineSBaseType remainder=0) : uRemainder(remainder) {}
       AtomicDivisionResult(const AtomicDivisionResult& source) = default;
       AtomicDivisionResult& operator=(const AtomicDivisionResult& source) = default;
       const DefineSBaseType& modulo() const { return uRemainder; }
@@ -859,7 +849,7 @@ DefineBigCellInt DefineBigCellTemplateParameters(IntegerTraits)::operator%=(cons
       promotedResult >>= (int) (inherited::getSize()*DefineSizeofBaseTypeInBits-result.comma());
 #ifndef DefineGeneric
       result.quotient()[(int) (result.comma()/DefineSizeofBaseTypeInBits)]
-            |= (1U << (result.comma() % DefineSizeofBaseTypeInBits));
+            |= ((uint32_t) 1 << (result.comma() % DefineSizeofBaseTypeInBits));
 #else
       BaseStoreTraits::setTrueBit(result.quotient()[result.comma()/DefineSizeofBaseTypeInBits],
             result.comma() % DefineSizeofBaseTypeInBits);
@@ -950,7 +940,7 @@ class DefineBigIntIntegerTraits {
    void normalizeLastCell()
       {  if (lastCellSize() < (int)DefineSizeofBaseTypeInBits)
 #ifndef DefineGeneric
-            ctTraits[lastCellIndex()] &= ~(~0U << lastCellSize());
+            ctTraits[lastCellIndex()] &= ~(~(uint32_t) 0 << lastCellSize());
 #else
             BaseStoreTraits::clearHighValuePart(ctTraits[lastCellIndex()], lastCellSize());
 #endif
@@ -958,7 +948,7 @@ class DefineBigIntIntegerTraits {
    void normalize()
       {  if (lastCellSize() < (int) DefineSizeofBaseTypeInBits)
 #ifndef DefineGeneric
-            ctTraits[lastCellIndex()] &= ~(~0U << lastCellSize());
+            ctTraits[lastCellIndex()] &= ~(~(uint32_t) 0 << lastCellSize());
 #else
             BaseStoreTraits::clearHighValuePart(ctTraits[lastCellIndex()], lastCellSize());
 #endif
@@ -1051,12 +1041,9 @@ class DefineBigInt
    DefineSBaseTypeConstReference carray(int index) const { return array(index); }
    ArrayProperty array(int index) { return inherited::array(index); }
    ComparisonResult compare(const thisType& source) const { return cells().compare(source.cells()); }
-   bool operator<(const thisType& source) const { return cells() < source.cells(); }
-   bool operator>(const thisType& source) const { return cells() > source.cells(); }
-   bool operator<=(const thisType& source) const { return cells() <= source.cells(); }
-   bool operator>=(const thisType& source) const { return cells() >= source.cells(); }
+   std::strong_ordering operator<=>(const thisType& source) const
+      {  return cells() <=> source.cells(); }
    bool operator==(const thisType& source) const { return cells() == source.cells(); }
-   bool operator!=(const thisType& source) const { return cells() != source.cells(); }
    thisType& operator<<=(int shift)
       {  cells() <<= shift;
          inherited::normalize();
@@ -1258,6 +1245,7 @@ class DefineBigInt
    DefineSBaseTypeConstReference getValue() const { return cells().getValue(); }
    bool isAtomic() const { return cells().isAtomic(); }
    bool isZero() const { return cells().isZero(); }
+   bool isOne() const { return cells().isOne(); }
    bool hasZero(int shift) const { return cells().hasZero(shift); }
    thisType& adjustSize(int newSize) { inherited::adjustSize(newSize); return *this; }
    thisType& setSize(int exactSize) { inherited::setSize(exactSize); return *this; }

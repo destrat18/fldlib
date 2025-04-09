@@ -1,35 +1,29 @@
 #!/bin/bash
 
-# @CXXFLAGS@
-
 if [ -z "${AUTOTEST}" ]
 then
 if [ -z "${FLOATDIAGNOSISHOME}" ]
 then
-   prefix=@prefix@
-   exec_prefix=@exec_prefix@
-   FLOATDIAGNOSIS_INCLUDE=@includedir@/@PACKAGE@
-   FLOATDIAGNOSIS_LIB=@libdir@/@PACKAGE@
+   prefix=@CMAKE_INSTALL_PREFIX@
+   exec_prefix=@CMAKE_INSTALL_PREFIX@/bin
+   FLOATDIAGNOSIS_INCLUDE=@CMAKE_INSTALL_PREFIX@/include/fldlib
+   FLOATDIAGNOSIS_LIB=@CMAKE_INSTALL_PREFIX@/lib
    FLOATDIAGNOSIS_TESTS_INCLUDE=${FLOATDIAGNOSIS_INCLUDE}
    FLOATDIAGNOSIS_ICONFIG_INCLUDE=-I${FLOATDIAGNOSIS_INCLUDE}
 else
-   FLOATDIAGNOSIS_INCLUDE=${FLOATDIAGNOSISHOME}/include/@PACKAGE@
+   FLOATDIAGNOSIS_INCLUDE=${FLOATDIAGNOSISHOME}/include/fldlib
    FLOATDIAGNOSIS_TESTS_INCLUDE=${FLOATDIAGNOSIS_INCLUDE}
    FLOATDIAGNOSIS_ICONFIG_INCLUDE=-I${FLOATDIAGNOSIS_INCLUDE}
-   FLOATDIAGNOSIS_LIB=${FLOATDIAGNOSISHOME}/lib/@PACKAGE@
+   FLOATDIAGNOSIS_LIB=${FLOATDIAGNOSISHOME}/lib
 fi
 else
-   FLOATDIAGNOSIS_INCLUDE=@top_srcdir@
-   FLOATDIAGNOSIS_TESTS_INCLUDE=@top_srcdir@/tests
-   FLOATDIAGNOSIS_ICONFIG_INCLUDE="-I@top_builddir@ -I@top_builddir@/applications -I@top_builddir@/tests"
-   FLOATDIAGNOSIS_LIB=@top_builddir@/.libs
+   FLOATDIAGNOSIS_INCLUDE=@CMAKE_SOURCE_DIR@
+   FLOATDIAGNOSIS_TESTS_INCLUDE=@CMAKE_SOURCE_DIR@/tests
+   FLOATDIAGNOSIS_ICONFIG_INCLUDE="-I@CMAKE_CURRENT_BINARY_DIR@ -I@CMAKE_SOURCE_DIR@/inc -I@CMAKE_SOURCE_DIR@/applications"
+   FLOATDIAGNOSIS_LIB=@CMAKE_CURRENT_BINARY_DIR@
 fi
 
-cxxflags=" -DFLOAT_DIAGNOSIS -I${FLOATDIAGNOSIS_INCLUDE} \
-   -std=c++11 @FLOAT_ALLOW_READ_EXCEPTION@ \
-   @FLOAT_GENERIC_BASE_LONG@ @FLOAT_GENERIC_BASE_UNSIGNED@ @FLOAT_LONG_WRITE@ \
-   @FLOAT_REAL_BITS_NUMBER@ @FLOAT_ZONOTOPE_ALLOW_SIMPLEX@ @FLOAT_ZONOTOPE_DOES_ABSORB_HIGH_LEVEL@ \
-   @FLOAT_ZONOTOPE_DOES_EXCLUDE_CONSTANT_FROM_SYMBOL_ABSORPTION@ @FLOAT_ZONOTOPE_LIMIT_SYMBOL_ABSORPTION@
+cxxflags=" -DFLOAT_DIAGNOSIS -I${FLOATDIAGNOSIS_INCLUDE} -std=c++20 \
    ${FLOATDIAGNOSIS_ICONFIG_INCLUDE} -I${FLOATDIAGNOSIS_INCLUDE}/utils -I${FLOATDIAGNOSIS_INCLUDE}/algorithms \
    -I${FLOATDIAGNOSIS_INCLUDE}/applications "
 
@@ -39,7 +33,6 @@ loop_unstable=0
 optim=0
 verbose=0
 analysis=0
-interface=0
 has_include=0
 has_progname=0
 
@@ -113,9 +106,6 @@ do
     elif [ "$param" == "-scenario" ]
     then
       cxxflags+=" -DFLOAT_SCENARIO"
-    elif [ "$param" == "-interface" ]
-    then
-      interface=1
     elif [ "$param" == "-backtrace" ]
     then
       cxxflags+=" -DFLOAT_BACKTRACE"
@@ -128,7 +118,7 @@ do
   fi
 done
 
-cxxflags+=" -include ${FLOATDIAGNOSIS_TESTS_INCLUDE}/std_header.h"
+cxxflags+=" -include std_header.h"
 
 if [ ${analysis} -eq 0 ]
 then
@@ -149,11 +139,11 @@ then
 fi
 if [ ${optim} = 1 ]
 then
-  if [ @HAVE_CLANG@ -ne 0 ]
+  if [ @CMAKE_HAVE_CLANG@ -ne 0 ]
   then
     cxxflags+=" -O3 -DDefineDebugLevel=1 -x c++ -Wall \
              -Wno-unused-local-typedefs -Wno-unused-variable -Woverloaded-virtual -fmessage-length=0"
-  elif [ @HAVE_GNUC@ -ne 0 ]
+  elif [ @CMAKE_HAVE_GNUC@ -ne 0 ]
   then
     cxxflags+=" -O3 -DDefineDebugLevel=1 -Wall -Wno-unused-but-set-variable \
              -Wno-unused-local-typedefs -Wno-unused-variable -Woverloaded-virtual -fmessage-length=0"
@@ -168,15 +158,13 @@ then
   cxxflags+=" -DFLOAT_SILENT_COMPUTATIONS"
 fi
 
-if [ ${interface} = 1 ]
+cxxflags+=" @FLOAT_ALLOW_INTERFACE@"
+if [ -z "${AUTOTEST}" ]
 then
-  cxxflags+=" -DFLOAT_INTERFACE"
-  ldflags="-L${FLOATDIAGNOSIS_LIB} -Wl,-rpath,${FLOATDIAGNOSIS_LIB} -lm -lFloatDiagnosisInterface"
+ldflags="@FLDLIBLDFLAGS@"
 else
-  ldflags="-L${FLOATDIAGNOSIS_LIB} -Wl,-rpath,${FLOATDIAGNOSIS_LIB} -lm -lFloatDiagnosis"
+ldflags="@FLDLIBAUTO_LDFLAGS@"
 fi
-
-ldflags+=" @LDFLAGS@"
 
 shift ${opt_params_count}
 
@@ -191,7 +179,6 @@ then
   echo -e "\t-affine\t\t\tto perform an affine arithmetic based analysis"
   echo -e "\t-scenario\t\tin affine mode, to choose a thin input scenario instead of the whole input intervals"
   echo -e "\t-interval\t\tto perform an interval based analysis"
-  echo -e "\t-interface\t\tuse an interface for the library headers, which improves the compilation time"
   echo -e "\t-optim\t\t\tto compile with the optimization flags"
   echo -e "\t-atomic\t\t\tto forget the errors on the constant values"
   echo -e "\t-loop\t\t\tloop over all possible execution paths"
@@ -210,7 +197,18 @@ if [ ${has_progname} -eq 0 ]
 then
   basefile=${1##*/}
   basefile=${basefile%.c} 
-  if [ "${basefile}" == "" ]
+  if [ "${basefile}" == "${1##*/}" ]
+  then
+    basefile=${1##*/}
+    basefile=${basefile%.cpp} 
+    if [ "${basefile}" == "" ]
+    then
+      basefile=progname
+    elif [ "${basefile:0:1}" == "-" ]
+    then
+      basefile=progname
+    fi
+  elif [ "${basefile}" == "" ]
   then
     basefile=progname
   elif [ "${basefile:0:1}" == "-" ]
@@ -229,9 +227,9 @@ done
 
 if [ ${has_progname} -eq 0 ]
 then
-  echo @CXX@ -DPROG_NAME="$basefile" ${cxxflags} $* ${ldflags}
-  @CXX@ -DPROG_NAME="$basefile" ${cxxflags} $* ${ldflags}
+  echo @FLDLIBCXX@ -DPROG_NAME="$basefile" ${cxxflags} $* ${ldflags}
+  @FLDLIBCXX@ -DPROG_NAME="$basefile" ${cxxflags} $* ${ldflags}
 else
-  echo @CXX@ ${cxxflags} $* ${ldflags}
-  @CXX@ ${cxxflags} $* ${ldflags}
+  echo @FLDLIBCXX@ ${cxxflags} $* ${ldflags}
+  @FLDLIBCXX@ ${cxxflags} $* ${ldflags}
 fi

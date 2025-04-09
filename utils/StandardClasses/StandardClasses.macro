@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -36,30 +34,34 @@
    Type<FstT, SndT, ThirdT, FourthT, FifthT>* createSCopy() const                                \
       {  return (Type<FstT, SndT, ThirdT, FourthT, FifthT>*) Type<FstT, SndT, ThirdT, FourthT, FifthT>::castFromCopyHandler(createCopy()); }
 
+#define DTemplate5DefineMCopy(Type, FstT, SndT, ThirdT, FourthT, FifthT)                         \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT, FifthT>(*this)); } \
+   Type<FstT, SndT, ThirdT, FourthT, FifthT>* createSCopy() const                                \
+      {  return (Type<FstT, SndT, ThirdT, FourthT, FifthT>*) Type<FstT, SndT, ThirdT, FourthT, FifthT>::castFromCopyHandler(createCopy()); }\
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT, FifthT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT, FourthT, FifthT>* createSMove()                                      \
+      {  return (Type<FstT, SndT, ThirdT, FourthT, FifthT>*) Type<FstT, SndT, ThirdT, FourthT, FifthT>::castFromCopyHandler(createMove()); }
+
+#define DTemplate5DefineMove(Type, FstT, SndT, ThirdT, FourthT, FifthT)                          \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT, FifthT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT, FourthT, FifthT>* createSMove()                                      \
+      {  return (Type<FstT, SndT, ThirdT, FourthT, FifthT>*) Type<FstT, SndT, ThirdT, FourthT, FifthT>::castFromCopyHandler(createMove()); }
+
 #define DTemplate5Compare(Type, FstT, SndT, ThirdT, FourthT, FifthT)                             \
   public:                                                                                        \
    ComparisonResult compare(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& source) const       \
       {  return _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(source)); }\
    bool isComparable(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const          \
       {  return _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
-   bool operator==(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const            \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)) == CREqual; } \
-   bool operator!=(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const            \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)); \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const             \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)) == CRLess; } \
-   bool operator<=(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const            \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const             \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)) == CRGreater; } \
-   bool operator>=(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& typeObject) const            \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& first, const Type<FstT, SndT, ThirdT, FourthT, FifthT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(Type<FstT, SndT, ThirdT, FourthT, FifthT>::castToCopyHandler(second))); }\
+   friend bool operator==(const Type<FstT, SndT, ThirdT, FourthT, FifthT>& first, const Type<FstT, SndT, ThirdT, FourthT, FifthT>& second)\
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DTemplate5Assign(Type, FstT, SndT, ThirdT, FourthT, FifthT)                              \
   public:                                                                                        \
@@ -92,30 +94,34 @@
    Type<FstT, SndT, ThirdT, FourthT>* createSCopy() const                                        \
       {  return (Type<FstT, SndT, ThirdT, FourthT>*) Type<FstT, SndT, ThirdT, FourthT>::castFromCopyHandler(createCopy()); }
 
+#define DTemplate4DefineMCopy(Type, FstT, SndT, ThirdT, FourthT)                                 \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT>(*this)); } \
+   Type<FstT, SndT, ThirdT, FourthT>* createSCopy() const                                        \
+      {  return (Type<FstT, SndT, ThirdT, FourthT>*) Type<FstT, SndT, ThirdT, FourthT>::castFromCopyHandler(createCopy()); }\
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT, FourthT>* createSMove()                                              \
+      {  return (Type<FstT, SndT, ThirdT, FourthT>*) Type<FstT, SndT, ThirdT, FourthT>::castFromCopyHandler(createMove()); }
+
+#define DTemplate4DefineMove(Type, FstT, SndT, ThirdT, FourthT)                                  \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(new Type<FstT, SndT, ThirdT, FourthT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT, FourthT>* createSMove()                                              \
+      {  return (Type<FstT, SndT, ThirdT, FourthT>*) Type<FstT, SndT, ThirdT, FourthT>::castFromCopyHandler(createMove()); }
+
 #define DTemplate4Compare(Type, FstT, SndT, ThirdT, FourthT)                                     \
   public:                                                                                        \
    ComparisonResult compare(const Type<FstT, SndT, ThirdT, FourthT>& source) const               \
       {  return _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(source)); }        \
    bool isComparable(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                  \
       {  return _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
-   bool operator==(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                    \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)) == CREqual; } \
-   bool operator!=(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                    \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)); \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                     \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)) == CRLess; } \
-   bool operator<=(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                    \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                     \
-      {  return _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)) == CRGreater; } \
-   bool operator>=(const Type<FstT, SndT, ThirdT, FourthT>& typeObject) const                    \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type<FstT, SndT, ThirdT, FourthT>& first, const Type<FstT, SndT, ThirdT, FourthT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(Type<FstT, SndT, ThirdT, FourthT>::castToCopyHandler(second))); }\
+   friend bool operator==(const Type<FstT, SndT, ThirdT, FourthT>& first, const Type<FstT, SndT, ThirdT, FourthT>& second)\
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DTemplate4Assign(Type, FstT, SndT, ThirdT, FourthT)                                      \
   public:                                                                                        \
@@ -149,30 +155,34 @@
    Type<FstT, SndT, ThirdT>* createSCopy() const                                                 \
       {  return (Type<FstT, SndT, ThirdT>*) Type<FstT, SndT, ThirdT>::castFromCopyHandler(createCopy()); }
 
+#define DTemplate3DefineMCopy(Type, FstT, SndT, ThirdT)                                          \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type<FstT, SndT, ThirdT>::castToCopyHandler(new Type<FstT, SndT, ThirdT>(*this)); } \
+   Type<FstT, SndT, ThirdT>* createSCopy() const                                                 \
+      {  return (Type<FstT, SndT, ThirdT>*) Type<FstT, SndT, ThirdT>::castFromCopyHandler(createCopy()); }\
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT>::castToCopyHandler(new Type<FstT, SndT, ThirdT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT>* createSMove()                                                       \
+      {  return (Type<FstT, SndT, ThirdT>*) Type<FstT, SndT, ThirdT>::castFromCopyHandler(createMove()); }
+
+#define DTemplate3DefineMove(Type, FstT, SndT, ThirdT)                                           \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT, ThirdT>::castToCopyHandler(new Type<FstT, SndT, ThirdT>(std::move(*this))); } \
+   Type<FstT, SndT, ThirdT>* createSMove()                                                       \
+      {  return (Type<FstT, SndT, ThirdT>*) Type<FstT, SndT, ThirdT>::castFromCopyHandler(createMove()); }
+
 #define DTemplate3Compare(Type, FstT, SndT, ThirdT)                                              \
   public:                                                                                        \
    ComparisonResult compare(const Type<FstT, SndT, ThirdT>& source) const                        \
       {  return _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(source)); }                 \
    bool isComparable(const Type<FstT, SndT, ThirdT>& typeObject) const                           \
       {  return _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)) != CRNonComparable; } \
-   bool operator==(const Type<FstT, SndT, ThirdT>& typeObject) const                             \
-      {  return _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)) == CREqual; }  \
-   bool operator!=(const Type<FstT, SndT, ThirdT>& typeObject) const                             \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)); \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type<FstT, SndT, ThirdT>& typeObject) const                              \
-      {  return _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)) == CRLess; }   \
-   bool operator<=(const Type<FstT, SndT, ThirdT>& typeObject) const                             \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type<FstT, SndT, ThirdT>& typeObject) const                              \
-      {  return _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)) == CRGreater; }\
-   bool operator>=(const Type<FstT, SndT, ThirdT>& typeObject) const                             \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(typeObject)); \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type<FstT, SndT, ThirdT>& first, const Type<FstT, SndT, ThirdT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(Type<FstT, SndT, ThirdT>::castToCopyHandler(second))); }\
+   friend bool operator==(const Type<FstT, SndT, ThirdT>& first, const Type<FstT, SndT, ThirdT>& second)\
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DTemplate3Assign(Type, FstT, SndT, ThirdT)                                               \
   public:                                                                                        \
@@ -206,30 +216,34 @@
    Type<FstT, SndT>* createSCopy() const                                                         \
       {  return (Type<FstT, SndT>*) Type<FstT, SndT>::castFromCopyHandler(createCopy()); }
 
+#define DTemplate2DefineMCopy(Type, FstT, SndT)                                                  \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type<FstT, SndT>::castToCopyHandler(new Type<FstT, SndT>(*this)); }              \
+   Type<FstT, SndT>* createSCopy() const                                                         \
+      {  return (Type<FstT, SndT>*) Type<FstT, SndT>::castFromCopyHandler(createCopy()); }       \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT>::castToCopyHandler(new Type<FstT, SndT>(std::move(*this))); }   \
+   Type<FstT, SndT>* createSMove()                                                               \
+      {  return (Type<FstT, SndT>*) Type<FstT, SndT>::castFromCopyHandler(createMove()); }
+
+#define DTemplate2DefineMove(Type, FstT, SndT)                                                   \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT, SndT>::castToCopyHandler(new Type<FstT, SndT>(std::move(*this))); }   \
+   Type<FstT, SndT>* createSMove()                                                               \
+      {  return (Type<FstT, SndT>*) Type<FstT, SndT>::castFromCopyHandler(createMove()); }
+
 #define DTemplate2Compare(Type, FstT, SndT)                                                      \
   public:                                                                                        \
    ComparisonResult compare(const Type<FstT, SndT>& source) const                                \
       {  return _compare(Type<FstT, SndT>::castToCopyHandler(source)); }                         \
    bool isComparable(const Type<FstT, SndT>& typeObject) const                                   \
       {  return _compare(Type<FstT, SndT>::castToCopyHandler(typeObject)) != CRNonComparable; }  \
-   bool operator==(const Type<FstT, SndT>& typeObject) const                                     \
-      {  return _compare(Type<FstT, SndT>::castToCopyHandler(typeObject)) == CREqual; }          \
-   bool operator!=(const Type<FstT, SndT>& typeObject) const                                     \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT>::castToCopyHandler(typeObject));  \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type<FstT, SndT>& typeObject) const                                      \
-      {  return _compare(Type<FstT, SndT>::castToCopyHandler(typeObject)) == CRLess; }           \
-   bool operator<=(const Type<FstT, SndT>& typeObject) const                                     \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT>::castToCopyHandler(typeObject));  \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type<FstT, SndT>& typeObject) const                                      \
-      {  return _compare(Type<FstT, SndT>::castToCopyHandler(typeObject)) == CRGreater; }        \
-   bool operator>=(const Type<FstT, SndT>& typeObject) const                                     \
-      {  ComparisonResult crResult = _compare(Type<FstT, SndT>::castToCopyHandler(typeObject));  \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type<FstT, SndT>& first, const Type<FstT, SndT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(Type<FstT, SndT>::castToCopyHandler(second))); }\
+   friend bool operator==(const Type<FstT, SndT>& first, const Type<FstT, SndT>& second)         \
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DTemplate2Assign(Type, FstT, SndT)                                                       \
   public:                                                                                        \
@@ -263,30 +277,34 @@
    Type<FstT>* createSCopy() const                                                               \
       {  return (Type<FstT>*) Type<FstT>::castFromCopyHandler(createCopy()); }
 
+#define DTemplateDefineMCopy(Type, FstT)                                                         \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type<FstT>::castToCopyHandler(new Type<FstT>(*this)); }                          \
+   Type<FstT>* createSCopy() const                                                               \
+      {  return (Type<FstT>*) Type<FstT>::castFromCopyHandler(createCopy()); }                   \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT>::castToCopyHandler(new Type<FstT>(std::move(*this))); }               \
+   Type<FstT>* createSMove()                                                                     \
+      {  return (Type<FstT>*) Type<FstT>::castFromCopyHandler(createMove()); }
+
+#define DTemplateDefineMove(Type, FstT)                                                          \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type<FstT>::castToCopyHandler(new Type<FstT>(std::move(*this))); }               \
+   Type<FstT>* createSMove()                                                                     \
+      {  return (Type<FstT>*) Type<FstT>::castFromCopyHandler(createMove()); }
+
 #define DTemplateCompare(Type, FstT)                                                             \
   public:                                                                                        \
    ComparisonResult compare(const Type<FstT>& source) const                                      \
       {  return _compare(Type<FstT>::castToCopyHandler(source)); }                               \
    bool isComparable(const Type<FstT>& typeObject) const                                         \
       {  return _compare(Type<FstT>::castToCopyHandler(typeObject)) != CRNonComparable; }        \
-   bool operator==(const Type<FstT>& typeObject) const                                           \
-      {  return _compare(Type<FstT>::castToCopyHandler(typeObject)) == CREqual; }                \
-   bool operator!=(const Type<FstT>& typeObject) const                                           \
-      {  ComparisonResult crResult = _compare(Type<FstT>::castToCopyHandler(typeObject));        \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type<FstT>& typeObject) const                                            \
-      {  return _compare(Type<FstT>::castToCopyHandler(typeObject)) == CRLess; }                 \
-   bool operator<=(const Type<FstT>& typeObject) const                                           \
-      {  ComparisonResult crResult = _compare(Type<FstT>::castToCopyHandler(typeObject));        \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type<FstT>& typeObject) const                                            \
-      {  return _compare(Type<FstT>::castToCopyHandler(typeObject)) == CRGreater; }              \
-   bool operator>=(const Type<FstT>& typeObject) const                                           \
-      {  ComparisonResult crResult = _compare(Type<FstT>::castToCopyHandler(typeObject));        \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type<FstT>& first, const Type<FstT>& second)\
+      {  return EnhancedObject::convertComparePartial(first._compare(Type<FstT>::castToCopyHandler(second))); }\
+   friend bool operator==(const Type<FstT>& first, const Type<FstT>& second)                     \
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DTemplateAssign(Type, FstT)                                                              \
   public:                                                                                        \
@@ -320,30 +338,34 @@
    Type* createSCopy() const                                                                     \
       {  return (Type*) Type::castFromCopyHandler(createCopy()); }
 
+#define DDefineMCopy(Type)                                                                       \
+  public:                                                                                        \
+   virtual EnhancedObject* createCopy() const override                                           \
+      {  return Type::castToCopyHandler(new Type(*this)); }                                      \
+   Type* createSCopy() const                                                                     \
+      {  return (Type*) Type::castFromCopyHandler(createCopy()); }                               \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type::castToCopyHandler(new Type(std::move(*this))); }                           \
+   Type* createSMove()                                                                           \
+      {  return (Type*) Type::castFromCopyHandler(createMove()); }
+
+#define DDefineMove(Type)                                                                        \
+  public:                                                                                        \
+   virtual EnhancedObject* createMove() override                                                 \
+      {  return Type::castToCopyHandler(new Type(std::move(*this))); }                           \
+   Type* createSMove()                                                                           \
+      {  return (Type*) Type::castFromCopyHandler(createMove()); }
+
 #define DCompare(Type)                                                                           \
   public:                                                                                        \
    ComparisonResult compare(const Type& source) const                                            \
       {  return _compare(Type::castToCopyHandler(source)); }                                     \
    bool isComparable(const Type& typeObject) const                                               \
       {  return _compare(Type::castToCopyHandler(typeObject)) != CRNonComparable; }              \
-   bool operator==(const Type& typeObject) const                                                 \
-      {  return _compare(Type::castToCopyHandler(typeObject)) == CREqual; }                      \
-   bool operator!=(const Type& typeObject) const                                                 \
-      {  ComparisonResult crResult = _compare(Type::castToCopyHandler(typeObject));              \
-         return (crResult != CRNonComparable) && (crResult != CREqual);                          \
-      }                                                                                          \
-   bool operator<(const Type& typeObject) const                                                  \
-      {  return _compare(Type::castToCopyHandler(typeObject)) == CRLess; }                       \
-   bool operator<=(const Type& typeObject) const                                                 \
-      {  ComparisonResult crResult = _compare(Type::castToCopyHandler(typeObject));              \
-         return (crResult == CRLess) || (crResult == CREqual);                                   \
-      }                                                                                          \
-   bool operator>(const Type& typeObject) const                                                  \
-      {  return _compare(Type::castToCopyHandler(typeObject)) == CRGreater; }                    \
-   bool operator>=(const Type& typeObject) const                                                 \
-      {  ComparisonResult crResult = _compare(Type::castToCopyHandler(typeObject));              \
-         return (crResult == CRGreater) || (crResult == CREqual);                                \
-      }
+   friend std::partial_ordering operator<=>(const Type& first, const Type& second)               \
+      {  return EnhancedObject::convertComparePartial(first._compare(Type::castToCopyHandler(second))); } \
+   friend bool operator==(const Type& first, const Type& second)                                 \
+      {  return first._compare(Type::castToCopyHandler(second)) == CREqual; }
 
 #define DAssign(Type)                                                                            \
   public:                                                                                        \

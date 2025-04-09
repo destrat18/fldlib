@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -28,11 +28,7 @@
 //
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
-// #include "Collection/Collection.hpp"
 
-namespace COL {}
-
-#include "Pointer/Pointer.template"
 //#include "Collection/Collection.template"
 #include "Collection/VirtualCollection/VirtualCollection.template"
 
@@ -122,7 +118,7 @@ VirtualCollection::pmoveAllTo(VirtualCollection& destination, const ExtendedRepl
    };
 
    const ExtendedSuppressParameters& suppressParameters = (const ExtendedSuppressParameters&) parameters;
-   PNT::AutoPointer<ExtendedReplaceParameters> paramsCopy(parameters);
+   PNT::PPassPointer<ExtendedReplaceParameters> paramsCopy(parameters);
 
    bool isForward = parameters.isRemote() ? (parameters.getInsertionPosition() != RPAfter)
       : (parameters.getInsertionPosition() != RPBefore);
@@ -175,7 +171,7 @@ VirtualCollection::premoveAll(const ExtendedSuppressParameters& parameters,
    VirtualCollection::_removeAll(parameters, start, end);
    if (!normalize(start, end))
       return;
-   PNT::AutoPointer<ExtendedSuppressParameters> parametersCopy(parameters);
+   PNT::PPassPointer<ExtendedSuppressParameters> parametersCopy(parameters);
    if (!start || (!parameters.isFirstExcluded() && start->isFirst())) {
       // The suppression always occurs at the beginning of the list.
       parametersCopy->setRelativePosition(RPAfter);

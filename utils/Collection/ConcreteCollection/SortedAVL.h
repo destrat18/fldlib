@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of AVLs as concrete sorted collections.
 //
 
-#ifndef COL_SortedAVLH
-#define COL_SortedAVLH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualSortedCollection.h"
 #include "Collection/Implementation/BinaryParent.h"
@@ -49,4 +46,3 @@ namespace COL {
 
 } // end of namespace COL
 
-#endif

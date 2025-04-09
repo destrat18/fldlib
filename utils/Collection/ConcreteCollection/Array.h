@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of concrete classes based on arrays.
 //
 
-#ifndef COL_ArrayH
-#define COL_ArrayH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 #include "Pointer/ImplArray.h"
@@ -320,4 +317,3 @@ TArray<Element, Cast>::rend() const
 
 } // end of namespace COL
 
-#endif // COL_ArrayH

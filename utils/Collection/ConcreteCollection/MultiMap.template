@@ -1,8 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,11 +29,9 @@
 //   It is a specialization of multiple collections with only multiple elements.
 //
 
-#ifndef COL_MultiMapTEMPLATE
-#define COL_MultiMapTEMPLATE
+#pragma once
 
 #include "Collection/ConcreteCollection/MultiMap.h"
-// #include "Collection/Collection.hpp"
 
 namespace COL {
 
@@ -137,8 +135,10 @@ TMultiMap<TypeTraits>::correctDuplicationCopyReceiver(const thisType& source,
 
    for (bool doesContinue = (cursor.isValid() && sourceCursor.isValid()); doesContinue;
       doesContinue = (direction == COL::VirtualCollection::RPAfter)
-         ? (cursor.setToNext() && sourceCursor.setToNext() && (!sourceEnd || !sourceCursor.isEqual(*sourceEnd)))
-         : (cursor.setToPrevious() && sourceCursor.setToPrevious() && (!sourceStart || !sourceCursor.isEqual(*sourceStart)))) {
+         ? (cursor.setToNext() && sourceCursor.setToNext()
+               && (!sourceEnd || sourceCursor != *sourceEnd))
+         : (cursor.setToPrevious() && sourceCursor.setToPrevious()
+               && (!sourceStart || sourceCursor != *sourceStart))) {
       typename SortedCollection::Node* node = &cursor.elementSAt();
       AssumeCondition(dynamic_cast<const ReceiverMultipleElement*>(node))
       ((ReceiverMultipleElement&) *node).adjustCopy(
@@ -405,8 +405,8 @@ TMultiMap<TypeTraits>::paddAll(const thisType& source,
       throw ENotImplemented();
 
    if (sourceCursor->isValid() && (isForward
-            ? ((endSource==nullptr) || (!sourceCursor->isEqual(*endSource)))
-            : ((startSource==nullptr) || (!sourceCursor->isEqual(*startSource))))) {
+            ? (endSource==nullptr || *sourceCursor != *endSource)
+            : (startSource==nullptr || *sourceCursor != *startSource))) {
       MultipleElement* sourceElement = sourceCursor->getSElement();
       DVirtualCollection::TReferenceInsertionParameters<ExtendedInsertionParameters,
          ExtendedInsertionParameters> paramsCopy(parameters, parameters);
@@ -415,8 +415,8 @@ TMultiMap<TypeTraits>::paddAll(const thisType& source,
 
       for (sourceCursor->position(VirtualCollectionCursor::Position().setDirection(isForward ? COL::VirtualCollection::RPAfter : COL::VirtualCollection::RPBefore));
            sourceCursor->isValid() && (isForward
-               ? ((endSource==nullptr) || (!sourceCursor->isEqual(*endSource)))
-               : ((startSource==nullptr) || (!sourceCursor->isEqual(*startSource))));
+               ? (endSource==nullptr || *sourceCursor != *endSource)
+               : (startSource==nullptr || *sourceCursor != *startSource));
            sourceCursor->position(VirtualCollectionCursor::Position()
                .setDirection(isForward ? COL::VirtualCollection::RPAfter : COL::VirtualCollection::RPBefore))) {
          sourceElement = sourceCursor->getSElement();
@@ -574,7 +574,7 @@ TMultiMap<TypeTraits>::_removeAll(const ExtendedSuppressParameters& parameters,
    else {
       if ((start != nullptr) && start->isValid() && (end != nullptr) && end->isValid()
                && start->multipleCursor().isValid() && end->multipleCursor().isValid()
-               && start->sortedCursor().isEqual(end->sortedCursor())) {
+               && start->sortedCursor() == end->sortedCursor()) {
          ReceiverMultipleElement* base = (ReceiverMultipleElement*) &start->sortedCursor().elementSAt();
          AssumeCondition(dynamic_cast<const ReceiverMultipleElement*>((typename SortedCollection::Node*) base))
          int removed = base->count();
@@ -627,7 +627,7 @@ TMultiMap<TypeTraits>::_removeAll(const ExtendedSuppressParameters& parameters,
          else {
             removed -= endNodeReceiver->count();
             uCount -= removed;
-            if (copyParameters.isAfter()) { // le curseur sera invalidé dans tous les cas
+            if (copyParameters.isAfter()) { // the cursor will be invalid in all cases
                if (!const_cast<typename SortedCollection::Cursor&>(end->sortedCursor())
                      .setToPrevious())
                   return;
@@ -814,7 +814,7 @@ TMultiMapCursor<TypeTraits>::_isPositionned(const ExtendedLocateParameters& pos,
    const thisType* cursor = (const thisType*) pvccCursor;
    if (cursor && cursor->isValid()) {
       if (ppmccMultipleCursor.isValid())
-         return (sccCursor.isEqual(cursor->sccCursor))
+         return (sccCursor == cursor->sccCursor)
              ? ppmccMultipleCursor->isPositionned(pos, cursor->ppmccMultipleCursor.key())
              : (sccCursor.isPositionned(pos, &cursor->sccCursor)
                && ppmccMultipleCursor->isPositionned(pos)
@@ -872,6 +872,4 @@ TMultiMapCursor<TypeTraits>::_position(const inherited::Position& pos) {
 }
 
 } // end of namespace COL
-
-#endif // COL_MultiMapTEMPLATE
 

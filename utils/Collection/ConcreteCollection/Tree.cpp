@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -31,13 +29,8 @@
 //
 
 #include "Collection/ConcreteCollection/Tree.h"
-// #include "Collection/Collection.hpp"
-
-namespace COL {}
-
 #include "Collection/Implementation/ImplCommonTree.template"
 #include "Collection/ConcreteCollection/TreeCommon.template"
-// #include "Collection/Collection.template"
 
 namespace COL {
 

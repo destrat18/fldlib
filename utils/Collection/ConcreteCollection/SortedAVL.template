@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of template localization methods for AVLs.
 //
 
-#ifndef COL_SortedAvlTEMPLATE
-#define COL_SortedAvlTEMPLATE
+#pragma once
 
 #include "Collection/ConcreteCollection/SortedAVL.h"
 
@@ -45,6 +42,4 @@ namespace COL {
 } // end of namespace COL
 
 #include "Pointer/Binary.template"
-
-#endif // COL_SortedAvlTEMPLATE
 

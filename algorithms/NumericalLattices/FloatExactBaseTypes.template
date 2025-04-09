@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Implementation of the floating point types for the comparison between floating points
 //
 
-#ifndef NumericalDomains_FloatExactBaseTypesTemplate
-#define NumericalDomains_FloatExactBaseTypesTemplate
+#pragma once
 
 #include "NumericalDomains/FloatExactBase.h"
 
@@ -46,6 +43,4 @@ namespace NumericalDomains {
 #include "NumericalLattices/FloatExactBaseTypes.inctemplate"
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatExactBaseTypesTemplate
 

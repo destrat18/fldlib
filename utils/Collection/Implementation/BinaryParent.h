@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   implementation for the COL::SortedParentAVL collection.
 //
 
-#ifndef COL_BinaryParentH
-#define COL_BinaryParentH
+#pragma once
 
 #include "Pointer/Binary.h"
 
@@ -434,4 +431,3 @@ class CustomImplParentBinaryNode : public EnhancedObject, public ImplParentBalan
 
 }
 
-#endif

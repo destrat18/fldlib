@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of the interface for the error messages.
 //
 
-#ifndef StandardMessageH
-#define StandardMessageH
+#pragma once
 
 #define DefineSTD_InvalidPrecondition "Invalid precondition"
 #define DefineSTD_InvalidObject "Invalid object"
@@ -46,22 +43,24 @@ class EUserError {
    EUserError() {}
    virtual ~EUserError() {}
    virtual std::ostream& print(std::ostream& out) const;
+
+   friend std::ostream& operator<<(std::ostream& osOut, const EUserError& error)
+      {  return error.print(osOut); }
 };
 
 class ESPreconditionError : public EUserError {
   private:
-   int uLine;
-   const char* szFile;
-   const char* szText;
+   int uLine = 0;
+   const char* szFile = nullptr;
+   const char* szText = nullptr;
 
   protected:
-   const int& queryLine() const { return uLine; }
-   const char* queryFile() const { return szFile; }
-   const char* queryText() const { return szText; }
+   const int& getLine() const { return uLine; }
+   const char* getFile() const { return szFile; }
+   const char* getText() const { return szText; }
 
   public:
-   ESPreconditionError(const char *text)
-      :  uLine(0), szFile(nullptr), szText(text) { szFile = ""; }
+   ESPreconditionError(const char *text) : szFile(""), szText(text) {}
    ESPreconditionError(const char *text, int line, const char* file)
 #if DefineDebugLevel <= 1
       :  uLine(line), szFile(file), szText(text) {}
@@ -77,9 +76,5 @@ class ENotImplemented : public EUserError {
    virtual std::ostream& print(std::ostream& out) const;
 };
 
-inline std::ostream& operator<<(std::ostream& osOut, const EUserError& epeError)
-   {  return epeError.print(osOut); }
-
 class EMemoryExhausted {};
 
-#endif // StandardMessageH

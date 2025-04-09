@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   No inheritance relationship is assumed on the elements.
 //
 
-#ifndef COL_BasicListH
-#define COL_BasicListH
+#pragma once
 
 #include "Collection/ConcreteCollection/List.h"
 
@@ -350,4 +347,3 @@ TemplateInlineCollectionIteratorForConcreteCollect(TBasicList, TypeElement, Cast
 
 } // end of namespace
 
-#endif // COL_BasicListH

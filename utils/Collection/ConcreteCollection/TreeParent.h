@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -32,8 +30,7 @@
 //     like Cursor::gotoReference.
 //
 
-#ifndef COL_TreeParentH
-#define COL_TreeParentH
+#pragma once
 
 #include "Collection/ConcreteCollection/TreeCommon.h"
 #include "Collection/Implementation/ImplTreeParent.h"
@@ -176,6 +173,4 @@ class TreeParentCursor : public TGenericTreeCursor<typename Cast::Base,
 Template2InlineCollectionForAbstractCollect(TreeParent, TreeParentCursor, Element, Cast)
 
 } // end of namespace COL
-
-#endif // COL_TreeParentH
 

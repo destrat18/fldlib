@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of affine relations.
 //
 
-#ifndef NumericalDomains_FloatAffineBaseH
-#define NumericalDomains_FloatAffineBaseH
+#pragma once
 
 #include "NumericalLattices/FloatAffineBaseComponents.h"
 
@@ -39,6 +36,4 @@ namespace NumericalDomains {
 #include "NumericalDomains/FloatAffineBase.inch"
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatAffineBaseH
 

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -77,8 +75,7 @@ class DefineDeclareTypeBinaryTree : public CustomImplBinaryTree {
       bool setToLast(Node* root) { return inherited::setToLast(root); }
       bool setToNext(Node* root) { return inherited::setToNext(root); }
       bool setToPrevious(Node* root) { return inherited::setToPrevious(root); }
-      virtual ComparisonResult _compare(const EnhancedObject& asource) const override
-         {  return inherited::_compare(asource); }
+      using inherited::_compare;
 
       friend class DefineTypeBinaryTree;
       friend class RouteCopyAction;

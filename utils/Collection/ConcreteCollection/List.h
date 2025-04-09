@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a list of double linked elements inheriting from VirtualCollection.
 //
 
-#ifndef COL_ListH
-#define COL_ListH
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualCollection.h"
 #include "Pointer/ImplList.h"
@@ -78,7 +75,6 @@ class GenericList : public VirtualCollection, private ImplList {
   protected:
    virtual ComparisonResult _compare(const EnhancedObject& asource) const override
       {  return VirtualCollection::_compare(asource); }
-
    virtual void _fullAssign(const VirtualCollection& source, const ExtendedReplaceParameters& parameters) override
       {  VirtualCollection::pfullAssign(source, parameters); }
    void _fullAssign(const GenericList& source, const ExtendedReplaceParameters& parameters);
@@ -529,4 +525,3 @@ TemplateInlineCollectionIteratorForConcreteCollect(TList, Element, Cast)
 
 } // end of namespace COL
 
-#endif // COL_ListH

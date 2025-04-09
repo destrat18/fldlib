@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of floating point intervals
 //
 
-#ifndef NumericalDomains_FloatIntervalBaseH
-#define NumericalDomains_FloatIntervalBaseH
+#pragma once
 
 #include "NumericalLattices/FloatIntervalBaseTypes.h"
 #include <fstream>
@@ -68,7 +65,7 @@ class TBaseFloatIntervalContract {
 
   protected:
    bool getThenBranch(bool executionResult) const { return executionResult; }
-   bool getConversionBranch(unsigned diff, unsigned executionResult) const { return executionResult; }
+   uint32_t getConversionBranch(uint64_t diff, uint64_t executionResult) const { return 0; }
    bool doesFollow() const { return false; }
 
   public:
@@ -85,7 +82,9 @@ class TCompareFloatInterval : public TypeBaseFloatInterval {
    typedef TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation> thisType;
    typedef TypeBaseFloatInterval inherited;
 
-   TypeImplementation dValue;
+#ifdef FLOAT_CONCRETE
+   TypeImplementation dValue = 0;
+#endif
    TypeBuiltDouble bfMin;
    TypeBuiltDouble bfMax;
 
@@ -113,19 +112,19 @@ class TCompareFloatInterval : public TypeBaseFloatInterval {
    const TypeBuiltDouble& max() const { return bfMax; }
 
   public:
-   TCompareFloatInterval() : dValue(0) {}
+   TCompareFloatInterval() = default;
    TCompareFloatInterval(const thisType& source) = default;
    TCompareFloatInterval(TypeImplementation min, TypeImplementation max);
-   TCompareFloatInterval(int value);
-   TCompareFloatInterval(long int value);
-   TCompareFloatInterval(unsigned value);
-   TCompareFloatInterval(unsigned long value);
+   template <typename TypeValue> TCompareFloatInterval(TypeValue value) requires std::integral<TypeValue>;
    TCompareFloatInterval(thisType&& source) = default; // [TODO] keep symbolic for constraints
    TCompareFloatInterval& operator=(const thisType& source) = default;
    TCompareFloatInterval& operator=(thisType&& source) = default; // [TODO] keep symbolic for constraints
 
    void mergeWith(const thisType& source)
-      {  dValue = source.dValue;
+      {  
+#ifdef FLOAT_CONCRETE
+         dValue = source.dValue;
+#endif
          if (bfMin > source.bfMin)
             bfMin = source.bfMin;
          if (bfMax < source.bfMax)
@@ -152,7 +151,10 @@ class TCompareFloatInterval : public TypeBaseFloatInterval {
    thisType& operator/=(const thisType& source);
 
    void oppositeAssign()
-      {  dValue = -dValue;
+      {  
+#ifdef FLOAT_CONCRETE
+         dValue = -dValue;
+#endif
          bfMin.swap(bfMax);
          bfMin.opposite();
          bfMax.opposite();
@@ -160,15 +162,21 @@ class TCompareFloatInterval : public TypeBaseFloatInterval {
       }
 
    typedef TypeImplementation ImplementationType;
+#ifdef FLOAT_CONCRETE
    TypeImplementation asImplementation() const { return dValue; }
+#endif
+   void retrieveImplementationBounds(TypeImplementation& min, TypeImplementation& max) const
+      {  DDoubleInterval::setContent(min, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
+         DDoubleInterval::setContent(max, bfMax, true /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
+      }
    typedef Numerics::DDouble::Access::ReadParameters ReadParametersBase;
    // roundMode=RMZero for C conversions, roundMode=RMNearest for Ada conversions, roundMode=RMLowest for floor
-   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
-   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
-   long int asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
-      {  return asInt(roundMode); }
-   unsigned long asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
-      {  return asUnsigned(roundMode); }
+   int64_t asLongInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const;
+   uint64_t asUnsignedLong(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const;
+   int asInt(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMZero) const
+      {  return asLongInt(roundMode); }
+   unsigned asUnsigned(ReadParametersBase::RoundMode roundMode=ReadParametersBase::RMLowest) const
+      {  return asUnsignedLong(roundMode); }
 
    void sqrtAssign();
    void sinAssign();
@@ -191,8 +199,8 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       value = -value;
    if (value > 0 && !bfMin.isInfty()) {
       bool isMinApproximate, isMaxApproximate;
-      unsigned shiftCount = bfMin.BitSizeMantissa/2;
-      if (shiftCount < 8*sizeof(unsigned)) {
+      uint32_t shiftCount = bfMin.BitSizeMantissa/2;
+      if (shiftCount < 8*sizeof(uint32_t)) {
          isMinApproximate = (bfMin.getMantissa()[0] & ~(~0U << shiftCount)) != 0;
          isMaxApproximate = (bfMax.getMantissa()[0] & ~(~0U << shiftCount)) != 0;
       }
@@ -227,6 +235,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
    bfMin.readDecimal(in, params);
    params.clear();
    bfMax = bfMin;
+#ifndef FLOAT_CONCRETE
+   TypeImplementation dValue = 0;
+#endif
    DDoubleInterval::setContent(dValue, bfMin, false /* isUpper */, typename TypeBaseFloatInterval::FloatDigitsHelper());
    adjustMinMax(dValue);
    inherited::notifyForCompare(*this);
@@ -235,7 +246,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
 inline void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::initFrom(TypeImplementation value) {
+#ifdef FLOAT_CONCRETE
    dValue = value;
+#endif
    DDoubleInterval::fillContent(bfMin, value, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::fillContent(bfMax, value, typename TypeBaseFloatInterval::FloatDigitsHelper());
    adjustMinMax(value);
@@ -245,7 +258,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
 inline void
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::initFromAtomic(TypeImplementation value) {
+#ifdef FLOAT_CONCRETE
    dValue = value;
+#endif
    DDoubleInterval::fillContent(bfMin, value, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::fillContent(bfMax, value, typename TypeBaseFloatInterval::FloatDigitsHelper());
    inherited::notifyForCompare(*this);
@@ -256,15 +271,18 @@ template <class TypeBuiltArgument, typename TypeImplementationArgument>
 inline
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(
       const TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltArgument, TypeImplementationArgument>& source)
-   :  dValue((TypeImplementation) source.dValue) {
+#ifdef FLOAT_CONCRETE
+   : dValue((TypeImplementation) source.dValue)
+#endif
+{
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
    typename inherited::FloatConversion conversion;
    conversion.setSizeMantissa(source.bfMin.BitSizeMantissa).setSizeExponent(source.bfMin.BitSizeExponent);
-   int sizeMantissa = (source.bfMin.BitSizeMantissa + 8*sizeof(unsigned) - 1)/(8*sizeof(unsigned));
+   int sizeMantissa = (source.bfMin.BitSizeMantissa + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t));
    for (int index = 0; index < sizeMantissa; ++index)
       conversion.mantissa()[index] = source.bfMin.getMantissa()[index];
-   int sizeExponent = (source.bfMin.BitSizeExponent + 8*sizeof(unsigned) - 1)/(8*sizeof(unsigned));
+   int sizeExponent = (source.bfMin.BitSizeExponent + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t));
    for (int index = 0; index < sizeExponent; ++index)
       conversion.exponent()[index] = source.bfMin.getBasicExponent()[index];
    conversion.setNegative(source.bfMin.isNegative());
@@ -287,8 +305,8 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       min = -min;
    if (min > 0 && !bfMin.isInfty()) {
       bool isApproximate;
-      unsigned shiftCount = bfMin.BitSizeMantissa/2;
-      if (shiftCount < 8*sizeof(unsigned)) {
+      uint32_t shiftCount = bfMin.BitSizeMantissa/2;
+      if (shiftCount < 8*sizeof(uint32_t)) {
          isApproximate = (bfMin.getMantissa()[0] & ~(~0U << shiftCount)) != 0;
       }
       else
@@ -309,8 +327,8 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       max = -max;
    if (max > 0 && !bfMax.isInfty()) {
       bool isApproximate;
-      unsigned shiftCount = bfMin.BitSizeMantissa/2;
-      if (shiftCount < 8*sizeof(unsigned)) {
+      uint32_t shiftCount = bfMin.BitSizeMantissa/2;
+      if (shiftCount < 8*sizeof(uint32_t)) {
          isApproximate = (bfMax.getMantissa()[0] & ~(~0U << shiftCount)) != 0;
       }
       else
@@ -331,7 +349,10 @@ template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble
 inline
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(
       TypeImplementation min, TypeImplementation max)
-   :  dValue((min + max)/2) {
+#ifdef FLOAT_CONCRETE
+   :  dValue((min + max)/2)
+#endif
+{
    DDoubleInterval::fillContent(bfMin, min, typename TypeBaseFloatInterval::FloatDigitsHelper());
    DDoubleInterval::fillContent(bfMax, max, typename TypeBaseFloatInterval::FloatDigitsHelper());
    adjustMin(min);
@@ -340,62 +361,25 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 }
 
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
+template <typename TypeValue>
 inline
-TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(int value)
-   :  dValue((TypeImplementation) value) {
+TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(TypeValue value)
+   requires std::integral<TypeValue>
+#ifdef FLOAT_CONCRETE
+   :  dValue((TypeImplementation) value)
+#endif
+{ // [TODO] to improve
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
    typename TypeBuiltDouble::IntConversion conversion;
-   conversion.setSigned();
-   conversion.assign(value);
-   bfMin.setInteger(conversion, minParams);
-   minParams.clear();
-   bfMax.setInteger(conversion, maxParams);
-   maxParams.clear();
-   inherited::notifyForCompare(*this);
-}
-
-template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
-inline
-TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(long int value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   auto& minParams = inherited::minParams();
-   auto& maxParams = inherited::maxParams();
-   typename TypeBuiltDouble::IntConversion conversion;
-   conversion.setSigned();
-   conversion.assign((int) value);
-   bfMin.setInteger(conversion, minParams);
-   minParams.clear();
-   bfMax.setInteger(conversion, maxParams);
-   maxParams.clear();
-   inherited::notifyForCompare(*this);
-}
-
-template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
-inline
-TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(unsigned value)
-   :  dValue((TypeImplementation) value) {
-   auto& minParams = inherited::minParams();
-   auto& maxParams = inherited::maxParams();
-   typename TypeBuiltDouble::IntConversion conversion;
-   conversion.setUnsigned();
-   conversion.assign(value);
-   bfMin.setInteger(conversion, minParams);
-   minParams.clear();
-   bfMax.setInteger(conversion, maxParams);
-   maxParams.clear();
-   inherited::notifyForCompare(*this);
-}
-
-template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
-inline
-TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::TCompareFloatInterval(unsigned long value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   auto& minParams = inherited::minParams();
-   auto& maxParams = inherited::maxParams();
-   typename TypeBuiltDouble::IntConversion conversion;
-   conversion.setUnsigned();
-   conversion.assign((unsigned) value);
+   if (std::is_unsigned<TypeValue>::value) {
+      conversion.setUnsigned();
+      conversion.assign((uint64_t) value);
+   }
+   else {
+      conversion.setSigned();
+      conversion.assign((int64_t) value);
+   }
    bfMin.setInteger(conversion, minParams);
    minParams.clear();
    bfMax.setInteger(conversion, maxParams);
@@ -406,7 +390,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
 inline TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>&
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::operator+=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue += source.dValue;
+#endif
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
    bfMin.plusAssign(source.bfMin, minParams);
@@ -420,7 +406,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
 template <int UMaxBitsNumber, class TypeBaseFloatInterval, class TypeBuiltDouble, typename TypeImplementation>
 inline TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>&
 TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, TypeImplementation>::operator-=(const thisType& source) {
+#ifdef FLOAT_CONCRETE
    dValue -= source.dValue;
+#endif
    auto& minParams = inherited::minParams();
    auto& maxParams = inherited::maxParams();
    bfMin.minusAssign(source.bfMax, minParams);
@@ -454,7 +442,9 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
    if (hasNegativeSqrt)
       inherited::notifyForNegativeSqrt(*this);
 
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::sqrt((double) dValue);
+#endif
    inherited::notifyForCompare(*this);
 }
 
@@ -475,15 +465,15 @@ TCompareFloatInterval<UMaxBitsNumber, TypeBaseFloatInterval, TypeBuiltDouble, Ty
       };
    };
 
+#ifdef FLOAT_CONCRETE
    if (dValue < 0)
       dValue = -dValue;
    // dValue = ::fabs((double) dValue);
+#endif
    inherited::notifyForCompare(*this);
 }
 
 } // end of namespace DDoubleInterval
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatIntervalBaseH
 

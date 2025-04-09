@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -30,8 +28,7 @@
 //   for the COL::TArray collection.
 //
 
-#ifndef COL_ImplArrayH
-#define COL_ImplArrayH
+#pragma once
 
 #include "Pointer/Vector.h"
 
@@ -43,9 +40,9 @@ namespace COL {
 
 class ImplArray : public EnhancedObject {
   private:
-   EnhancedObject** apeoArray;
-   int uCount;
-   int uAllocated;
+   EnhancedObject** apeoArray = nullptr;
+   int uCount = 0;
+   int uAllocated = 0;
    typedef DVirtualCollection::VirtualCastWithElement VirtualCastWithElement;
 
   protected:
@@ -86,7 +83,7 @@ class ImplArray : public EnhancedObject {
          const VirtualCast* retrieveRegistrationFromCopy=nullptr);
 
   public:
-   ImplArray() : apeoArray(nullptr), uCount(0), uAllocated(0) {}
+   ImplArray() = default;
    ImplArray(ImplArray&& source)
       :  apeoArray(source.apeoArray), uCount(source.uCount), uAllocated(source.uAllocated)
       {  source.apeoArray = nullptr; source.uCount = 0; source.uAllocated = 0; }
@@ -194,8 +191,8 @@ ImplArray::foreachReverseDo(std::function<bool (EnhancedObject&)> function, int 
 template <class Element, class Cast=SimpleCast>
 class TImplArray : public ImplArray {
   public:
-   TImplArray() {}
-   TImplArray(TImplArray<Element, Cast>&& source) : ImplArray(source) {}
+   TImplArray() = default;
+   TImplArray(TImplArray<Element, Cast>&& source) = default;
    TImplArray(const TImplArray<Element, Cast>& source, bool doesDuplicate=false)
       :  ImplArray(source, doesDuplicate) {}
    TImplArray<Element, Cast>& operator=(const TImplArray<Element, Cast>& source) = default;
@@ -242,7 +239,4 @@ class TImplArray : public ImplArray {
 };
 
 } // end of namespace COL
-
-#endif
-
 

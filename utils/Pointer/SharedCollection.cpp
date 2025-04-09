@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2013-2017                                               */
+/*  Copyright (C) 2013-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -32,9 +30,9 @@
 //   SharedPointer with multiple pointed elements.
 //
 
-#include "Pointer/ExtPointer.hpp"
-// #include "Pointer/SharedCollection.h"
+#include "Pointer/SharedCollection.h"
 
+#include "Pointer/PassPointer.h"
 #include "Pointer/ImplList.template"
 #include "Pointer/ImplArray.template"
 
@@ -112,7 +110,7 @@ LocalElement::duplicateCalls(const LocalElement& source, UpdateCopyTable& table,
                ((SharedCollection&) ((UpdateCopyConnection*) locateCursor.elementAt())->target())
                      .addElement((SharedCollection::Element&) *this);
             else {
-               AutoPointer<SharedCollection> copy(retrieveRegistrationFromCopy
+               CPassPointer<SharedCollection> copy(retrieveRegistrationFromCopy
                   ?  (SharedCollection*) retrieveRegistrationFromCopy->castFrom(localSource->createCopy())
                   :  localSource->createSCopy(), PNT::Pointer::Init());
                copy->removeAll(); // makes only minor perturbations to source.calls() 

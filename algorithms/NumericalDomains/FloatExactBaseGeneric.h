@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,8 +27,7 @@
 //   Definition of a class of floating point comparison
 //
 
-#ifndef NumericalDomains_FloatExactBaseGenericH
-#define NumericalDomains_FloatExactBaseGenericH
+#pragma once
 
 #include "NumericalLattices/FloatExactBaseTypesGeneric.h"
 
@@ -41,6 +38,4 @@ namespace NumericalDomains {
 #undef DefineGeneric
 
 } // end of namespace NumericalDomains
-
-#endif // NumericalDomains_FloatExactBaseGenericH
 

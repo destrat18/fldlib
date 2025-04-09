@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2011-2017                                               */
+/*  Copyright (C) 2011-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -36,7 +34,7 @@
 #define DefineEquationTemplateParameters(RealBitsNumber)             \
    <RealBitsNumber, TypeBaseFloatAffine>
 #define DefineSizeofBaseTypeInBits                                   \
-   (sizeof(unsigned int)*8)
+   (sizeof(uint32_t)*8)
 #define DefineDefinedSymbol TDefinedSymbol
 #define DefineBuiltDouble TBuiltDouble
 #define DefineBuiltDoubleTraits BuiltDoubleTraits
@@ -477,8 +475,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          Symbol* constrainedSymbol = symbolsManager
                .createDefinedSymbol(TemplateTraits(), constraint);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, isLess, symbolsManager,
-                  TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager.doesDisableConstraintPropagation() ? true
+               : (constraint.simplifyAllEquationsIf(*constrainedSymbol, isLess, symbolsManager,
+                  TypeBaseFloatAffine::getConditionSameBranch())))
             : constraint.simplifyAllEquations(*constrainedSymbol, isLess, symbolsManager);
          if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -493,11 +492,15 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
                || hasInverseErrorFlow) {
             Symbol* constrainedErrorSymbol = symbolsManager
                   .createDefinedSymbol(TemplateTraits(), constraintWithError);
-            bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-               ? constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol,
-                     isLess ? !hasInverseErrorFlow : hasInverseErrorFlow, symbolsManager,
-                     TypeBaseFloatAffine::getConditionSameBranch())
-               : constraintWithError.simplifyAllEquations(*constrainedErrorSymbol,
+            bool hasAllSimplified = true;
+            if (TypeBaseFloatAffine::hasMultipleBranches()) {
+               if (!symbolsManager.doesDisableConstraintPropagation())
+                  hasAllSimplified = constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol,
+                        isLess ? !hasInverseErrorFlow : hasInverseErrorFlow, symbolsManager,
+                        TypeBaseFloatAffine::getConditionSameBranch());
+            }
+            else
+               hasAllSimplified = constraintWithError.simplifyAllEquations(*constrainedErrorSymbol,
                      isLess ? !hasInverseErrorFlow : hasInverseErrorFlow, symbolsManager);
             if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
                if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -531,8 +534,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          Symbol* constrainedSymbol = symbolsManager
                .createDefinedSymbol(TemplateTraits(), constraint);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, !isLess, symbolsManager,
-                  TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager.doesDisableConstraintPropagation() ? true
+               : (constraint.simplifyAllEquationsIf(*constrainedSymbol, !isLess, symbolsManager,
+                  TypeBaseFloatAffine::getConditionSameBranch())))
             : constraint.simplifyAllEquations(*constrainedSymbol, !isLess, symbolsManager);
          if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -547,11 +551,15 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
                || hasInverseErrorFlow) {
             Symbol* constrainedErrorSymbol = symbolsManager
                   .createDefinedSymbol(TemplateTraits(), constraintWithError);
-            bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-               ? constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol,
-                     isLess ? hasInverseErrorFlow : !hasInverseErrorFlow, symbolsManager,
-                     TypeBaseFloatAffine::getConditionSameBranch())
-               : constraintWithError.simplifyAllEquations(*constrainedErrorSymbol,
+            bool hasAllSimplified = true;
+            if (TypeBaseFloatAffine::hasMultipleBranches()) {
+               if (!symbolsManager.doesDisableConstraintPropagation())
+                  hasAllSimplified = constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol,
+                        isLess ? hasInverseErrorFlow : !hasInverseErrorFlow, symbolsManager,
+                        TypeBaseFloatAffine::getConditionSameBranch());
+            }
+            else
+               hasAllSimplified = constraintWithError.simplifyAllEquations(*constrainedErrorSymbol,
                      isLess ? hasInverseErrorFlow : !hasInverseErrorFlow, symbolsManager);
             if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
                if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -584,8 +592,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          Symbol* constrainedErrorSymbol = symbolsManager
                .createDefinedSymbol(TemplateTraits(), constraintWithError);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol, isLess,
-                  symbolsManager, TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager.doesDisableConstraintPropagation() ? true
+               : constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol, isLess,
+                  symbolsManager, TypeBaseFloatAffine::getConditionSameBranch()))
             : constraintWithError.simplifyAllEquations(*constrainedErrorSymbol, isLess, symbolsManager);
          if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -599,10 +608,14 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          if (hasInverseRealFlow) {
             Symbol* constrainedRealSymbol = symbolsManager
                   .createDefinedSymbol(TemplateTraits(), constraint);
-            bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-               ? constraint.simplifyAllEquationsIf(*constrainedRealSymbol,
-                     !isLess /* isNegative */, symbolsManager, TypeBaseFloatAffine::getConditionSameBranch())
-               : constraint.simplifyAllEquations(*constrainedRealSymbol,
+            bool hasAllSimplified = true;
+            if (TypeBaseFloatAffine::hasMultipleBranches()) {
+               if (!symbolsManager.doesDisableConstraintPropagation())
+                  hasAllSimplified = constraint.simplifyAllEquationsIf(*constrainedRealSymbol,
+                           !isLess /* isNegative */, symbolsManager, TypeBaseFloatAffine::getConditionSameBranch());
+            }
+            else
+               hasAllSimplified = constraint.simplifyAllEquations(*constrainedRealSymbol,
                      !isLess /* isNegative */, symbolsManager);
             if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
                if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -635,8 +648,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          Symbol* constrainedErrorSymbol = symbolsManager
                .createDefinedSymbol(TemplateTraits(), constraintWithError);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol, !isLess, symbolsManager,
-                  TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager.doesDisableConstraintPropagation() ? true
+               : constraintWithError.simplifyAllEquationsIf(*constrainedErrorSymbol, !isLess, symbolsManager,
+                  TypeBaseFloatAffine::getConditionSameBranch()))
             : constraintWithError.simplifyAllEquations(*constrainedErrorSymbol, !isLess, symbolsManager);
          if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -650,10 +664,14 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::setCo
          if (hasInverseRealFlow) {
             Symbol* constrainedRealSymbol = symbolsManager
                   .createDefinedSymbol(TemplateTraits(), constraint);
-            bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-               ? constraint.simplifyAllEquationsIf(*constrainedRealSymbol,
-                     isLess /* isNegative */, symbolsManager, TypeBaseFloatAffine::getConditionSameBranch())
-               : constraint.simplifyAllEquations(*constrainedRealSymbol,
+            bool hasAllSimplified = true;
+            if (TypeBaseFloatAffine::hasMultipleBranches()) {
+               if (!symbolsManager.doesDisableConstraintPropagation())
+                  hasAllSimplified = constraint.simplifyAllEquationsIf(*constrainedRealSymbol,
+                        isLess /* isNegative */, symbolsManager, TypeBaseFloatAffine::getConditionSameBranch());
+            }
+            else
+               hasAllSimplified =  constraint.simplifyAllEquations(*constrainedRealSymbol,
                      isLess /* isNegative */, symbolsManager);
             if (auto* symbolDefinitionTracker = symbolsManager.getSymbolDefinitionTracker()) {
                if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -1316,7 +1334,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
       BuiltReal minReal, maxReal;
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -1326,9 +1346,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -1449,22 +1467,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
       DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -1480,7 +1499,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
          BuiltReal minError, maxError;
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -1490,9 +1511,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -1613,22 +1632,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::sinAs
          DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -1643,7 +1663,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
       BuiltReal minReal, maxReal;
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -1653,9 +1675,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -1787,22 +1807,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
       DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -1818,7 +1839,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
          BuiltReal minError, maxError;
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -1828,9 +1851,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -1962,22 +1983,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::cosAs
          DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -1992,7 +2014,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
       BuiltReal minReal, maxReal;
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2002,9 +2026,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2035,22 +2057,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
       DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -2085,7 +2108,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
          BuiltReal minError, maxError;
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2095,9 +2120,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2128,22 +2151,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::asinA
          DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -2158,7 +2182,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
       BuiltReal minReal, maxReal;
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2168,9 +2194,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2203,22 +2227,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
       DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -2253,7 +2278,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
          BuiltReal minError, maxError;
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2263,9 +2290,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2298,22 +2323,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::acosA
          DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -2328,7 +2354,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
       BuiltReal minReal, maxReal;
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2338,9 +2366,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2361,22 +2387,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
       DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -2392,7 +2419,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
          BuiltReal minError, maxError;
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2402,9 +2431,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2425,22 +2452,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atanA
          DAffine::DefineFillContent(minBuilt, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -2719,6 +2747,54 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::logAs
 }
 
 DefineEquationTemplateHeader(URealBitsNumber)
+typename DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::BuiltReal
+DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::computeNonRelationalPartOfIntPower(
+      const BuiltReal& implementationInput, const BuiltReal& realInput, bool isMin, int powValue,
+      const BuiltReal& powValueReal) const {
+   // result = (x + e)^n - x^n - n*e*x^{n-1}
+   BuiltReal result(implementationInput);
+   {  auto& params = isMin ? ((!result.isNegative() || ((powValue & 0x1) == 1))
+            ? inherited::minParams() : inherited::maxParams())
+         : ((result.isPositive() || ((powValue & 0x1) == 1))
+            ? inherited::maxParams() : inherited::minParams());
+      result.nthExponentAssign(powValue, params);
+      params.clear();
+      BuiltReal subPart(realInput);
+      {  auto& params = isMin ? ((!subPart.isNegative() || ((powValue & 0x1) == 1))
+               ? inherited::maxParams() : inherited::minParams())
+            : ((subPart.isPositive() || ((powValue & 0x1) == 1))
+               ? inherited::minParams() : inherited::maxParams());
+         subPart.nthExponentAssign(powValue, params);
+         params.clear();
+      }
+      result.minusAssign(subPart, params);
+      params.clear();
+      subPart = realInput;
+      {  bool isMaxParams = (!subPart.isNegative() || ((powValue & 0x1) == 0));
+         BuiltReal minError, maxError;
+         eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
+         if (maxError.isNegative())
+            isMaxParams = !isMaxParams;
+         else if (minError.isNegative()) {
+            minError.opposite();
+            if (maxError < minError)
+               maxError = minError;
+         }
+         auto& params = isMaxParams ? inherited::maxParams() : inherited::minParams();
+         subPart.nthExponentAssign(powValue-1, params);
+         params.clear();
+         subPart.multAssign(maxError, params);
+         params.clear();
+         subPart.multAssign(powValueReal, params);
+         params.clear();
+      }
+      result.minusAssign(subPart, params);
+      params.clear();
+   }
+   return result;
+}
+
+DefineEquationTemplateHeader(URealBitsNumber)
 void
 DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::powAssign(
       const thisType& value, typename Equation::PolicyCall policyCall) {
@@ -2726,8 +2802,32 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::powAs
    if (doesComputeError()) {
       if (!doesComputeReal()) {
          BuiltReal minThis, maxThis, minValue, maxValue;
-         eRealDomain.retrieveBound(minThis, maxThis, false /* hasExternalCoefficient */);
-         value.eRealDomain.retrieveBound(minValue, maxValue, false /* hasExternalCoefficient */);
+         eError.retrieveBound(minThis, maxThis, false /* hasExternalCoefficient */);
+         value.eError.retrieveBound(minValue, maxValue, false /* hasExternalCoefficient */);
+         if (minValue == maxValue) {
+            typename BuiltReal::IntConversion intValue;
+            intValue.setSigned();
+            minValue.retrieveInteger(intValue, inherited::nearestParams());
+            bool isIntegerValue = !inherited::nearestParams().isApproximate()
+                  && (intValue.getSize() <= (int) sizeof(int)*8
+                     || ((long long) intValue.sresult() >= INT_MIN && (long long) intValue.sresult() <= INT_MAX));
+            if (isIntegerValue) { // manage special cases with integer power
+               int value = intValue.asInt();
+               bool isNegative = value < 0;
+               if (isNegative) {
+                  if ((minThis.isNegative() || minThis.isZero())
+                        && (maxThis.isPositive() || maxThis.isZero())) {
+                     mergeTopError();
+                     return;
+                  }
+                  value = -value;
+               }
+               eError.nthExponentAssign(value, symbolsManager());
+               if (isNegative)
+                  eError.inverseAssign(symbolsManager());
+               return;
+            }
+         }
          if (minThis.isZero() && !minValue.isZero() && minValue.isPositive()) {
             if (!maxThis.isZero()) {
                BuiltReal tmpMin, tmpMax;
@@ -2747,7 +2847,132 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::powAs
          Equation implementation(eRealDomain), valueImplementation(value.eRealDomain);
          implementation.plusAssign(eError, Equation::PCSourceRValue, symbolsManager(), false /* hasExternalCoefficient */);
          implementation.retrieveBound(minThisImplementation, maxThisImplementation, false /* hasExternalCoefficient */);
+         eRealDomain.retrieveBound(minThisReal, maxThisReal, false /* hasExternalCoefficient */);
+         value.eRealDomain.retrieveBound(minValueReal, maxValueReal, false /* hasExternalCoefficient */);
+         valueImplementation.plusAssign(value.eError, Equation::PCSourceRValue, symbolsManager(), false /* hasExternalCoefficient */);
          valueImplementation.retrieveBound(minValueImplementation, maxValueImplementation, false /* hasExternalCoefficient */);
+         if (minValueReal == maxValueReal && minValueImplementation == maxValueImplementation
+               && minValueReal == minValueImplementation) {
+            typename BuiltReal::IntConversion intValue;
+            intValue.setSigned();
+            minValueReal.retrieveInteger(intValue, inherited::nearestParams());
+            bool isIntegerValue = !inherited::nearestParams().isApproximate()
+                  && (intValue.getSize() <= (int) sizeof(int)*8
+                     || ((long long) intValue.sresult() >= INT_MIN && (long long) intValue.sresult() <= INT_MAX));
+            if (isIntegerValue) { // manage special cases with integer power
+               int value = intValue.asInt();
+               bool isNegativeValue = value < 0;
+               bool hasTopReal = false, hasTopImplementation = false;
+               if (isNegativeValue) {
+                  if ((minThisReal.isNegative() || minThisReal.isZero())
+                        && (maxThisReal.isPositive() || maxThisReal.isZero())) {
+                     mergeTopReal();
+                     hasTopReal = true;
+                  }
+                  if ((minThisImplementation.isNegative() || minThisImplementation.isZero())
+                        && (maxThisImplementation.isPositive() || maxThisImplementation.isZero())) {
+                     mergeTopError();
+                     hasTopImplementation = true;
+                  }
+                  value = -value;
+               }
+               if (value == 0)
+                  eError = Equation();
+               else if (value == 1) {
+                  if (isNegativeValue)
+                     inverseAssign();
+                  return;
+               }
+               else if (value == 2) {
+                  multAssign(*this, Equation::PCSourceXValue);
+                  if (isNegativeValue)
+                     inverseAssign();
+                  return;
+               }
+               else if (value == 3) {
+                  thisType copyThis(*this);
+                  multAssign(copyThis, Equation::PCSourceRValue);
+                  multAssign(copyThis, Equation::PCSourceXValue);
+                  if (isNegativeValue)
+                     inverseAssign();
+                  return;
+               }
+               else if (value == 4) {
+                  multAssign(*this, Equation::PCSourceXValue);
+                  multAssign(*this, Equation::PCSourceXValue);
+                  if (isNegativeValue)
+                     inverseAssign();
+                  return;
+               }
+               if (!hasTopImplementation) {
+                  // (x+e)^n = x^n + n*e*x^{n-1} + ((x+e)^n - x^n - n*e*x^{n-1})
+                  Equation realDomainPower(eRealDomain);
+                  realDomainPower.nthExponentAssign(value-1, symbolsManager());
+                  eError.multAssign(realDomainPower, Equation::PCSourceXValue, symbolsManager());
+                  BuiltReal valueReal(minValueReal);
+                  if (!isNegativeValue)
+                     valueReal.opposite();
+                  eError.multAssign(valueReal, symbolsManager());
+                  BuiltReal nonRelationPartMin = computeNonRelationalPartOfIntPower(
+                     minThisImplementation, minThisReal, true /* isMin */, value, valueReal);
+                  BuiltReal nonRelationPartMinUp = computeNonRelationalPartOfIntPower(
+                     minThisImplementation, minThisReal, false /* isMin */, value, valueReal);
+                  BuiltReal nonRelationPartMax = computeNonRelationalPartOfIntPower(
+                     maxThisImplementation, maxThisReal, false /* isMin */, value, valueReal);
+                  BuiltReal nonRelationPartMaxDown = computeNonRelationalPartOfIntPower(
+                     maxThisImplementation, maxThisReal, true /* isMin */, value, valueReal);
+                  if (nonRelationPartMin > nonRelationPartMax)
+                     nonRelationPartMin.swap(nonRelationPartMax);
+                  if (nonRelationPartMinUp < nonRelationPartMin)
+                     nonRelationPartMin = nonRelationPartMinUp;
+                  if (nonRelationPartMaxDown > nonRelationPartMax)
+                     nonRelationPartMax = nonRelationPartMaxDown;
+                  if ((eError.isAtomic() && eError.getCentral().isZero())
+                        || (((minThisImplementation.isPositive() || minThisImplementation.isZero()))
+                           && (minThisReal.isPositive() || minThisReal.isZero()))
+                        || (((maxThisImplementation.isNegative() || maxThisImplementation.isZero()))
+                           && (maxThisReal.isNegative() || maxThisReal.isZero()))) {
+                     if (nonRelationPartMin.isNegative() && nonRelationPartMax.isPositive())
+                        eError.plusAssign(Equation().setInterval(nonRelationPartMin, nonRelationPartMax,
+                              symbolsManager(), nullptr /* expressionBuilder */), Equation::PCSourceXValue, symbolsManager());
+                     else if (nonRelationPartMin.isPositive())
+                        eError.plusAssign(Equation().setInterval(BuiltReal(), nonRelationPartMax,
+                              symbolsManager(), nullptr /* expressionBuilder */), Equation::PCSourceXValue, symbolsManager());
+                     else
+                        eError.plusAssign(Equation().setInterval(nonRelationPartMin, BuiltReal(),
+                              symbolsManager(), nullptr /* expressionBuilder */), Equation::PCSourceXValue, symbolsManager());
+                  }
+                  else {
+                     if (nonRelationPartMin.isNegative() && nonRelationPartMax.isPositive()) {
+                        nonRelationPartMin.opposite();
+                        if (nonRelationPartMin < nonRelationPartMax) {
+                           nonRelationPartMin = nonRelationPartMax;
+                           nonRelationPartMin.opposite();
+                        }
+                        else {
+                           nonRelationPartMax = nonRelationPartMin;
+                           nonRelationPartMax.opposite();
+                        }
+                     }
+                     else if (nonRelationPartMin.isPositive()) {
+                        nonRelationPartMin = nonRelationPartMax;
+                        nonRelationPartMin.opposite();
+                     }
+                     else {
+                        nonRelationPartMax = nonRelationPartMin;
+                        nonRelationPartMax.opposite();
+                     }
+                     eError.plusAssign(Equation().setInterval(nonRelationPartMin, nonRelationPartMax,
+                              symbolsManager(), nullptr /* expressionBuilder */), Equation::PCSourceXValue, symbolsManager());
+                  }
+               }
+               if (!hasTopReal)
+                  eRealDomain.nthExponentAssign(value, symbolsManager());
+               if (isNegativeValue)
+                  inverseAssign();
+               return;
+            }
+         }
          if ((minThisReal.isZero() && !minValueReal.isZero() && minValueReal.isPositive())
               || (minThisImplementation.isZero() && !minValueImplementation.isZero() && minValueImplementation.isPositive())) {
             if (!maxThisReal.isZero()) {
@@ -2777,6 +3002,46 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::powAs
       BuiltReal minThis, maxThis, minValue, maxValue;
       eRealDomain.retrieveBound(minThis, maxThis, false /* hasExternalCoefficient */);
       value.eRealDomain.retrieveBound(minValue, maxValue, false /* hasExternalCoefficient */);
+      if (minValue == maxValue) {
+         typename BuiltReal::IntConversion intValue;
+         intValue.setSigned();
+         minValue.retrieveInteger(intValue, inherited::nearestParams());
+         bool isIntegerValue = !inherited::nearestParams().isApproximate()
+               && (intValue.getSize() <= (int) sizeof(int)*8
+                  || ((long long) intValue.sresult() >= INT_MIN && (long long) intValue.sresult() <= INT_MAX));
+         if (isIntegerValue) { // manage special cases with integer power
+            int value = intValue.asInt();
+            bool isNegativeValue = value < 0;
+            bool hasTop = false;
+            if (isNegativeValue) {
+               if ((minThis.isNegative() || minThis.isZero())
+                     && (maxThis.isPositive() || maxThis.isZero())) {
+                  mergeTopReal();
+                  hasTop = true;
+               }
+               value = -value;
+            }
+            if (value == 0)
+               eError = Equation();
+            else if (value == 1) {}
+            else if (value == 2)
+               multAssign(*this, Equation::PCSourceXValue);
+            else if (value == 3) {
+               thisType copyThis(*this);
+               multAssign(copyThis, Equation::PCSourceRValue);
+               multAssign(copyThis, Equation::PCSourceXValue);
+            }
+            else if (value == 4) {
+               multAssign(*this, Equation::PCSourceXValue);
+               multAssign(*this, Equation::PCSourceXValue);
+            }
+            else if (!hasTop)
+               eRealDomain.nthExponentAssign(value, symbolsManager());
+            if (isNegativeValue)
+               inverseAssign();
+            return;
+         }
+      }
       if (minThis.isZero() && !minValue.isZero() && minValue.isPositive()) {
          if (!maxThis.isZero()) {
             BuiltReal tmpMin, tmpMax;
@@ -2810,7 +3075,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
       eRealDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
       source.eRealDomain.retrieveBound(minSourceReal, maxSourceReal, false /* hasExternalCoefficient */);
 
-      typename BuiltReal::FloatConversion conversion;
+      typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+      typename LocalBuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2820,9 +3087,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
          conversion.exponent()[index] = minReal.getBasicExponent()[index];
       conversion.setNegative(minReal.isNegative());
       auto& minParams = TypeBaseFloatAffine::minParams();
-      Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-            DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-         minBuilt, maxBuilt, minSourceBuilt, maxSourceBuilt;
+      LocalBuiltDouble minBuilt, maxBuilt, minSourceBuilt, maxSourceBuilt;
       minBuilt.setFloat(conversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
@@ -2875,22 +3140,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
       DAffine::DefineFillContent(minBuilt, newmin, typename TypeBaseFloatAffine::FloatDigitsHelper());
       DAffine::DefineFillContent(maxBuilt, newmax, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-      conversion.setSizeMantissa(52).setSizeExponent(11);
+      typename BuiltReal::FloatConversion realConversion;
+      realConversion.setSizeMantissa(52).setSizeExponent(11);
       sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-      conversion.setNegative(minBuilt.isNegative());
-      minReal.setFloat(conversion, minParams);
+         realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+      realConversion.setNegative(minBuilt.isNegative());
+      minReal.setFloat(realConversion, minParams);
       minParams.clear();
       for (int index = 0; index < sizeMantissa; ++index)
-         conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+         realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
       for (int index = 0; index < sizeExponent; ++index)
-         conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-      conversion.setNegative(maxBuilt.isNegative());
-      maxReal.setFloat(conversion, maxParams);
+         realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+      realConversion.setNegative(maxBuilt.isNegative());
+      maxReal.setFloat(realConversion, maxParams);
       maxParams.clear();
       eRealDomain.setInterval(minReal, maxReal, symbolsManager(), nullptr);
    }
@@ -2910,7 +3176,9 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
          eError.retrieveBound(minError, maxError, false /* hasExternalCoefficient */);
          source.eError.retrieveBound(minSourceError, maxSourceError, false /* hasExternalCoefficient */);
 
-         typename BuiltReal::FloatConversion conversion;
+         typedef Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) > LocalBuiltDouble;
+         typename LocalBuiltDouble::FloatConversion conversion;
          conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
          int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2920,9 +3188,7 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
             conversion.exponent()[index] = minError.getBasicExponent()[index];
          conversion.setNegative(minError.isNegative());
          auto& minParams = TypeBaseFloatAffine::minParams();
-         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
-               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, 52, 11) >
-            minBuilt, maxBuilt, minSourceBuilt, maxSourceBuilt;
+         LocalBuiltDouble minBuilt, maxBuilt, minSourceBuilt, maxSourceBuilt;
          minBuilt.setFloat(conversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
@@ -2975,22 +3241,23 @@ DefineBaseFloatZonotope DefineEquationTemplateParameters(URealBitsNumber)::atan2
          DAffine::DefineFillContent(minBuilt, newmin, typename TypeBaseFloatAffine::FloatDigitsHelper());
          DAffine::DefineFillContent(maxBuilt, newmax, typename TypeBaseFloatAffine::FloatDigitsHelper());
 
-         conversion.setSizeMantissa(52).setSizeExponent(11);
+         typename BuiltReal::FloatConversion realConversion;
+         realConversion.setSizeMantissa(52).setSizeExponent(11);
          sizeMantissa = (52 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          sizeExponent = (11 + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = minBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = minBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = minBuilt.getBasicExponent()[index];
-         conversion.setNegative(minBuilt.isNegative());
-         minError.setFloat(conversion, minParams);
+            realConversion.exponent()[index] = minBuilt.getBasicExponent()[index];
+         realConversion.setNegative(minBuilt.isNegative());
+         minError.setFloat(realConversion, minParams);
          minParams.clear();
          for (int index = 0; index < sizeMantissa; ++index)
-            conversion.mantissa()[index] = maxBuilt.getMantissa()[index];
+            realConversion.mantissa()[index] = maxBuilt.getMantissa()[index];
          for (int index = 0; index < sizeExponent; ++index)
-            conversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
-         conversion.setNegative(maxBuilt.isNegative());
-         maxError.setFloat(conversion, maxParams);
+            realConversion.exponent()[index] = maxBuilt.getBasicExponent()[index];
+         realConversion.setNegative(maxBuilt.isNegative());
+         maxError.setFloat(realConversion, maxParams);
          maxParams.clear();
          eError.setInterval(minError, maxError, symbolsManager(), nullptr);
       };
@@ -3069,7 +3336,7 @@ TSimplificationRules DefineEquationTemplateParameters(URealBitsNumber)
             equation.addElementBefore(*definedSymbol, cursor);
       coeff->setValue(max);
 
-      definitionEquation.notifyUpdate([this, &definitionEquation, &equation, &definedSymbol, &max, &manager]
+      definitionEquation.notifyUpdate([/* this, */&definitionEquation, &equation, &definedSymbol, &max, &manager]
             (Equation& source)
          {  if (!source.isDefinition() && equation.getConditionSameBranch()(source))
                source.simplifyWith(definitionEquation, false, *definedSymbol, max, manager, false /* hasExternalCoefficient */);
@@ -3167,7 +3434,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    if (relativeError.divAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager())) {
       BuiltReal min, max;
       relativeError.retrieveBound(min, max, false /* hasExternalCoefficient */);
-      typename BuiltReal::FloatConversion conversion;
+      typename BuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
       for (int index = 0; index < sizeMantissa; ++index)
@@ -3202,7 +3469,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    implementation.plusAssign(getError(), Equation::PCSourceRValue, symbolsManager());
    BuiltReal extendedMin, extendedMax;
    implementation.retrieveBound(extendedMin, extendedMax, false /* hasExternalCoefficient */);
-   typename BuiltReal::FloatConversion conversion;
+   typename BuiltDouble::FloatConversion conversion;
    conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
    int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
    for (int index = 0; index < sizeMantissa; ++index)
@@ -3268,7 +3535,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    implementation.plusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
    BuiltReal extendedMin, extendedMax;
    implementation.retrieveBound(extendedMin, extendedMax, false /* hasExternalCoefficient */);
-   typename BuiltReal::FloatConversion conversion;
+   typename BuiltDouble::FloatConversion conversion;
    conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
    int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
    for (int index = 0; index < sizeMantissa; ++index)
@@ -3321,7 +3588,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& minParams = TypeBaseFloatAffine::minParams();
    BuiltReal min(conversion, minParams);
    minParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMin((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMin->getSDefinition().setCentral(min);
@@ -3331,6 +3598,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    BuiltReal normalization = constraintMin->getDefinition().getNormalization(true, &doesConstraint);
    if (doesConstraint && getSRealDomain().simplifyWith(constraintMin->getDefinition(), true,
          *constraintMin, normalization, symbolsManager())) {
+      // min_float - error - real = normalization/2 + normalization/2*d
+      // => normalization/2*d = -normalization/2 + (min_float - error - real)
+      normalization.divAssign(2U, TypeBaseFloatAffine::nearestParams());
+      TypeBaseFloatAffine::nearestParams().clear();
+      normalization.opposite();
+      constraintMin->getSDefinition().getSCentral().plusAssign(normalization, TypeBaseFloatAffine::nearestParams());
+      normalization.opposite();
+      TypeBaseFloatAffine::nearestParams().clear();
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
          ? symbolDefinitionTracker->getExpressionBuilder() : nullptr;
@@ -3340,10 +3615,8 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       };
       const auto& symbol = symbolsManager().recordDefinedSymbol(typename inherited::TemplateTraits(),
             constraintMin.extractElement());
-      if (expressionBuilder) {
-         BuiltReal one(1U);
-         symbolDefinitionTracker->setDefinition(one, symbol, *expressionBuilder);
-      };
+      if (expressionBuilder)
+         symbolDefinitionTracker->setDefinition(normalization, symbol, *expressionBuilder);
    }
 
    for (int index = 0; index < sizeMantissa; ++index)
@@ -3355,7 +3628,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    BuiltReal max(conversion, maxParams);
    maxParams.clear();
 
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMax((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMax->getSDefinition().setCentral(max);
@@ -3365,6 +3638,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    normalization = constraintMax->getDefinition().getNormalization(false, &doesConstraint);
    if (doesConstraint && getSRealDomain().simplifyWith(constraintMax->getDefinition(), false,
          *constraintMax, normalization, symbolsManager())) {
+      // max_float - error - real = normalization/2 + normalization/2*d
+      // => normalization/2*d = -normalization/2 + (max_float - error - real)
+      normalization.divAssign(2U, TypeBaseFloatAffine::nearestParams());
+      TypeBaseFloatAffine::nearestParams().clear();
+      normalization.opposite();
+      constraintMax->getSDefinition().getSCentral().plusAssign(normalization, TypeBaseFloatAffine::nearestParams());
+      TypeBaseFloatAffine::nearestParams().clear();
+      normalization.opposite();
       auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker();
       VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker
          ? symbolDefinitionTracker->getExpressionBuilder() : nullptr;
@@ -3374,10 +3655,8 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       };
       const auto& symbol = symbolsManager().recordDefinedSymbol(typename inherited::TemplateTraits(),
             constraintMax.extractElement());
-      if (expressionBuilder) {
-         BuiltReal one(1U);
-         symbolDefinitionTracker->setDefinition(one, symbol, *expressionBuilder);
-      };
+      if (expressionBuilder)
+         symbolDefinitionTracker->setDefinition(normalization, symbol, *expressionBuilder);
    };
 }
 
@@ -3391,7 +3670,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    if (relativeError.divAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager())) {
       BuiltReal min, max;
       relativeError.retrieveBound(min, max, false /* hasExternalCoefficient */);
-      typename BuiltReal::FloatConversion conversion;
+      typename BuiltDouble::FloatConversion conversion;
       conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
       int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
       for (int index = 0; index < sizeMantissa; ++index)
@@ -3437,7 +3716,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& minParams = TypeBaseFloatAffine::minParams();
    BuiltReal min(conversion, minParams);
    minParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMin((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMin->getSDefinition().setCentral(min);
@@ -3471,7 +3750,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    BuiltReal max(conversion, maxParams);
    maxParams.clear();
 
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMax((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMax->getSDefinition().setCentral(max);
@@ -3519,7 +3798,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& minParams = TypeBaseFloatAffine::minParams();
    BuiltReal minRelativeError(conversion, minParams);
    minParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMin((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMin->getSDefinition() = getError();
@@ -3553,7 +3832,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& maxParams = TypeBaseFloatAffine::maxParams();
    BuiltReal maxRelativeError(conversion, maxParams);
    maxParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMax((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMin->getSDefinition() = getError();
@@ -3607,7 +3886,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& minParams = TypeBaseFloatAffine::minParams();
    BuiltReal minRelativeError(conversion, minParams);
    minParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMin((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMin->getSDefinition() = getRealDomain();
@@ -3641,7 +3920,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto& maxParams = TypeBaseFloatAffine::maxParams();
    BuiltReal maxRelativeError(conversion, maxParams);
    maxParams.clear();
-   PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+   PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
       constraintMax((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
          symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
    constraintMax->getSDefinition() = getRealDomain();
@@ -3666,6 +3945,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          symbolDefinitionTracker->setDefinition(one, symbol, *expressionBuilder);
       };
    };
+}
+
+DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
+void
+DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
+      ::retrieveImplementationBounds(TypeImplementation& min, TypeImplementation& max) const {
+   DAffine::DefineSetContent(min, bfMin /*, false isUpper */, typename TypeBaseFloatAffine::FloatDigitsHelper());
+   DAffine::DefineSetContent(max, bfMax /*, true isUpper */, typename TypeBaseFloatAffine::FloatDigitsHelper());
 }
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
@@ -3830,7 +4117,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ((typename Equation::Coefficient&) *coefficient).setValue(maxError);
 
       if (expressionBuilder) { // expressionBuilder = { val_float }
-         PNT::AutoPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
+         PNT::CPassPointer<DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber) >
             newSymbol((DefineDefinedSymbol DefineEquationTemplateParameters(URealBitsNumber)*)
                symbolsManager().createUnrecordedDefinedSymbol(typename inherited::TemplateTraits()), PNT::Pointer::Init());
          newSymbol->getSDefinition() = additionalError;
@@ -3961,7 +4248,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool isDownApproximate = params.isDownApproximate(), isUpApproximate = params.isUpApproximate();
    params.clear();
 
-   typename BuiltReal::FloatConversion conversion;
+   typename BuiltDouble::FloatConversion conversion;
    conversion.setSizeMantissa(real.bitSizeMantissa()).setSizeExponent(real.bitSizeExponent());
    int sizeMantissa = (real.bitSizeMantissa() + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
    for (int index = 0; index < sizeMantissa; ++index)
@@ -3972,7 +4259,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    conversion.setNegative(real.isNegative());
    bfMin.setFloat(conversion, params);
    bfMax = bfMin;
+#ifdef FLOAT_CONCRETE
    DAffine::DefineSetContent(dValue, bfMax, typename TypeBaseFloatAffine::FloatDigitsHelper());
+#endif
 
    if (!isDownApproximate && !isUpApproximate)
       inherited::setCentral(real);
@@ -4012,12 +4301,14 @@ void
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::initFrom(TypeImplementation value) {
    inherited::updateLocalState();
+#ifdef FLOAT_CONCRETE
    dValue = value;
+#endif
    DAffine::DefineFillContent(bfMin, value, typename TypeBaseFloatAffine::FloatDigitsHelper());
    DAffine::DefineFillContent(bfMax, value, typename TypeBaseFloatAffine::FloatDigitsHelper());
    if (value != 0 && !bfMin.isInfty()) {
       bool isApproximate;
-      int limit = 4*sizeof(unsigned);
+      int limit = 4*sizeof(uint32_t);
 #ifdef DefineGeneric
       if (2*limit > DefineSizeofBaseTypeInBits)
          limit = DefineSizeofBaseTypeInBits/2;
@@ -4062,8 +4353,8 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          AssumeCondition(bitIndex >= 0)
          typename BuiltReal::Mantissa diffMantissa;
 #ifndef DefineGeneric
-         diffMantissa[bitIndex/(8*sizeof(unsigned))]
-               |= 1U << (bitIndex % (8*sizeof(unsigned)));
+         diffMantissa[bitIndex/(8*sizeof(uint32_t))]
+               |= 1U << (bitIndex % (8*sizeof(uint32_t)));
 #else
          BaseStoreTraits::setTrueBit(diffMantissa[bitIndex/(BaseStoreTraits::sizeBaseInBits())],
                bitIndex % (BaseStoreTraits::sizeBaseInBits()));
@@ -4120,7 +4411,9 @@ void
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::initFromAtomic(TypeImplementation value) {
    inherited::updateLocalState();
+#ifdef FLOAT_CONCRETE
    dValue = value;
+#endif
    DAffine::DefineFillContent(bfMin, value, typename TypeBaseFloatAffine::FloatDigitsHelper());
    DAffine::DefineFillContent(bfMax, value, typename TypeBaseFloatAffine::FloatDigitsHelper());
    if (value != 0 && !bfMin.isInfty()) {
@@ -4250,6 +4543,43 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
 void
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
+      ::writeBasicInterval(STG::IOObject::OSBase& out) const {
+   inherited::writeBasicInterval(out);
+   typename BuiltDouble::WriteParameters defaultParams;
+   defaultParams.setDecimal();
+   out.writesome(", i=");
+   if (!inherited::hasNoError()) {
+      if (!inherited::hasTopError()) {
+         out.put('[');
+         bfMin.write(out, defaultParams);
+         out.put(',');
+         bfMax.write(out, defaultParams);
+         out.put(']');
+      }
+      else
+         out.put('T');
+   }
+   else
+      out.writesome("xxx");
+   out.writesome(", re=");
+   if (!inherited::hasNoError() && !inherited::hasNoReal()) {
+      if (!inherited::hasTopError()) {
+         out.put('[');
+         bfMinRelativeError.write(out, defaultParams);
+         out.put(',');
+         bfMaxRelativeError.write(out, defaultParams);
+         out.put(']');
+      }
+      else
+         out.put('T');
+   }
+   else
+      out.writesome("xxx");
+}
+
+DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
+void
+DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::retrieveRelativeError(BuiltReal& result) const {
    const BuiltDouble* implementation = nullptr;
    if (bfMinRelativeError.isPositive())
@@ -4284,7 +4614,10 @@ DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExpo
 inline
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::DefineBasicFloatZonotope(TypeImplementation min, TypeImplementation max)
-   :  dValue((min + max)/2) {
+#ifdef FLOAT_CONCRETE
+   :  dValue((min + max)/2)
+#endif
+{
    inherited::updateLocalState();
    DAffine::DefineFillContent(bfMin, min, typename TypeBaseFloatAffine::FloatDigitsHelper());
    DAffine::DefineFillContent(bfMax, max, typename TypeBaseFloatAffine::FloatDigitsHelper());
@@ -4330,10 +4663,10 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    BuiltReal rmin, rmax;
    typename BuiltReal::FloatConversion conversion;
    conversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-   int sizeMantissa = (USizeMantissa + 8*sizeof(unsigned) - 1)/(8*sizeof(unsigned));
+   int sizeMantissa = (USizeMantissa + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t));
    for (int index = 0; index < sizeMantissa; ++index)
       conversion.mantissa()[index] = errmin.getMantissa()[index];
-   int sizeExponent = (USizeExponent + 8*sizeof(unsigned) - 1)/(8*sizeof(unsigned));
+   int sizeExponent = (USizeExponent + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t));
    for (int index = 0; index < sizeExponent; ++index)
       conversion.exponent()[index] = errmin.getBasicExponent()[index];
    conversion.setNegative(errmin.isNegative());
@@ -4370,7 +4703,7 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    BuiltReal minReal, maxReal;
    realDomain.retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
 
-   typename BuiltReal::FloatConversion conversion;
+   typename BuiltDouble::FloatConversion conversion;
    conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
    int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
    for (int index = 0; index < sizeMantissa; ++index)
@@ -4396,227 +4729,45 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    TypeImplementation min=0, max=0;
    DAffine::DefineSetContent(min, bfMin /*, false isUpper */, typename TypeBaseFloatAffine::FloatDigitsHelper());
    DAffine::DefineSetContent(max, bfMax /*, true isUpper */, typename TypeBaseFloatAffine::FloatDigitsHelper());
+#ifdef FLOAT_CONCRETE
    dValue = (min + max) / 2.0;
+#endif
    addSemiUlpToError();
 }
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
+template <typename TypeValue>
 inline
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::DefineBasicFloatZonotope(int value)
-   :  dValue((TypeImplementation) value) {
+      ::DefineBasicFloatZonotope(TypeValue value) requires std::integral<TypeValue>
+#ifdef FLOAT_CONCRETE
+   :  dValue((TypeImplementation) value)
+#endif
+{ // [TODO] to improve
    inherited::updateLocalState();
    typename BuiltDouble::IntConversion conversion;
-   conversion.setSigned();
-   conversion.assign(value);
-   auto& nearestParams = TypeBaseFloatAffine::nearestParams();
-   bfMin.setInteger(conversion, nearestParams);
-   bfMax = bfMin;
-   if (nearestParams.isApproximate()) {
-      nearestParams.clear();
-      typename BuiltReal::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign(value);
-      BuiltReal value;
-      value.setInteger(conversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
-
-      BuiltReal error;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      error.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      error.minusAssign(value, nearestParams);
-      nearestParams.clear();
-      getSError().setCentral(error);
-      computeRelativeError();
-   }
-   else {
-      BuiltReal value;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      value.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
-   }
-   if (!inherited::doesComputeReal()) {
-      getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
-      getSRealDomain().clear(&symbolsManager());
-   };
-   if (!inherited::doesComputeError()) {
-      getSError().clear(&symbolsManager());
-      bfMin.clear();
-      bfMax.clear();
-   };
-   TypeBaseFloatAffine::notifyForCompare(*this);
-}
-
-DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
-inline
-DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::DefineBasicFloatZonotope(long int value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   inherited::updateLocalState();
-   typename BuiltDouble::IntConversion conversion;
-   conversion.setSigned();
-   conversion.assign((int) value);
-   auto& nearestParams = TypeBaseFloatAffine::nearestParams();
-   bfMin.setInteger(conversion, nearestParams);
-   bfMax = bfMin;
-   if (nearestParams.isApproximate()) {
-      nearestParams.clear();
-      typename BuiltReal::IntConversion conversion;
-      conversion.setSigned();
-      conversion.assign((int) value);
-      BuiltReal value;
-      value.setInteger(conversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
-
-      BuiltReal error;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      error.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      error.minusAssign(value, nearestParams);
-      nearestParams.clear();
-      getSError().setCentral(error);
-      computeRelativeError();
-   }
-   else {
-      BuiltReal value;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      value.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
-   }
-
-   if (!inherited::doesComputeReal()) {
-      getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
-      getSRealDomain().clear(&symbolsManager());
-   };
-   if (!inherited::doesComputeError()) {
-      getSError().clear(&symbolsManager());
-      bfMin.clear();
-      bfMax.clear();
-   };
-   TypeBaseFloatAffine::notifyForCompare(*this);
-}
-
-DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
-inline
-DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::DefineBasicFloatZonotope(unsigned value)
-   :  dValue((TypeImplementation) value) {
-   inherited::updateLocalState();
-   typename BuiltDouble::IntConversion conversion;
-   conversion.setUnsigned();
-   conversion.assign(value);
-   auto& nearestParams = TypeBaseFloatAffine::nearestParams();
-   bfMin.setInteger(conversion, nearestParams);
-   bfMax = bfMin;
-   if (nearestParams.isApproximate()) {
-      nearestParams.clear();
-      typename BuiltReal::IntConversion conversion;
+   if (std::is_unsigned<TypeValue>::value) {
       conversion.setUnsigned();
-      conversion.assign(value);
-      BuiltReal value;
-      value.setInteger(conversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
-
-      BuiltReal error;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      error.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      error.minusAssign(value, nearestParams);
-      nearestParams.clear();
-      getSError().setCentral(error);
-      computeRelativeError();
+      conversion.assign((uint64_t) value);
    }
    else {
-      BuiltReal value;
-      typename BuiltReal::FloatConversion floatConversion;
-      floatConversion.setSizeMantissa(USizeMantissa).setSizeExponent(USizeExponent);
-      int sizeMantissa = (USizeMantissa + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeMantissa; ++index)
-         floatConversion.mantissa()[index] = bfMin.getMantissa()[index];
-      int sizeExponent = (USizeExponent + DefineSizeofBaseTypeInBits - 1)/(DefineSizeofBaseTypeInBits);
-      for (int index = 0; index < sizeExponent; ++index)
-         floatConversion.exponent()[index] = bfMin.getBasicExponent()[index];
-      floatConversion.setNegative(bfMin.isNegative());
-      value.setFloat(floatConversion, nearestParams);
-      nearestParams.clear();
-      getSRealDomain().setCentral(value);
+      conversion.setSigned();
+      conversion.assign((int64_t) value);
    }
-
-   if (!inherited::doesComputeReal()) {
-      getSError().plusAssign(getRealDomain(), Equation::PCSourceRValue, symbolsManager());
-      getSRealDomain().clear(&symbolsManager());
-   };
-   if (!inherited::doesComputeError()) {
-      getSError().clear(&symbolsManager());
-      bfMin.clear();
-      bfMax.clear();
-   };
-   TypeBaseFloatAffine::notifyForCompare(*this);
-}
-
-DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
-inline
-DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::DefineBasicFloatZonotope(unsigned long value)
-   :  dValue((TypeImplementation) value) { // [TODO] to improve
-   inherited::updateLocalState();
-   typename BuiltDouble::IntConversion conversion;
-   conversion.setUnsigned();
-   conversion.assign((unsigned) value);
    auto& nearestParams = TypeBaseFloatAffine::nearestParams();
    bfMin.setInteger(conversion, nearestParams);
    bfMax = bfMin;
    if (nearestParams.isApproximate()) {
       nearestParams.clear();
       typename BuiltReal::IntConversion conversion;
-      conversion.setUnsigned();
-      conversion.assign((unsigned) value);
+      if (std::is_unsigned<TypeValue>::value) {
+         conversion.setUnsigned();
+         conversion.assign((uint64_t) value);
+      }
+      else {
+         conversion.setSigned();
+         conversion.assign((int64_t) value);
+      }
       BuiltReal value;
       value.setInteger(conversion, nearestParams);
       nearestParams.clear();
@@ -4677,7 +4828,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultiple = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isLessThan(source, hasMultiple, dValue < source.dValue);
+      bool result = inherited::isLessThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+            , dValue < source.dValue
+#else
+            , true
+#endif
+         );
       if (hasMultiple) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -4697,7 +4854,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    else {
       if (bfMax < source.bfMin) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessThan(source, hasMultiple, dValue < source.dValue,
+         bool result = inherited::isLessThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue < source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4712,7 +4874,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       else if ((bfMin >= source.bfMax)
             || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessThan(source, hasMultiple, dValue < source.dValue,
+         bool result = inherited::isLessThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue < source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, false /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4728,7 +4895,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    // bfMax >= source.bfMin && bfMin < source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isLessThan(source, hasMultiple, dValue < source.dValue);
+   bool result = inherited::isLessThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+         , dValue < source.dValue
+#else
+         , true
+#endif
+      );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (result) {
          if (bfMax >= source.bfMax) {
@@ -4773,7 +4946,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultiple = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isLessOrEqualThan(source, hasMultiple, dValue <= source.dValue);
+      bool result = inherited::isLessOrEqualThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+               , dValue <= source.dValue
+#else
+               , true
+#endif
+         );
       if (hasMultiple) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -4793,7 +4972,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    else {
       if (bfMax <= source.bfMin) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessOrEqualThan(source, hasMultiple, dValue <= source.dValue,
+         bool result = inherited::isLessOrEqualThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue <= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4808,7 +4992,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       else if ((bfMin > source.bfMax)
             || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessOrEqualThan(source, hasMultiple, dValue <= source.dValue,
+         bool result = inherited::isLessOrEqualThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue <= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, false /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4824,7 +5013,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    // bfMax >= source.bfMin && bfMin < source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isLessOrEqualThan(source, hasMultiple, dValue <= source.dValue);
+   bool result = inherited::isLessOrEqualThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+         , dValue <= source.dValue
+#else
+         , true
+#endif
+      );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (result) {
          if (bfMax > source.bfMax)
@@ -4869,8 +5064,20 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultipleLess = false, hasMultipleGreater = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isLessOrEqualThan(source, hasMultipleLess, dValue <= source.dValue)
-            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater, dValue >= source.dValue);
+      bool result = inherited::isLessOrEqualThan(source, hasMultipleLess
+#ifdef FLOAT_CONCRETE
+               , dValue <= source.dValue
+#else
+               , true
+#endif
+            )
+            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater
+#ifdef FLOAT_CONCRETE
+               , dValue >= source.dValue
+#else
+               , true
+#endif
+            );
       if (hasMultipleLess || hasMultipleGreater) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -4893,9 +5100,20 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       if ((bfMax < source.bfMin || bfMin > source.bfMax)
            || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessOrEqualThan(source, hasMultipleLess, dValue <= source.dValue,
-               true /* bool doesAssumeErrorValue */, (bfMax < source.bfMin) /* errorValue */)
-            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater, dValue >= source.dValue,
+         bool result = inherited::isLessOrEqualThan(source, hasMultipleLess,
+#ifdef FLOAT_CONCRETE
+               dValue <= source.dValue,
+#else
+               true,
+#endif
+               true /* bool doesAssumeErrorValue */, (bfMax < source.bfMin) /* errorValue */
+            )
+            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater,
+#ifdef FLOAT_CONCRETE
+               dValue >= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, (bfMin > source.bfMax) /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4909,9 +5127,19 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       }
       else if (bfMin == source.bfMax && bfMax == source.bfMin) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessOrEqualThan(source, hasMultipleLess, dValue <= source.dValue,
+         bool result = inherited::isLessOrEqualThan(source, hasMultipleLess,
+#ifdef FLOAT_CONCRETE
+               dValue <= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */)
-            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater, dValue >= source.dValue,
+            && inherited::isGreaterOrEqualThan(source, hasMultipleGreater,
+#ifdef FLOAT_CONCRETE
+               dValue >= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -4926,8 +5154,20 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    };
    // bfMax >= source.bfMin && bfMin <= source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isLessOrEqualThan(source, hasMultipleLess, dValue <= source.dValue)
-         && inherited::isGreaterOrEqualThan(source, hasMultipleGreater, dValue >= source.dValue);
+   bool result = inherited::isLessOrEqualThan(source, hasMultipleLess
+#ifdef FLOAT_CONCRETE
+               , dValue <= source.dValue
+#else
+               , true
+#endif
+         )
+         && inherited::isGreaterOrEqualThan(source, hasMultipleGreater
+#ifdef FLOAT_CONCRETE
+               , dValue >= source.dValue
+#else
+               , true
+#endif
+         );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (result) {
          if (bfMin < source.bfMin)
@@ -4966,8 +5206,20 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultipleLess = false, hasMultipleGreater = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isLessThan(source, hasMultipleLess, dValue < source.dValue)
-            || inherited::isGreaterThan(source, hasMultipleGreater, dValue > source.dValue);
+      bool result = inherited::isLessThan(source, hasMultipleLess
+#ifdef FLOAT_CONCRETE
+               , dValue < source.dValue
+#else
+               , true
+#endif
+            )
+            || inherited::isGreaterThan(source, hasMultipleGreater
+#ifdef FLOAT_CONCRETE
+               , dValue > source.dValue
+#else
+               , true
+#endif
+         );
       if (hasMultipleLess || hasMultipleGreater) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -4989,9 +5241,19 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    else {
       if (bfMax < source.bfMin || bfMin > source.bfMax) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessThan(source, hasMultipleLess, dValue < source.dValue,
+         bool result = inherited::isLessThan(source, hasMultipleLess,
+#ifdef FLOAT_CONCRETE
+               dValue < source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, (bfMax < source.bfMin) /* errorValue */)
-            || inherited::isGreaterThan(source, hasMultipleGreater, dValue > source.dValue,
+            || inherited::isGreaterThan(source, hasMultipleGreater,
+#ifdef FLOAT_CONCRETE
+               dValue > source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, (bfMin > source.bfMax) /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5006,9 +5268,19 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       else if ((bfMin == source.bfMax && bfMax == source.bfMin)
            || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isLessThan(source, hasMultipleLess, dValue < source.dValue,
+         bool result = inherited::isLessThan(source, hasMultipleLess,
+#ifdef FLOAT_CONCRETE
+                  dValue < source.dValue,
+#else
+                  true,
+#endif
                   true /* bool doesAssumeErrorValue */, false /* errorValue */)
-               || inherited::isGreaterThan(source, hasMultipleGreater, dValue > source.dValue,
+               || inherited::isGreaterThan(source, hasMultipleGreater,
+#ifdef FLOAT_CONCRETE
+                  dValue > source.dValue,
+#else
+                  true,
+#endif
                   true /* bool doesAssumeErrorValue */, false /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5023,8 +5295,20 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    };
    // bfMax >= source.bfMin && bfMin <= source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isLessThan(source, hasMultipleLess, dValue < source.dValue)
-         || inherited::isGreaterThan(source, hasMultipleGreater, dValue > source.dValue);
+   bool result = inherited::isLessThan(source, hasMultipleLess
+#ifdef FLOAT_CONCRETE
+               , dValue < source.dValue
+#else
+               , true
+#endif
+         )
+         || inherited::isGreaterThan(source, hasMultipleGreater
+#ifdef FLOAT_CONCRETE
+               , dValue > source.dValue
+#else
+               , true
+#endif
+      );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (!result) {
          if (bfMin < source.bfMin)
@@ -5063,7 +5347,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultiple = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isGreaterOrEqualThan(source, hasMultiple, dValue >= source.dValue);
+      bool result = inherited::isGreaterOrEqualThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+               , dValue >= source.dValue
+#else
+               , true
+#endif
+      );
       if (hasMultiple) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -5084,7 +5374,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       if ((bfMax < source.bfMin)
             || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isGreaterOrEqualThan(source, hasMultiple, dValue >= source.dValue,
+         bool result = inherited::isGreaterOrEqualThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue >= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, false /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5098,7 +5393,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       }
       else if (bfMin >= source.bfMax) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isGreaterOrEqualThan(source, hasMultiple, dValue >= source.dValue,
+         bool result = inherited::isGreaterOrEqualThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue >= source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5114,7 +5414,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    // bfMax >= source.bfMin && bfMin < source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isGreaterOrEqualThan(source, hasMultiple, dValue >= source.dValue);
+   bool result = inherited::isGreaterOrEqualThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+         , dValue >= source.dValue
+#else
+         , true
+#endif
+      );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (result) {
          if (bfMax < source.bfMax)
@@ -5159,7 +5465,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool hasMultiple = false;
    if (!this->doesComputeError() || !source.doesComputeError()) {
       typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-      bool result = inherited::isGreaterThan(source, hasMultiple, dValue > source.dValue);
+      bool result = inherited::isGreaterThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+            , dValue > source.dValue
+#else
+            , true
+#endif
+         );
       if (hasMultiple) {
          bool isUnstable = mode != inherited::getMode();
          TypeBaseFloatAffine::notifyForBranchCompare(*this, isUnstable);
@@ -5180,7 +5492,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       if ((bfMax <= source.bfMin)
             || ((bfMin.isNaN() && bfMax.isNaN()) || (source.bfMin.isNaN() && source.bfMax.isNaN()))) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isGreaterThan(source, hasMultiple, dValue > source.dValue,
+         bool result = inherited::isGreaterThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue > source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, false /* errorValue */);
          if (!result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5194,7 +5511,12 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       }
       else if (bfMin > source.bfMax) {
          typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-         bool result = inherited::isGreaterThan(source, hasMultiple, dValue > source.dValue,
+         bool result = inherited::isGreaterThan(source, hasMultiple,
+#ifdef FLOAT_CONCRETE
+               dValue > source.dValue,
+#else
+               true,
+#endif
                true /* bool doesAssumeErrorValue */, true /* errorValue */);
          if (result && this->doesComputeReal() && this->doesComputeError())
             const_cast<thisType*>(this)->restrictRelativeErrorFromRealAndError();
@@ -5210,7 +5532,13 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    // bfMax >= source.bfMin && bfMin < source.bfMax
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   bool result = inherited::isGreaterThan(source, hasMultiple, dValue > source.dValue);
+   bool result = inherited::isGreaterThan(source, hasMultiple
+#ifdef FLOAT_CONCRETE
+         , dValue > source.dValue
+#else
+         , true
+#endif
+      );
    if (TypeBaseFloatAffine::getMode() != TypeBaseFloatAffine::MOnlyReal) {
       if (result) {
          if (bfMax <= source.bfMax) {
@@ -5253,7 +5581,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          << *this << source) >> *this;
    bool isApproximate = !this->isZero() && !source.isZero();
    inherited::plusAssign(source, policyCall);
+#ifdef FLOAT_CONCRETE
    dValue += source.dValue;
+#endif
    if (!this->hasNoError() && !source.hasNoError()) {
       auto& nearestParams = TypeBaseFloatAffine::nearestParams();
       bfMin.plusAssign(source.bfMin, nearestParams);
@@ -5278,7 +5608,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          << *this << source) >> *this;
    bool isApproximate = !this->isZero() && !source.isZero();
    inherited::minusAssign(source, policyCall);
+#ifdef FLOAT_CONCRETE
    dValue -= source.dValue;
+#endif
    if (!this->hasNoError() && !source.hasNoError()) {
       auto& nearestParams = TypeBaseFloatAffine::nearestParams();
       bfMin.minusAssign(source.bfMax, nearestParams);
@@ -5304,7 +5636,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool isApproximate = !this->isZero() && !source.isZero()
       && !this->isTwoPower() && !source.isTwoPower();
    inherited::multAssign(source, policyCall);
+#ifdef FLOAT_CONCRETE
    dValue *= source.dValue;
+#endif
    if (!this->hasNoError() && !source.hasNoError()) {
       auto& nearestParams = TypeBaseFloatAffine::nearestParams();
       if (bfMin.isPositive() || bfMin.isZero()) {
@@ -5504,7 +5838,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          << *this << source) >> *this;
    bool isApproximate = !this->isZero() && !source.isTwoPower();
    inherited::divAssign(source, policyCall);
+#ifdef FLOAT_CONCRETE
    dValue /= source.dValue;
+#endif
    if (!this->hasNoError() && !source.hasNoError()) {
       if (bfMin.isPositive() || bfMin.isZero()) {
          if (source.bfMin.isPositive() || source.bfMin.isZero()) {
@@ -5722,11 +6058,11 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       typename BuiltReal::IntConversion conversion;
       if (isSigned) {
          conversion.setSigned();
-         conversion.assign((int) (signedResult-signedImplementationResult-unitSub));
+         conversion.assign((int64_t) (signedResult-signedImplementationResult-unitSub));
       }
       else {
          conversion.setUnsigned();
-         conversion.assign((unsigned) (result-implementationResult-unitSub));
+         conversion.assign((uint64_t) (result-implementationResult-unitSub));
       };
       BuiltReal errorBound;
       errorBound.setInteger(conversion, maxParams);
@@ -5770,9 +6106,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       unitSub = isStrictGreater ? 1 : 0;
       Equation constraint(getRealDomain());
       if (isSigned)
-         conversion.assign(signedImplementationResult);
+         conversion.assign((int64_t) signedImplementationResult);
       else
-         conversion.assign(implementationResult);
+         conversion.assign((uint64_t) implementationResult);
       BuiltReal max;
       max.setInteger(conversion, maxParams);
       maxParams.clear();
@@ -5819,11 +6155,11 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       typename BuiltReal::IntConversion conversion;
       if (isSigned) {
          conversion.setSigned();
-         conversion.assign((int) (signedImplementationResult-signedResult-unitSub));
+         conversion.assign((int64_t) (signedImplementationResult-signedResult-unitSub));
       }
       else {
          conversion.setUnsigned();
-         conversion.assign((unsigned) (implementationResult-result-unitSub));
+         conversion.assign((uint64_t) (implementationResult-result-unitSub));
       };
       BuiltReal errorBound;
       errorBound.setInteger(conversion, maxParams);
@@ -5866,9 +6202,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       unitSub = isStrictGreater ? 1 : 0;
       Equation constraint(getRealDomain());
       if (isSigned)
-         conversion.assign(signedImplementationResult);
+         conversion.assign((int64_t) signedImplementationResult);
       else
-         conversion.assign(implementationResult);
+         conversion.assign((uint64_t) implementationResult);
       BuiltReal max;
       max.setInteger(conversion, maxParams);
       maxParams.clear();
@@ -5999,11 +6335,11 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       typename BuiltReal::IntConversion conversion;
       if (isSigned) {
          conversion.setSigned();
-         conversion.assign((int) (signedRealResult-signedResult-unitSub));
+         conversion.assign((int64_t) (signedRealResult-signedResult-unitSub));
       }
       else {
          conversion.setUnsigned();
-         conversion.assign((int) (realResult-result-unitSub));
+         conversion.assign((uint64_t) (realResult-result-unitSub));
       };
       BuiltReal errorBound;
       errorBound.setInteger(conversion, maxParams);
@@ -6023,9 +6359,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          unitSub = (roundMode == ReadParametersBase::RMHighest) ? 1 : 0;
       Equation constraint(getRealDomain());
       if (isSigned)
-         conversion.assign(signedRealResult);
+         conversion.assign((int64_t) signedRealResult);
       else
-         conversion.assign(realResult);
+         conversion.assign((uint64_t) realResult);
       BuiltReal max;
       max.setInteger(conversion, maxParams);
       maxParams.clear();
@@ -6068,11 +6404,11 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       typename BuiltReal::IntConversion conversion;
       if (isSigned) {
          conversion.setSigned();
-         conversion.assign((int) (signedResult-signedRealResult-unitSub));
+         conversion.assign((int64_t) (signedResult-signedRealResult-unitSub));
       }
       else {
          conversion.setUnsigned();
-         conversion.assign((unsigned) (result-realResult-unitSub));
+         conversion.assign((uint64_t) (result-realResult-unitSub));
       };
       BuiltReal errorBound;
       errorBound.setInteger(conversion, maxParams);
@@ -6091,9 +6427,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
             || (roundMode == ReadParametersBase::RMHighest)) ? 1 : 0;
       Equation constraint(getRealDomain());
       if (isSigned)
-         conversion.assign(signedRealResult);
+         conversion.assign((int64_t) signedRealResult);
       else
-         conversion.assign(realResult);
+         conversion.assign((uint64_t) realResult);
       BuiltReal max;
       max.setInteger(conversion, maxParams);
       maxParams.clear();
@@ -6132,8 +6468,8 @@ bool
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
    ::retrieveConcreteChoicesForConversion(ReadParametersBase::RoundMode roundMode,
          typename inherited::EquationHolder& implementation, TypeConversion& baseResult,
-         unsigned& firstReal, unsigned& lastReal, unsigned& firstImplementation,
-         unsigned& lastImplementation, TypeConversion& realResultMin, TypeConversion& realResultMax,
+         uint64_t& firstReal, uint64_t& lastReal, uint64_t& firstImplementation,
+         uint64_t& lastImplementation, TypeConversion& realResultMin, TypeConversion& realResultMax,
          TypeConversion& implementationResultMin, TypeConversion& implementationResultMax,
          TypeConversion& realPlusErrorResultMin, TypeConversion& realPlusErrorResultMax,
          TypeConversion& implementationBoundResultMin, TypeConversion& implementationBoundResultMax) const {
@@ -6203,7 +6539,11 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    if ((realResultMax - realResultMin >= (1 << 12))
          || (implementationResultMax - implementationResultMin >= (1 << 12))) {
+#ifdef FLOAT_CONCRETE
       baseResult = (TypeConversion) dValue;
+#else
+      baseResult = implementationResultMin;
+#endif
       return true;
    };
 
@@ -6244,22 +6584,30 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    bool isSigned = std::is_signed<TypeConversion>();
    if (realChoice) {
       if (!implementationChoice) {
-         AssumeCondition(hasValidAlternative && alternativeResult != result)
-         if (inherited::doesComputeError()) {
-            if (!optimizeUnstableConversionForRealFlow(result, alternativeResult,
-                     isSigned ? result : 0, isSigned ? alternativeResult : 0, isSigned /* isSigned */,
-                     hasMultipleResults, mode, minParams, maxParams, roundMode))
-               return result;
-            const_cast<thisType*>(this)->mergeNoError();
-         };
+         if (hasValidAlternative) {
+            AssumeCondition(alternativeResult != result)
+            if (inherited::doesComputeError()) {
+               if (!optimizeUnstableConversionForRealFlow(result, alternativeResult,
+                        isSigned ? result : 0, isSigned ? alternativeResult : 0, isSigned /* isSigned */,
+                        hasMultipleResults, mode, minParams, maxParams, roundMode))
+                  return result;
+               const_cast<thisType*>(this)->mergeNoError();
+            };
+         }
+         else {
+            AssumeCondition(!inherited::doesComputeError())
+         }
       };
       if ((realResultMin <= realResultMax) && (result+1 < realResultMax)) {
          typename BuiltReal::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result+1);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result+1);
+            conversion.assign((uint64_t) result+1);
+         }
          BuiltReal newMax;
          newMax.setInteger(conversion, maxParams);
          maxParams.clear();
@@ -6269,8 +6617,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          Symbol* constrainedSymbol = symbolsManager()
             .createDefinedSymbol(typename inherited::TemplateTraits(), constraint);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, true, symbolsManager(),
-                  TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager().doesDisableConstraintPropagation() ? true
+               : constraint.simplifyAllEquationsIf(*constrainedSymbol, true, symbolsManager(),
+                  TypeBaseFloatAffine::getConditionSameBranch()))
             : constraint.simplifyAllEquations(*constrainedSymbol, true, symbolsManager());
          if (auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -6285,11 +6634,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
       if ((realResultMin <= realResultMax) && (result > realResultMin)) {
          typename BuiltReal::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result);
+            conversion.assign((uint64_t) result);
+         }
          BuiltReal newMin;
          newMin.setInteger(conversion, minParams);
          minParams.clear();
@@ -6298,10 +6650,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          maxParams.clear();
          Symbol* constrainedSymbol = symbolsManager()
                .createDefinedSymbol(typename inherited::TemplateTraits(), constraint);
-         bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, false, symbolsManager(),
-                  TypeBaseFloatAffine::getConditionSameBranch())
-            : constraint.simplifyAllEquations(*constrainedSymbol, false, symbolsManager());
+         bool hasAllSimplified = true;
+         if (TypeBaseFloatAffine::hasMultipleBranches()) {
+            if (!symbolsManager().doesDisableConstraintPropagation())
+               hasAllSimplified = constraint.simplifyAllEquationsIf(*constrainedSymbol, false,
+                  symbolsManager(), TypeBaseFloatAffine::getConditionSameBranch());
+         }
+         else
+            hasAllSimplified = constraint.simplifyAllEquations(*constrainedSymbol, false, symbolsManager());
          if (auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
                expressionBuilder->assumeCleared();
@@ -6316,23 +6672,31 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
    if (implementationChoice) {
       if (!realChoice) {
-         AssumeCondition(hasValidAlternative && alternativeResult != result)
-         if (inherited::doesComputeError()) {
-            if (!optimizeUnstableConversionForImplementationFlow(result, alternativeResult,
-                     isSigned ? result : 0, isSigned ? alternativeResult : 0, isSigned /* isSigned */,
-                     hasMultipleResults, mode, minParams, maxParams, roundMode))
-               return result;
-            const_cast<thisType*>(this)->mergeNoReal();
-            implementation = getError();
-         };
+         if (hasValidAlternative) {
+            AssumeCondition(alternativeResult != result)
+            if (inherited::doesComputeError()) {
+               if (!optimizeUnstableConversionForImplementationFlow(result, alternativeResult,
+                        isSigned ? result : 0, isSigned ? alternativeResult : 0, isSigned /* isSigned */,
+                        hasMultipleResults, mode, minParams, maxParams, roundMode))
+                  return result;
+               const_cast<thisType*>(this)->mergeNoReal();
+               implementation = getError();
+            };
+         }
+         else {
+            AssumeCondition(!inherited::doesComputeError())
+         }
       };
       if ((realPlusErrorResultMin <= realPlusErrorResultMax) && (result+1 < realPlusErrorResultMax)) {
          typename BuiltReal::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result+1);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result+1);
+            conversion.assign((uint64_t) result+1);
+         }
          BuiltReal newMax;
          newMax.setInteger(conversion, maxParams);
          maxParams.clear();
@@ -6343,8 +6707,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          Symbol* constrainedSymbol = symbolsManager()
                .createDefinedSymbol(typename inherited::TemplateTraits(), constraint);
          bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, true, symbolsManager(),
-                  TypeBaseFloatAffine::getConditionSameBranch())
+            ? (symbolsManager().doesDisableConstraintPropagation() ? true
+               : constraint.simplifyAllEquationsIf(*constrainedSymbol, true, symbolsManager(),
+                     TypeBaseFloatAffine::getConditionSameBranch()))
             : constraint.simplifyAllEquations(*constrainedSymbol, true, symbolsManager());
          if (auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
@@ -6359,11 +6724,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
       if ((realPlusErrorResultMin <= realPlusErrorResultMax) && (result > realPlusErrorResultMin)) {
          typename BuiltReal::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result);
+            conversion.assign((uint64_t) result);
+         }
          BuiltReal newMin;
          newMin.setInteger(conversion, minParams);
          minParams.clear();
@@ -6373,10 +6741,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
          maxParams.clear();
          Symbol* constrainedSymbol = symbolsManager()
                .createDefinedSymbol(typename inherited::TemplateTraits(), constraint);
-         bool hasAllSimplified = TypeBaseFloatAffine::hasMultipleBranches()
-            ? constraint.simplifyAllEquationsIf(*constrainedSymbol, false, symbolsManager(),
-                  TypeBaseFloatAffine::getConditionSameBranch())
-            : constraint.simplifyAllEquations(*constrainedSymbol, false, symbolsManager());
+         bool hasAllSimplified = true;
+         if (TypeBaseFloatAffine::hasMultipleBranches()) {
+            if (!symbolsManager().doesDisableConstraintPropagation())
+               hasAllSimplified = constraint.simplifyAllEquationsIf(*constrainedSymbol, false, symbolsManager(),
+                     TypeBaseFloatAffine::getConditionSameBranch());
+         }
+         else
+            hasAllSimplified = constraint.simplifyAllEquations(*constrainedSymbol, false, symbolsManager());
          if (auto* symbolDefinitionTracker = symbolsManager().getSymbolDefinitionTracker()) {
             if (VirtualExpressionBuilder* expressionBuilder = symbolDefinitionTracker->getExpressionBuilder()) {
                expressionBuilder->assumeCleared();
@@ -6390,11 +6762,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
       if (result < implementationBoundResultMax) {
          typename BuiltDouble::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result);
+            conversion.assign((uint64_t) result);
+         }
          const_cast<thisType&>(*this).bfMax.setInteger(conversion, maxParams);
          maxParams.clear();
          if (!isSigned || bfMax.isPositive()) {
@@ -6408,11 +6783,14 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 
       if (result > implementationBoundResultMin) {
          typename BuiltDouble::IntConversion conversion;
-         if (isSigned)
+         if (isSigned) {
             conversion.setSigned();
-         else
+            conversion.assign((int64_t) result);
+         }
+         else {
             conversion.setUnsigned();
-         conversion.assign(result);
+            conversion.assign((uint64_t) result);
+         }
          const_cast<thisType&>(*this).bfMin.setInteger(conversion, minParams);
          minParams.clear();
          if (isSigned && bfMin.isNegative()) {
@@ -6441,17 +6819,17 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
 }
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
-int
+int64_t
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::asInt(ReadParametersBase::RoundMode roundMode) const {
+      ::asLongInt(ReadParametersBase::RoundMode roundMode) const {
    typename inherited::GuardStateZonotope thisGuard(*this, true /* isConstEquation*/, false /* isXValue */);
    // const_cast<thisType&>(*this).updateLocalState();
-   int realResultMin, realResultMax, implementationResultMin, implementationResultMax,
+   int64_t realResultMin, realResultMax, implementationResultMin, implementationResultMax,
       realPlusErrorResultMin, realPlusErrorResultMax,
       implementationBoundResultMin, implementationBoundResultMax;
 
-   int baseResult;
-   unsigned firstReal, lastReal, firstImplementation, lastImplementation;
+   int64_t baseResult;
+   uint64_t firstReal, lastReal, firstImplementation, lastImplementation;
    typename inherited::EquationHolder implementation;
    if (retrieveConcreteChoicesForConversion(roundMode, implementation, baseResult, firstReal,
             lastReal, firstImplementation, lastImplementation, realResultMin, realResultMax,
@@ -6459,34 +6837,40 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
             realPlusErrorResultMax, implementationBoundResultMin, implementationBoundResultMax))
       return baseResult;
 
-   unsigned casesNumber = TypeBaseFloatAffine::getConversionNumber(firstReal, lastReal,
+   uint64_t casesNumber = TypeBaseFloatAffine::getConversionNumber(firstReal, lastReal,
          firstImplementation, lastImplementation);
    bool realChoice = this->doesComputeReal(), implementationChoice = this->doesComputeError();
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   unsigned ualternativeResult;
-   int result = baseResult + TypeBaseFloatAffine::getConversionBranch(casesNumber,
+   uint64_t ualternativeResult;
+   int64_t result = baseResult + TypeBaseFloatAffine::getConversionBranch(casesNumber,
          firstReal, lastReal, firstImplementation, lastImplementation,
-         realChoice, implementationChoice, (unsigned) ((int) dValue - baseResult), ualternativeResult);
-   int alternativeResult = baseResult + ualternativeResult;
+         realChoice, implementationChoice,
+#ifdef FLOAT_CONCRETE
+         (unsigned) ((int) dValue - baseResult),
+#else
+         0,
+#endif
+         ualternativeResult);
+   int64_t alternativeResult = baseResult + ualternativeResult;
    return const_cast<thisType*>(this)->setConversionResult(roundMode, mode, result, realChoice,
-         implementationChoice, alternativeResult, casesNumber > 1, ualternativeResult != ~0U,
+         implementationChoice, alternativeResult, casesNumber > 1, ualternativeResult != ~0UL,
          implementation, realResultMin, realResultMax, implementationResultMin,
          implementationResultMax, realPlusErrorResultMin, realPlusErrorResultMax,
          implementationBoundResultMin, implementationBoundResultMax);
 }
 
 DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExponent)
-unsigned
+uint64_t
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
-      ::asUnsigned(ReadParametersBase::RoundMode roundMode) const {
+      ::asUnsignedLong(ReadParametersBase::RoundMode roundMode) const {
    typename inherited::GuardStateZonotope thisGuard(*this, true /* isConstEquation*/, false /* isXValue */);
    // const_cast<thisType&>(*this).updateLocalState();
-   unsigned realResultMin, realResultMax, implementationResultMin, implementationResultMax,
+   uint64_t realResultMin, realResultMax, implementationResultMin, implementationResultMax,
       realPlusErrorResultMin, realPlusErrorResultMax,
       implementationBoundResultMin, implementationBoundResultMax;
 
-   unsigned baseResult;
-   unsigned firstReal, lastReal, firstImplementation, lastImplementation;
+   uint64_t baseResult;
+   uint64_t firstReal, lastReal, firstImplementation, lastImplementation;
    typename inherited::EquationHolder implementation;
    if (retrieveConcreteChoicesForConversion(roundMode, implementation, baseResult, firstReal,
             lastReal, firstImplementation, lastImplementation, realResultMin, realResultMax,
@@ -6494,15 +6878,21 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
             realPlusErrorResultMax, implementationBoundResultMin, implementationBoundResultMax))
       return baseResult;
 
-   unsigned casesNumber = TypeBaseFloatAffine::getConversionNumber(firstReal, lastReal,
+   uint64_t casesNumber = TypeBaseFloatAffine::getConversionNumber(firstReal, lastReal,
          firstImplementation, lastImplementation);
    bool realChoice = this->doesComputeReal(), implementationChoice = this->doesComputeError();
    typename TypeBaseFloatAffine::Mode mode = inherited::getMode();
-   unsigned ualternativeResult;
-   unsigned result = baseResult + TypeBaseFloatAffine::getConversionBranch(casesNumber,
+   uint64_t ualternativeResult;
+   uint64_t result = baseResult + TypeBaseFloatAffine::getConversionBranch(casesNumber,
          firstReal, lastReal, firstImplementation, lastImplementation,
-         realChoice, implementationChoice, (unsigned) ((int) dValue - baseResult), ualternativeResult);
-   unsigned alternativeResult = baseResult + ualternativeResult;
+         realChoice, implementationChoice,
+#ifdef FLOAT_CONCRETE
+         (uint64_t) dValue - baseResult,
+#else
+         0,
+#endif
+         ualternativeResult);
+   uint64_t alternativeResult = baseResult + ualternativeResult;
    return const_cast<thisType*>(this)->setConversionResult(roundMode, mode, result, realChoice,
          implementationChoice, alternativeResult, casesNumber > 1, ualternativeResult != ~0U,
          implementation, realResultMin, realResultMax, implementationResultMin,
@@ -6517,7 +6907,47 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
    bool isApproximate = !this->isFourPower();
-   dValue = (TypeImplementation) ::sqrt((double) dValue);
+#ifdef FLOAT_CONCRETE
+   if (inherited::getMode() != TypeBaseFloatAffine::MOnlyReal || dValue >= 0)
+      dValue = (TypeImplementation) ::sqrt((double) dValue);
+   else {
+      typename BuiltDouble::FloatConversion conversion;
+      conversion.setSizeMantissa(BuiltReal::BitSizeMantissa).setSizeExponent(BuiltReal::BitSizeExponent);
+      int sizeMantissa = (BuiltReal::BitSizeMantissa + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
+      int sizeExponent = (BuiltReal::BitSizeExponent + DefineSizeofBaseTypeInBits - 1)/DefineSizeofBaseTypeInBits;
+      if (getRealDomain().getCentral().isPositive() || getRealDomain().getCentral().isZero()) {
+         for (int index = 0; index < sizeMantissa; ++index)
+            conversion.mantissa()[index] = getRealDomain().getCentral().getMantissa()[index];
+         for (int index = 0; index < sizeExponent; ++index)
+            conversion.exponent()[index] = getRealDomain().getCentral().getBasicExponent()[index];
+         conversion.setNegative(getRealDomain().getCentral().isNegative());
+         auto& nearestParams = TypeBaseFloatAffine::nearestParams();
+         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent) >
+            implementationForReal;
+         implementationForReal.setFloat(conversion, nearestParams);
+         nearestParams.clear();
+         DAffine::DefineSetContent(dValue, implementationForReal, typename TypeBaseFloatAffine::FloatDigitsHelper());
+      }
+      else {
+         BuiltReal minReal, maxReal;
+         getRealDomain().retrieveBound(minReal, maxReal, false /* hasExternalCoefficient */);
+         for (int index = 0; index < sizeMantissa; ++index)
+            conversion.mantissa()[index] = maxReal.getMantissa()[index];
+         for (int index = 0; index < sizeExponent; ++index)
+            conversion.exponent()[index] = maxReal.getBasicExponent()[index];
+         conversion.setNegative(maxReal.isNegative());
+         auto& minParams = TypeBaseFloatAffine::minParams();
+         Numerics::DefineBuiltDouble<DefineBuiltDoubleTraits
+               DefineRealMantissaExponentTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent) >
+            implementationForReal;
+         implementationForReal.setFloat(conversion, minParams);
+         minParams.clear();
+         DAffine::DefineSetContent(dValue, implementationForReal, typename TypeBaseFloatAffine::FloatDigitsHelper());
+      }
+      dValue = (TypeImplementation) ::sqrt((double) dValue);
+   }
+#endif
    inherited::sqrtAssign();
    if (!this->hasNoError()) {
       if (bfMin.isNegative() && !bfMin.isZero()) {
@@ -6547,7 +6977,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::sinAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::sin((double) dValue);
+#endif
    inherited::sinAssign();
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6564,7 +6996,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::cosAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::cos((double) dValue);
+#endif
    inherited::cosAssign();
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6581,7 +7015,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::asinAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::asin((double) dValue);
+#endif
    inherited::asinAssign();
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6598,7 +7034,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::acosAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::acos((double) dValue);
+#endif
    inherited::acosAssign();
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6615,7 +7053,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::tanAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::tan((double) dValue);
+#endif
    inherited::tanAssign();
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6632,7 +7072,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::atanAssign() {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::atan((double) dValue);
+#endif
    inherited::atanAssign();
 
 /* typedef Numerics::DefineTaylorDouble<
@@ -6676,7 +7118,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
    bool isApproximate = !this->isZero();
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::exp((double) dValue);
+#endif
    inherited::expAssign();
 
    if (!this->hasNoError()) {
@@ -6719,7 +7163,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this) >> *this;
    bool isApproximate = !this->isOne();
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::log((double) dValue);
+#endif
    inherited::logAssign();
    if (bfMin.isNegative() && !bfMin.isZero()) {
       // [TODO] should be in FloatZonotope::logAssign
@@ -6767,7 +7213,9 @@ void
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::log10Assign() {
    bool isApproximate = !this->isOne();
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::log10((double) dValue);
+#endif
    inherited::log10Assign();
    if (!this->hasNoError()) {
       if (bfMin.isNegative() && !bfMin.isZero()) {
@@ -6817,7 +7265,9 @@ DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNum
       ::powAssign(const thisType& source, typename Equation::PolicyCall policyCall) {
    auto simplificationRules = (SimplificationRules(TypeBaseFloatAffine::getLimitNoiseSymbolsNumber())
          << *this << source) >> *this;
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::pow((double) dValue, (double) source.dValue);
+#endif
    inherited::powAssign(source, policyCall);
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);
@@ -6832,7 +7282,9 @@ DefineBasicFloatZonotopeTemplateHeader(URealBitsNumber, USizeMantissa, USizeExpo
 void
 DefineBasicFloatZonotope DefineBasicFloatZonotopeTemplateParameters(URealBitsNumber, USizeMantissa, USizeExponent)
       ::atan2Assign(const thisType& source, typename Equation::PolicyCall policyCall) {
+#ifdef FLOAT_CONCRETE
    dValue = (TypeImplementation) ::atan2((double) dValue, (double) source.dValue);
+#endif
    inherited::atan2Assign(source, policyCall);
    if (this->doesComputeError())
       addSemiUlpToError(true /* isBeforeValidImplementation */);

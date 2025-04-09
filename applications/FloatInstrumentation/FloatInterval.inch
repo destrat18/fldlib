@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2015-2017                                               */
+/*  Copyright (C) 2015-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -29,24 +27,21 @@
 //   Definition of a class of floating point intervals
 //
 
-#include "FloatInstrumentation/BackTrace.h"
+#include "NumericalAnalysis/BackTrace.h"
 
 namespace NumericalDomains { namespace DDoubleInterval {
 
 class PathExplorer {
   private:
    Numerics::BigInteger biStackTrace;
-   int uCurrentStackPosition;
-   unsigned uLastResult;
-   unsigned uLastLogCases;
-   unsigned uLastZeroBit;
-   unsigned uLastIncBit;
+   int uCurrentStackPosition = 0;
+   unsigned uLastResult = 0;
+   unsigned uLastLogCases = 0;
+   unsigned uLastZeroBit = 0;
+   unsigned uLastIncBit = 0;
 
   public:
-   PathExplorer()
-      :  uCurrentStackPosition(0), uLastResult(0), uLastLogCases(0),
-         uLastZeroBit(0), uLastIncBit(0) {}
-
+   PathExplorer() = default;
    PathExplorer(const PathExplorer& source) = default;
    PathExplorer(PathExplorer&& source) = default;
    PathExplorer& operator=(const PathExplorer& source) = default;
@@ -154,6 +149,7 @@ class ExecutionPath : public BaseExecutionPath {
   public:
    static bool doesFollowFlow() { return fDoesFollow && (fSupportUnstableInLoop || iTraceFile); }
    static STG::IOObject::ISBase* inputTraceFile() { return iTraceFile; }
+   static STG::IOObject::OSBase* outputTraceFile() { return oTraceFile; }
    static void setFollowFlow(bool doesFollow=true, STG::IOObject::ISBase* inputTraceFile=nullptr)
       { fDoesFollow = doesFollow; iTraceFile = inputTraceFile; }
    static void clearFollowFlow() { fDoesFollow = false; }
@@ -312,7 +308,7 @@ class ExecutionPath : public BaseExecutionPath {
       }
 
    static bool followNewUnresolvedBranch(bool& isLastBranch);
-   static unsigned followNewConversionBranch(unsigned conversion, bool& isLastBranch);
+   static uint32_t followNewConversionBranch(uint64_t conversion, bool& isLastBranch);
 
   public:
    static STG::IOObject::ISBase* acquireConstantStream(const char* content);
@@ -342,17 +338,17 @@ PathExplorer::isFinished() {
       }
       else { // conversion
          AssumeCondition(uCurrentStackPosition >= (int) uLastLogCases)
-         int index = (int) (((uCurrentStackPosition-uLastLogCases) + 8*sizeof(unsigned) - 1)/(8*sizeof(unsigned)));
-         int shiftIndex = (int) ((uCurrentStackPosition-uLastLogCases) % (8*sizeof(unsigned)));
-         if ((int) (8*sizeof(unsigned) - shiftIndex) < (int) uLastLogCases) {
+         int index = (int) (((uCurrentStackPosition-uLastLogCases) + 8*sizeof(uint32_t) - 1)/(8*sizeof(uint32_t)));
+         int shiftIndex = (int) ((uCurrentStackPosition-uLastLogCases) % (8*sizeof(uint32_t)));
+         if ((int) (8*sizeof(uint32_t) - shiftIndex) < (int) uLastLogCases) {
             biStackTrace[index] &= ~(~(~0U << uLastLogCases) << shiftIndex);
             biStackTrace[index] |= uLastResult << shiftIndex;
          }
          else {
             biStackTrace[index] &= ~(~0U << shiftIndex);
-            biStackTrace[index+1] &= ~0U << (uLastLogCases - (8*sizeof(unsigned) - shiftIndex));
+            biStackTrace[index+1] &= ~0U << (uLastLogCases - (8*sizeof(uint32_t) - shiftIndex));
             biStackTrace[index] |= uLastResult << shiftIndex;
-            biStackTrace[index+1] |= uLastResult >> (uLastLogCases - (8*sizeof(unsigned) - shiftIndex));
+            biStackTrace[index+1] |= uLastResult >> (uLastLogCases - (8*sizeof(uint32_t) - shiftIndex));
          };
       };
    };

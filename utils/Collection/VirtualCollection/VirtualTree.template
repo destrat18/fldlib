@@ -1,10 +1,8 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
-/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
-/*         alternatives)                                                  */
+/*  Copyright (C) 2014-2025                                               */
+/*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
+/*         Alternatives)                                                  */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,11 +27,9 @@
 //   Implementation of the iteration methods of the class VirtualTree.
 //
 
-#ifndef COL_VirtualTreeTemplate
-#define COL_VirtualTreeTemplate
+#pragma once
 
 #include "Collection/VirtualCollection/VirtualTree.h"
-#include "Pointer/Pointer.template"
 
 namespace COL {
 
@@ -194,7 +190,7 @@ VirtualTree::foreachMultiSonLevelSDo(TemplateParameters, Action& action,
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
-   PNT::PassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
+   PNT::PPassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
 
    EnhancedObject* oldElement = nullptr;
    bool hasAscent = true;
@@ -451,7 +447,7 @@ VirtualTree::foreachMultiBrotherLevelSDo(TemplateParameters, Action& action,
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
-   PNT::PassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
+   PNT::PPassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
 
    bool hasAscent = true;
    if ((startMode == VirtualTreeCursor::VMInvalidCursor) || path->hasAscent()) {
@@ -585,7 +581,7 @@ VirtualTree::foreachInnerSonsLevelSDo(TemplateParameters, Action& action,
    };
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToLastBrother())
@@ -659,7 +655,7 @@ VirtualTree::foreachBrothersSDo(TemplateParameters, Action& action,
 
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToLastBrother())
@@ -769,7 +765,7 @@ VirtualTree::foreachSonsSDo(TemplateParameters, Action& action,
 
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToLastBrother())
@@ -1156,7 +1152,7 @@ VirtualTree::foreachMultiSonLevelSReverseDo(TemplateParameters, Action& action,
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
-   PNT::PassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
+   PNT::PPassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
 
    EnhancedObject* oldElement = nullptr;
    bool hasAscent = true;
@@ -1413,7 +1409,7 @@ VirtualTree::foreachMultiBrotherLevelSReverseDo(TemplateParameters, Action& acti
    VirtualTreeCursor::ValidityMode startMode = start->_getMode(), endMode = end->getMode();
    AssumeCondition((startMode != VirtualTreeCursor::VMUpRoot) && (startMode != VirtualTreeCursor::VMDownCursor)
       && (endMode != VirtualTreeCursor::VMUpRoot) && (endMode != VirtualTreeCursor::VMDownCursor))
-   PNT::PassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
+   PNT::PPassPointer<VirtualTreeCursor::VirtualCursorPath> path = cursor->newPath(end);
 
    bool hasAscent = true;
    if ((startMode == VirtualTreeCursor::VMInvalidCursor) || path->hasAscent()) {
@@ -1547,7 +1543,7 @@ VirtualTree::foreachInnerSonsLevelSReverseDo(TemplateParameters, Action& action,
    };
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToFirstBrother())
@@ -1621,7 +1617,7 @@ VirtualTree::foreachBrothersSReverseDo(TemplateParameters, Action& action,
 
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToFirstBrother())
@@ -1731,7 +1727,7 @@ VirtualTree::foreachSonsSReverseDo(TemplateParameters, Action& action,
 
    if (endMode != VirtualTreeCursor::VMTree) {
       endCursor = thisTree.newCursor();
-      endCursor = *end;
+      endCursor->assign(*end);
       doesExcludeLast = false;
       end = endCursor.key();
       if ((endMode == VirtualTreeCursor::VMDownCursor) || !endCursor->setToFirstBrother())
@@ -2097,4 +2093,3 @@ VirtualTreeCursor::tsetToLast(Route route, Action& action) {
 
 } // end of namespace COL
 
-#endif

@@ -1,8 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  This file is part of FLDLib                                           */
-/*                                                                        */
-/*  Copyright (C) 2014-2017                                               */
+/*  Copyright (C) 2014-2025                                               */
 /*    CEA (Commissariat a l'Energie Atomique et aux Energies              */
 /*         Alternatives)                                                  */
 /*                                                                        */
@@ -35,6 +33,7 @@
 namespace {}
 
 #include <iostream>
+#include <sstream>
 
 namespace STG {
 
@@ -70,6 +69,15 @@ EWriteError::EWriteError(const char* message)
 #undef DefineLinkStream
 #undef DefineTypeObject
 #undef DefineImplementsOStreamMethods
+
+const char*
+IOObject::debugWrite() const {
+   static std::string result;
+   std::ostringstream out;
+   write(out, FormatParameters());
+   result = out.str();
+   return result.c_str();
+}
 
 } // end of namespace STG
 
